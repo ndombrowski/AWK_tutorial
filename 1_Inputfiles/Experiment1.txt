@@ -1,0 +1,4 @@
+Ex1	control1	0.2	0.3	#Ex1_all_good
+Ex1	control2	0.3	0.1	#all_good
+Ex1	N[0.4uM]	10.1	4.7	#contamination yellow_discoloration?
+Ex1	N[0.4uM]	5.2	4.3	#all_good

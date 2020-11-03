@@ -1,0 +1,6 @@
+Ex2	control1	0.6	0.4	#all_good
+Ex2	control2	0.7	0.5	#all_good
+Ex2	N[0.4uM]	6.3	2.1	#all_good
+Ex2	N[0.4uM]	5.2	4.3	#all_good
+Ex2	control1	0.2	0.1	#repetition
+Ex2	N[0.4uM]	5.2	4.3	#all_good

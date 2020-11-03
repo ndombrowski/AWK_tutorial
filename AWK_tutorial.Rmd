@@ -1,0 +1,659 @@
+---
+title: "AWK notebook"
+author: "Nina Dombrowski"
+affiliation: "NIOZ"
+date: "`r Sys.Date()`"
+knit: (function(input_file, encoding) {
+  out_dir <- 'docs';
+  rmarkdown::render(input_file,
+ encoding=encoding,
+ output_file=file.path(dirname(input_file), out_dir, 'index.html'))})
+output:
+  rmdformats::readthedown:
+    highlight: kate
+editor_options: 
+  chunk_output_type: console
+---
+
+
+
+```{r knitr setup, include=FALSE,  eval=TRUE, echo=FALSE, warning=FALSE}
+library(knitr)
+knitr::opts_chunk$set(eval=TRUE, cache=FALSE, message=FALSE, warning=FALSE, 
+                      comment = "", results="markup")
+#https://bookdown.org/yihui/rmarkdown/html-document.html
+#install.packages('knitr', ependencies = TRUE)
+#install.packages("devtools", lib="~/R/lib")
+#library(DT)
+#devtools::session_info()
+```
+
+
+This file lists code snippets and a small mini tutorial to work with AWK.
+
+AWK is an excellent tool to filter and manipulate data that comes with rows and columns, which is very common with biological data. 
+Awk requires no compiling, and allows the user to use variables, numeric functions, string functions, and logical operators.
+Importantly, it can deal fast and effectively with very large data files.
+
+Examples of things AWK can do:
+
+- Scans a file line by line
+- Splits each input line into fields
+- Compares input line/fields to pattern
+- Performs action(s) on matched lines
+
+When you want to work with AWK a basic knowledge about how to use the command line is required. 
+We have a small tutorial for this [here](https://github.com/ndombrowski/Unix_tutorial)
+
+Here, we test basic awk operations with several input files that can be found in the 1_Inputfiles folder. 
+The files usually look like this:
+
+<p align="left">
+  <img width=600, height=600, src="/Users/ninadombrowski/Desktop/WorkingDir/Notebooks/Pictures/input.png">
+</p>
+
+We have a file with
+
+- 4 rows
+- 5 columns
+- The columns have information for one experiment with control and nitrogen measurements (two things were measured)
+
+In this tutorial we learn how to:
+
+- Subset dataframes by columns
+- Subset dataframes based on patterns
+- Merge dataframes
+- etc.
+
+
+###################################################################################
+###################################################################################
+# Basic introduction
+###################################################################################
+###################################################################################
+
+An essential awk command looks like follows:
+
+**awk pattern { action }**
+
+- pattern = when the action is performed
+- action = what we wanto do
+
+
+
+###################################################################################
+###################################################################################
+# Subsetting dataframes
+###################################################################################
+###################################################################################
+
+1. To test things you can use some files generated for this purpose in the 1_Inputfoles folder. 
+
+2. By default the examples below will print to the screen. In case you want to save into a new file you can do parse the output into a new file with a >. Example: **awk command Experiment1.txt > File_new.txt**
+
+3. The file **Experiment*.txt** contains five columns: The experimentID, conditions, two measurments and a column with some comments.
+
+4. If you want to follow this tutorial: Go into the 1_Inputfiles folder and execute the commands from the command line.
+
+
+## Print a column of interest
+######################
+
+First, lets learn how we print certain columns, we are interested in.
+
+General info:
+
+- **FS** = input field separator
+- **OFS** = Output field separator
+- **$0** prints everything
+- A **BEGIN** rule is executed once only, before the first input record is read
+
+
+```{bash, highlight=TRUE, eval=FALSE}
+#just print column 1
+awk '{print $1}' Experiment1.txt 
+```
+
+In the terminal we should see something like this:
+
+<p align="left">
+  <img width=200, height=200, src="/Users/ninadombrowski/Desktop/WorkingDir/Notebooks/Pictures/awk1.png">
+</p>
+
+
+We can print any other combination as shown below. Try this by yourself and see what is happening.
+
+```{bash, highlight=TRUE, eval=FALSE}
+#print column 3 and 4
+awk '{print $3, $4}' Experiment1.txt 
+
+#print column 3 and 4 and tab separate them
+awk '{print $3 "\t" $4}' Experiment1.txt 
+
+#print column 3 and 4 and separate them with a minus symbol
+awk '{print $3 "-" $4}' Experiment1.txt 
+```
+
+Notice:
+
+- The "\t" represents an escaped character and represents a ``tab``
+
+
+## Print everything
+######################
+
+We can also print everything using ``$0``.
+
+
+```{bash, highlight=TRUE, eval=FALSE}
+awk '{print $0}' Experiment1.txt
+```
+
+
+
+## Print a column of interest and define the column separators
+######################
+
+**Something to keep in mind about the default awk behaviour:**
+
+By default awk uses BOTH tabs and spaces as separated, which sometimes can create issues. 
+We can use variables to control this behaviour and examples are given below.
+
+
+```{bash, highlight=TRUE, eval=FALSE}
+#Print column 1 and specify that the input separator (-F) is a tab
+awk 'BEGIN{FS="\t"}{print $1}' Experiment1.txt 
+
+#Print column 1 and 2 and specify that the input separator (-F) is a tab and the output separator is a comma
+awk 'BEGIN{FS="\t";OFS=","}{print $1,$2}' Experiment1.txt  
+
+#print column 1 and then all the columns
+awk 'BEGIN{FS=OFS="\t"}  {print $1,$0}'  Experiment1.txt
+```
+
+If we look at the second example, we see that awk recognizes the tab of the input file but then for the output generated uses the semicoloon.
+
+<p align="left">
+  <img width=100, height=100, src="/Users/ninadombrowski/Desktop/WorkingDir/Notebooks/Pictures/awk2.png">
+</p>
+
+ *For the rest of the tutorial we set the OFS and FS as tab as a default.
+
+
+## Add a column
+######################
+
+We can use this if we want to add some extra information into our tables. 
+Later we can also do this a bit more sophisticated using **if/else** statements
+
+```{bash, highlight=TRUE, eval=FALSE}
+#add a new column in the beginning
+awk 'BEGIN{FS=OFS="\t"}{print "redo",$0}' Experiment1.txt
+```
+
+If we run this, we see that we have a new first column followed by the original dataframe.
+
+<p align="left">
+  <img width=600, height=600, src="/Users/ninadombrowski/Desktop/WorkingDir/Notebooks/Pictures/awk3.png">
+</p>
+
+We can exactly control where we add new information.
+For example, with the code below, we add the extra column between the 2nd and 3rd column of the original dataframe.
+
+```{bash, highlight=TRUE, eval=FALSE}
+#add a new column as new third column
+$ awk 'BEGIN{FS=OFS="\t"}{print $1,$2,"redo",$3,$4,$5}' Experiment1.txt
+
+```
+
+
+
+## Change the content of an existing column
+######################
+
+Let's say, we do not like to use the word Experiment in our table, but rather would say Repetition.
+We can change the content of the first column like this:
+
+```{bash, highlight=TRUE, eval=FALSE}
+#change the content in column 1 to**repetition**
+awk 'BEGIN{FS=OFS="\t"}{$1="Repetition1"} {print $0 }' Experiment1.txt
+```
+
+<p align="left">
+  <img width=600, height=600, src="/Users/ninadombrowski/Desktop/WorkingDir/Notebooks/Pictures/awk4.png">
+</p>
+
+
+
+## Split a column
+######################
+
+We can also split columns. For example, the Ex1 in the first column, maybe we would want to split before and after the x and print the results into new columns.
+This is a random example, but when dealing with proteins, you often have something like GenomeName-ProteinID and for some operations we might want to have that information in different columns/
+
+Some new syntax for AWK:
+
+- **split()** =  the function 'split' divides a string into pieces
+- **$1** =  The column we want to split
+- **"x"** =  The pattern we want to use for splitting
+- **a** =  We name the ARRAY we generate 'a'. An ARRAY is similar to a variable you just can store more information in the array we store the different pieces that were split
+- **a[1]** =  retrieve the first part of the split array =E
+- **a[2]** =  retrieve the second part of the split array =1
+
+Here, we see the output and what our arrays are:
+
+<p align="left">
+  <img src="/Users/ninadombrowski/Desktop/WorkingDir/Notebooks/Pictures/AWK_arrays.png">
+</p>
+
+
+```{bash, highlight=TRUE, eval=FALSE}
+
+#split using  **x** in the 1st column and print the two arrays generated in that step
+awk 'BEGIN{FS=OFS="\t"}{split($1,a,"x")} {print $1,a[1],a[2],$2,$3}' Experiment1.txt
+```
+
+The output of this line of code should look like this:
+
+<p align="left">
+  <img width=600, height=600, src="/Users/ninadombrowski/Desktop/WorkingDir/Notebooks/Pictures/awk5.png">
+</p>
+
+
+## Dealing with more than one column
+######################
+
+In this example we work with the split function we used above but the syntax stays the same for other commands. 
+
+More specifically, we want to do the following: 
+
+1. Split the third column by the dot
+2. Split the second column by the dot
+3. print the 1st, 2nd, the first array of the first split (=a) and the first array of the second split (=b)
+
+The curly brackets allow us to separate two different commands (version 1). We can also do this by using a semicolon (version 2). 
+
+```{bash, highlight=TRUE, eval=FALSE}
+#version 1
+awk '{split($3,a,".")} {split($4,b,".")} {print $1,$2,a[1],b[1]}' Experiment1.txt
+
+#version 2
+awk '{split($3,a,"."); split($4,b,"."); print $1,$2,a[1],b[1]}' Experiment1.txt
+```
+
+
+
+
+## Use search and replace
+######################
+
+We can search for patterns and if a pattern is found we can replace it with something else.
+For example, we can search for **Ex** and replace it with **Experiment**
+
+We can also use wildcards here. The default behaviour of wildcards is explained in more detail in the [Unix tutorial](https://github.com/ndombrowski/Unix_tutorial).
+
+```{bash, highlight=TRUE, eval=FALSE}
+#default
+awk '{gsub(/Ex/,"Experiment")}{print $0}' Experiment1.txt
+
+#use gsub together with wildcards
+#Here, we replace control1 + control2 with blank
+awk '{gsub(/control[12]/,"blank")}{print $0}' Experiment1.txt
+```
+
+The second example looks like this:
+
+<p align="left">
+  <img width=600, height=600, src="/Users/ninadombrowski/Desktop/WorkingDir/Notebooks/Pictures/awk6.png">
+</p>
+
+
+We can see that since we use the wildcard ([12]) both control1 and control2 are replaced with blank.
+
+
+## Only print rows that have a pattern of interest
+######################
+
+We can also only print rows that we find relevant. I.e. we might only want to print the columns with our control measurements. Or we might want to only print the information from specific treatments, metadata for certain organisms, etc... 
+
+New syntax:
+
+-**?** =  Searches for any Number/Letter (exactly one)
+- **==** =  is a logical operator/Boolean expression. This one means find a pattern that is **equal** to the pattern we gave
+- **!=** =  means unequal to
+- **~** =  means find a pattern that is the same AND allow for wildcards
+
+```{bash, highlight=TRUE, eval=FALSE}
+#only print rows with control treatments (search across all columns)
+awk '/control?/''{print $0}' Experiment1.txt
+
+#only print rows if we find the term control2 in column2
+awk '$2=="control2"''{print $0}' Experiment1.txt
+
+#only print rows wit the control in column2 (AND use wildcards)
+awk '$2~"control?"''{print $0}' Experiment1.txt
+
+#print everything EXCEPT control2
+awk '$2!="control2"' Experiment1.txt
+```
+
+
+## Only print data if a condition is met
+######################
+
+Here: Only print rows if the second column has the pattern **N**
+
+```{bash, highlight=TRUE, eval=FALSE}
+#search pattern across the whole file 
+awk '/N/ {print $0}' Experiment1.txt
+
+#search pattern in specific column
+awk '$2 == "N" { print $0 }' Experiment1.txt
+```
+
+
+
+
+
+## Subset dataframes by using cutoffs 
+######################
+
+We might also want to subset data by numeric values. I.e. we only might want to retain columns were values are larger than 10, or larger than a certain e-value, etc..
+
+This can be very helpful when subsetting blast tables
+
+We can combine two statements using **||** , which means OR
+Alternatively, we can use **&&** , which means AND
+
+```{bash, highlight=TRUE, eval=FALSE}
+#only print rows if the third column has values larger than 5
+awk '$3>5' Experiment1.txt
+
+#if the value in the third column is equal to 5.2 do NOT print
+awk '$3!=5.2' Experiment1.txt
+
+#if the third column is larger than 5 OR the fourth column is greater than 0.2 then print
+awk '($3>5)||($4>0.2)' Experiment1.txt
+
+#only print if the values in the third column are equal to or greater than 5
+awk '$3>=5.2' Experiment1.txt
+
+#only print if the third column is equal/larger than 5.2 AND the fourth column is larger than 4.5
+awk '($3>=5.2)&&($4>4.5)' Experiment1.txt
+```
+
+
+
+## Changing specific cells
+######################
+
+This specific command can be quite useful when we for example want to change headers.
+
+Here, we learn several new statements that can be used in AWK:
+
+- **if** =  Do the action only IF a specific condition is met
+- **NR** =  Number of fields (or "rows")
+- **NR==3** =  We are in the 3rd field
+- **if(NR==3)** =  if we are in field 3 do sth
+- **if(NR==3) $2="P"** =  if we are in field 3 replace the value in the 2nd column with P
+
+```{bash, highlight=TRUE, eval=FALSE}
+#change a the pattern in the 2nd column to **P** if we are in the 3rd ROW 
+awk 'BEGIN{FS="\t"; OFS="\t"}{if(NR==3) $2="P"} {print $0 }' Experiment1.txt
+```
+
+
+
+
+
+###################################################################################
+###################################################################################
+# Math with awk
+###################################################################################
+###################################################################################
+
+
+## Basics
+######################
+
+With awk we can add/substract ... values. The benefit over excel is that it works extremely fast.
+
+```{bash, highlight=TRUE, eval=FALSE} 
+
+#add the values of the 3rd and 4th column
+awk '{print $3+$4}' Experiment1.txt
+
+#subtract
+awk '{print $3-$4}' Experiment1.txt
+
+#multiply
+awk '{print $3*$4}' Experiment1.txt
+
+```
+
+
+## Using variables
+######################
+
+### basics
+
+Here, we create a variable named **SUM** that stores added values of the 3rd and 4th column. We can use this variable for printing.
+
+```{bash, highlight=TRUE, eval=FALSE}
+awk '{SUM=$3+$4}{print $1,$2,SUM}' Experiment1.txt
+```
+
+### creating several variables
+
+Here, we again create the variable **SUM**. Then, we run a second command (using the semicolon) and add a 1 to the values stored in **SUM** and create a new variable named **SUM2**
+
+```{bash, highlight=TRUE, eval=FALSE}
+awk '{SUM=$3+$4;SUM2=SUM+1}{print $1,$2,SUM,SUM2}' Experiment1.txt
+```
+
+In a more useful way we can use this to create basic functions and for example calculate the average and just print that
+
+```{bash, highlight=TRUE, eval=FALSE}
+awk '{SUM = $3+$4; avg = SUM/2}{print $1,$2,avg}' Experiment1.txt
+```
+
+
+
+### Summarizing across columns
+
+<p align="left">
+  <img src="/Users/ninadombrowski/Desktop/WorkingDir/Notebooks/Pictures/Row_v_Column.png">
+</p>
+
+
+Now, we want to add all the values of the third column together:
+
+- **SUM+** =  SUM = the variable we define and '+' = is the summary function
+- **2x{}** =  2 action blocks we are executing
+- **END** =  Execute the 1st action block until the end of the file is reached = marks the end of action block 1
+
+
+```{bash, highlight=TRUE, eval=FALSE}
+#using the variable SUM
+awk '{SUM+=$3}END{print SUM}' Experiment1.txt
+
+#using the variable new_name
+awk '{New_name+=$3}END{print New_name}' Experiment1.txt
+
+#add sum text to the results
+awk '{SUM+=$4}END{print "The result is",SUM}' Experiment1.txt
+
+#also here we can combine two actions into one command
+awk '{SUM_Col3+=$3;SUMCol4+=$4}END{print SUM_Col3,SUMCol4}' Experiment1.txt
+```
+
+If we do not use **END** this gets messed up, so be careful. Basically without this variable, we consecutively add values within the column and print the individual values. You can check this unwanted behaviour with the code below.
+
+```{bash, highlight=TRUE, eval=FALSE}
+#not using END
+awk '{New_name+=$3}{print New_name}' Experiment1.txt
+```
+
+
+
+### Summarizing across columns by using categories
+
+In this example, we want to only summarize the values across our three categories: control1, control2 and N
+
+<p align="left">
+  <img src="/Users/ninadombrowski/Desktop/WorkingDir/Notebooks/Pictures/Categories.png">
+</p>
+
+New elements to keep in mind:
+
+- **{SUM[$2]+=$3}** =  Sum column3 based on the categories in column2. SUM is stored in an array, where we have 3 indices (i) for control1, control2 and N[0.4uM]
+- **for(i in SUM)** =  a for loop that loops through our array loop through every of the 3 indices we stored
+- **print i** =  print each index stored in SUM
+- **print SUM[i]** =  print each calculated sum stored in the array
+
+
+```{bash, highlight=TRUE, eval=FALSE} 
+#using the default categories
+awk '{SUM[$2]+=$3}END{for(i in SUM) print i,SUM[i]}' Experiment1.txt
+
+#combining control1 and control2 into one categorie (we use pipes again, Notice we can use pipes to combine different progamms)
+sed 's/control[12]/control/g' Experiment1.txt | awk '{SUM[$2]+=$4}END{for(i in SUM)
+print i,SUM[i]}'
+```
+
+
+
+### Using the FILENAME variable
+
+While this is not math this is incredibly useful if you have thousands of files that you want to merge (as long as you can distinguish them by the file name). For example, if we have the 100 different files with measurements from different experiments, we can combine them into one document as long as they have the same layout in terms of nr. of columns and a useful header
+
+```{bash, highlight=TRUE, eval=FALSE}
+awk '{print FILENAME,$0}' Experiment1.txt
+
+```
+
+With our example we would get something like this:
+
+<p align="left">
+  <img src="/Users/ninadombrowski/Desktop/WorkingDir/Notebooks/Pictures/Filenames.png">
+</p>
+
+
+Since, the **.txt** is not pretty we can also remove it by using gsub and a pipe. Pipes are explained in the general notebook but basically allow to combine two commands into one.
+
+```{bash, highlight=TRUE, eval=FALSE}
+awk '{print FILENAME,$0}' Experiment1.txt | awk '{gsub(/.txt/,"")}{print $0}'
+```
+
+
+
+
+## Using Operators
+######################
+
+### use Arithmetic operators 
+######################
+```{bash, highlight=TRUE, eval=FALSE}
+awk 'BEGIN {a = 50; b = 20; print "(a + b) = ", (a + b)}'
+
+awk 'BEGIN {a = 50; b = 20; print "(a - b) = ", (a - b)}'
+	
+awk 'BEGIN {a = 50; b = 20; print "(a * b) = ", (a * b)}'
+
+awk 'BEGIN {a = 50; b = 20; print "(a / b) = ", (a / b)}'
+```
+
+
+
+### use Increment and decrement operators
+######################
+- ++a : increments the value of an operand by ‘1’. first increments the value of the operand, then returns the incremented value.
+- a++: first returns the value of the operand, then it decrements its value 
+- Printf = allows more option for printing
+
+```{bash, highlight=TRUE, eval=FALSE}
+awk 'BEGIN {a = 10; b = ++a; print b}'
+
+awk 'BEGIN {a = 10; b = ++a; printf "a = %d, b = %d\n", a, b}'
+
+awk 'BEGIN {a = 10; b = --a; printf "a = %d, b = %d\n", a, b}'
+	
+awk 'BEGIN {a = 10; b = a--; printf "a = %d, b = %d\n", a, b}'
+```
+
+
+### use Relational operators
+######################
+- != unequal
+
+```{bash, highlight=TRUE, eval=FALSE}
+awk 'BEGIN {a = 10; b = 10; if (a == b) print "a==b"}'
+
+awk 'BEGIN {a = 10; b = 20; if (a != b) print "a = "a,"b = "b,"therefore", "a!=b"}'
+	
+awk 'BEGIN {a = 10; b = 20; if (a <= b) print "a<=b"}'
+
+awk 'BEGIN {a = 10; b = 10; if (a < b) print "a==b"; else print "false"}'
+```
+
+### Only print data if a condition is met
+######################
+
+```{bash, highlight=TRUE, eval=FALSE}
+#count lines where the length of column 2 is larger than 4
+awk 'length($2) > 4' marks.txt
+
+```
+
+
+
+
+
+###################################################################################
+###################################################################################
+# Merging tables
+###################################################################################
+###################################################################################
+
+Inside the file *Metadata* we have some additional information on how we did our different experiments. I.e. the date, temperature and how long they were run. With awk we can add this info into our Experiment1.txt table.
+
+New things to learn:
+
+- **FNR** =  record number (typically the line number per file)
+- **NR** =  total record number across files
+- **==** =  comparison operator that means equal to
+- **a[$1]** =  We use the 1st Column of Metadata as our KEY = do we find the ‘Ex1’ in metadata also in Experiment1.txt?
+- **a[$1]=$0** =  in Metadata use first column as key AND store the info from all the columns. If we only would want to have the fourth column we could use **a[$1]=$4**
+
+```{bash, highlight=TRUE, eval=FALSE}
+awk 'FNR==NR{a[$1]=$0;next}{print $0,a[$1]}' Metadata Experiment1.txt
+```
+
+
+If you are interested in how the first command works **FNR==NR** we can break this down to
+
+```{bash, highlight=TRUE, eval=FALSE}
+awk '{print "NR:", NR " FNR:", FNR}' Metadata Experiment1.txt
+```
+
+Which will give this:
+
+<p align="left">
+  <img src="/Users/ninadombrowski/Desktop/WorkingDir/Notebooks/Pictures/Merging.png">
+</p>
+
+
+The **next** statement means: the print statement is only executed after we stored the data from
+Metadata1 (using FNR==NR). If we do not use next we record metadata1 but do not "store" it in the background
+and print in one go.
+
+Below you can test what happens if we do not use **next**
+
+```{bash, highlight=TRUE, eval=FALSE}
+#example without using next
+awk 'FNR==NR{a[$1]=$0}{print $0,a[$1]}' Metadata Experiment1.txt`
+```
+
+The KEY **a[$1]** is important as it tells awk were to look for a common pattern that can be used for merging. In this example, both columns have **Ex1** in the first column. If we use the second column, that has no common pattern, nothing would be merged.
+
+
