@@ -1,24 +1,44 @@
 ---
-title: "AWK notebook"
+title: "General AWK notebook"
 author: "Nina Dombrowski"
 affiliation: "NIOZ"
 date: "`r Sys.Date()`"
-knit: (function(input_file, encoding) {
-  out_dir <- 'docs';
-  rmarkdown::render(input_file,
- encoding=encoding,
- output_file=file.path(dirname(input_file), out_dir, 'index.html'))})
+knit: (function(input_file, encoding) {out_dir <- 'docs';rmarkdown::render(input_file,encoding=encoding,output_file=file.path(dirname(input_file), out_dir, 'AWK_tutorial.html'))})
 output:
   rmdformats::readthedown:
     highlight: kate
+    code_folding: hide
 editor_options: 
+  
   chunk_output_type: console
 ---
 
 
+```{css, echo=FALSE}
+.spoiler {
+  visibility: hidden;
+}
+
+.spoiler::before {
+  visibility: visible;
+  content: "Spoiler alert! Hover over me to see the answer.";
+  font-weight: bold
+}
+
+.spoiler:hover {
+  visibility: visible;
+}
+
+.spoiler:hover::before {
+  display: none;
+}
+```
+
 
 ```{r knitr setup, include=FALSE,  eval=TRUE, echo=FALSE, warning=FALSE}
 library(knitr)
+library(kableExtra)
+options(knitr.table.format = "html")
 knitr::opts_chunk$set(eval=TRUE, cache=FALSE, message=FALSE, warning=FALSE, 
                       comment = "", results="markup")
 #https://bookdown.org/yihui/rmarkdown/html-document.html
@@ -28,6 +48,11 @@ knitr::opts_chunk$set(eval=TRUE, cache=FALSE, message=FALSE, warning=FALSE,
 #devtools::session_info()
 ```
 
+###################################################################################
+###################################################################################
+# 0. Introduction
+###################################################################################
+###################################################################################
 
 This file lists code snippets and a small mini tutorial to work with AWK.
 
@@ -65,6 +90,15 @@ In this tutorial we learn how to:
 - Merge dataframes
 - etc.
 
+**General info on this tutorial**
+
+- `r text_spec("grey box.", background = "#BEBEBE", color = "black", bold = F)` : The code that we want to execute
+- `r text_spec("red box.", background = "#D05A6E", color = "white", bold = T)` : Urgent comments ;-)
+- `r text_spec("Code", background = "white", color = "black", bold = F)` : In some cases the code might be hidden and you only see a little box at the right hand side. Hidden codes means that from the previous sessions you should have enough knowledge to do this step or it is is a test of your skills. If you run into issues you can open the code and check how to run your command by clicking on the `Code` button to reveal the code
+- `r text_spec("hyperlink", background = "white", color = "red", bold = F)` : If the text is highlighted like this during a text section, then you can click on it and a hyperlink gives you more info (either the publication or an online tutorial)
+- **Exercise:** : This will appear if you should have the required background to finish all the steps yourself. If you run into trouble, you can find the answers if you click the Code butto, which will reveal the answer.
+- Sometimes we also just ask questions for you to think about the output of certain programs. The text is then hidden and you have to hover over the "spoiler" to see the answer to the question
+
 
 ###################################################################################
 ###################################################################################
@@ -74,11 +108,20 @@ In this tutorial we learn how to:
 
 An essential awk command looks like follows:
 
+**awk 'instructions' files**
+
+The Input is read a line at a time. The instructions are enclosed by single quotes to protect them from the shell, since curly brackets or dollars signs are otherwise not interpreted correctly.
+
+Same as with sed, we can issue multiple commands by using a semicolon.
+
 **awk pattern { action }**
 
 - pattern = when the action is performed
 - action = what we wanto do
 
+In case we want to run an awk script with more complex commands, we run:
+
+**awk -f script file**
 
 
 ###################################################################################
@@ -91,9 +134,32 @@ An essential awk command looks like follows:
 
 2. By default the examples below will print to the screen. In case you want to save into a new file you can do parse the output into a new file with a >. Example: **awk command 1_Inputfiles/Experiment1.txt > File_new.txt**
 
-3. The file **1_Inputfiles/Experiment*.txt** contains five columns: The 1_Inputfiles/ExperimentID, conditions, two measurments and a column with some comments.
+3. The file **1_Inputfiles/Experiment*.txt** contains five columns: The 1_Inputfiles/ExperimentID, conditions, two measurments and a column with some comments. The file **1_Inputfiles/list** contains a list of addresses, which uses the comma as a separator.
 
-4. If you want to follow this tutorial: Go into the 1_Inputfiles folder and execute the commands from the command line.
+4. If you want to follow this tutorial do the following steps
+
+- Make a new folder inside the workshop directory, name it `Awk_tutorial`
+- Go inside that folder
+- Copy the folder with the test data from `/export/lv3/scratch/workshop_2021/Sxx_Practice/Awk/1_Inputfiles/`
+- familirize yourself with the content of the indiv. files
+
+```{bash class.source = 'fold-bash', eval=FALSE}
+#make folder
+mkdir Awk_tutorial
+
+#go inside that new folder
+cd Awk_tutorial
+
+#get the test data
+cp -r /export/lv3/scratch/workshop_2021/Sxx_Practice/Awk/1_Inputfiles/ .
+
+#check files
+head 1_Inputfiles/list
+head 1_Inputfiles/Experiment1.txt
+head 1_Inputfiles/Metadata
+head 1_Inputfiles/nameState
+```
+
 
 
 ## Print a column of interest
@@ -108,36 +174,195 @@ General info:
 - **$0** prints everything
 - A **BEGIN** rule is executed once only, before the first input record is read
 
+We can print the entire input line with ``$0`` or specific input fields (or columns) with ``$1`` and ``$2`` and so on.
 
-```{bash, highlight=TRUE, eval=FALSE}
+**Important:**
+
+By default awks assumes that a space and tab is used as a separator for columns/fields. We can change this behaviour and will discuss this later.
+
+```{bash class.source = 'fold-show', eval=FALSE}
 #just print column 1
-awk '{print $1}' 1_Inputfiles/Experiment1.txt 
+awk '{print $1}' 1_Inputfiles/list
 ```
 
-In the terminal we should see something like this:
+**Exercise**: Print the 3rd input field. 
 
-<p align="left">
-  <img width=200, height=200, src="/Users/ninadombrowski/Desktop/WorkingDir/Notebooks/Pictures/awk1.png">
-</p>
+```{bash class.source = 'fold-hide', eval=FALSE}
+#just print column 1
+awk '{print $3}' 1_Inputfiles/list
+```
 
 
-We can print any other combination as shown below. Try this by yourself and see what is happening.
+We can also print lines that have specific pattern.
 
-```{bash, highlight=TRUE, eval=FALSE}
+```{bash class.source = 'fold-show', eval=FALSE}
+#just print addresses from MA
+awk '$3~ /MA/' 1_Inputfiles/list
+```
 
+
+
+
+**Exercise**: Extract the data for Amy
+
+```{bash class.source = 'fold-hide', eval=FALSE}
+#qst1
+awk '/Amy/' 1_Inputfiles/list
+```
+
+
+In the above example, we specify a pattern but no procedure. When doing this the default action is to print each line that matches the pattern. 
+
+We can not only specifiy the pattern but also exactly say what fields we want to print.
+
+```{bash class.source = 'fold-show', eval=FALSE}
+#just print addresses from MA and just print the names
+awk '/MA/ {print $1}' 1_Inputfiles/list
+```
+
+We can also specify the separator for the different fields using the ``-F`` option. For example, we can use the comma in our list.
+
+```{bash class.source = 'fold-show', eval=FALSE}
+#just print addresses from MA and just print the names
+awk -F, '/MA/ {print $1}' 1_Inputfiles/list
+```
+
+If we use this command not only the first but the full name is printed. 
+
+
+**Exercise**: Extract in what street Amy lives
+
+```{bash class.source = 'fold-hide', eval=FALSE}
+#just print column 1
+awk -F, '/Amy/{print $2}' 1_Inputfiles/list
+```
+
+
+If we want to specify in what colum to look for the data, we do it like this.
+
+```{bash class.source = 'fold-show', eval=FALSE}
+#just print names from MA
+awk -F, '$3 ~ /MA/ {print $1}' 1_Inputfiles/list
+```
+
+This is esp. useful if MA might also occur in unrelated columns.
+
+If we want to search for two patterns:
+
+
+```{bash class.source = 'fold-show', eval=FALSE}
+#just print names from MA and PA
+awk -F, '$3 ~ /MA|PA/ {print $1}' 1_Inputfiles/list
+```
+
+We can also print all names but exclude people from Ma and PA
+
+```{bash class.source = 'fold-show', eval=FALSE}
+#just print names from MA and PA
+awk -F, '!/MA|PA/ {print $1,$3}' 1_Inputfiles/list
+
+awk -F, '$3 !~ /MA|PA/ {print $1,$3}' 1_Inputfiles/list
+
+```
+
+
+## Splitting data by categories
+######################
+
+Now imagine we want a separate table with the names of people for each different state, with awk that is relatively easy to do
+
+```{bash class.source = 'fold-show', eval=FALSE}
+#just print names from MA and PA
+awk -F, '{print > $3}'  1_Inputfiles/list2
+
+#use ll to see what happened
+ls -l
+
+#check the content of a file
+head VA
+```
+
+To make this a bit nicer, we even can add an extension to the new files that are generaetd
+
+
+```{bash class.source = 'fold-show', eval=FALSE}
+#just print names from MA and PA
+awk -F, '{print > $3".txt"}'  1_Inputfiles/list2
+
+#use ll to see what happened
+ls -l
+
+#check the content of a file
+head VA.txt
+```
+
+We can also just print certain data, i.e. just the names
+
+```{bash class.source = 'fold-show', eval=FALSE}
+#just print names from MA and PA
+awk -F, '{print $1 > $3".txt"}'  1_Inputfiles/list2
+
+#use ll to see what happened
+ls -l
+
+#check the content of a file
+head VA.txt
+```
+
+
+
+
+
+## Combining several actions
+######################
+
+We can combine multiple actions by using the semicolon (same as in sed)
+
+```{bash class.source = 'fold-show', eval=FALSE}
+#just print addresses from MA and just print the names
+awk -F, '{print $1; print $2; print $3}' 1_Inputfiles/list
+```
+
+Options used:
+
+- `-F`: we define the input field delimiter and say to only see the comma as a delimiter not the space
+
+
+
+## Print several columns
+######################
+
+We can also print any other combination as shown below. Try this by yourself and see what is happening.
+
+```{bash class.source = 'fold-show', eval=FALSE}
 #print column 3 and 4
-awk '{print $3, $4}' 1_Inputfiles/Experiment1.txt 
-
-#print column 3 and 4 and tab separate them
-awk '{print $3 "\t" $4}' 1_Inputfiles/Experiment1.txt 
+awk -F, '{print $1, $3}' 1_Inputfiles/list 
 
 #print column 3 and 4 and separate them with a minus symbol
-awk '{print $3 "-" $4}' 1_Inputfiles/Experiment1.txt 
+awk -F, '{print $1"-"$3}' 1_Inputfiles/list 
+
+#print column 3 and 4 and tab separate them
+awk -F, '{print $1 "\t" $3}' 1_Inputfiles/list 
+awk -F, -v OFS="\t" '{print $1, $3}' 1_Inputfiles/list 
+
 ```
 
 Notice:
 
 - The ``"\t"`` represents an escaped character and represents a ``tab``
+
+Options used:
+
+- `-v OFS="\t"`: we define the output field delimiter as a tab
+
+**Exercise**: Extract in what street and state Amy lives. Separate the columns by a `!`
+
+```{bash class.source = 'fold-hide', eval=FALSE}
+#just print column 1
+awk -F',' '/Amy/{print $2"!"$3}' 1_Inputfiles/list
+```
+
+
 
 
 ## Print everything
@@ -146,22 +371,31 @@ Notice:
 We can also print everything using ``$0``.
 
 
-```{bash, highlight=TRUE, eval=FALSE}
-awk '{print $0, $1}' 1_Inputfiles/Experiment1.txt
+```{bash class.source = 'fold-show', eval=FALSE}
+awk '{print $0, $1}' 1_Inputfiles/list 
 ```
 
+Another way to do this is:
+
+```{bash class.source = 'fold-show', eval=FALSE}
+awk '1' 1_Inputfiles/list 
+```
+
+The above awk command has only the pattern or condition part, no action part. The '1' in the pattern indicates "true" which means true for every line. As said above, no action part denotes just to print which is the default when no action statement is given, and hence the entire file contents get printed.
 
 
 ## Print a column of interest and define the column separators
 ######################
 
+Now, lets work with a file that uses a tab to separate columns, as this is the type of file we more commonly work with, the file in `1_Inputfiles/Experiment1.txt `
+
 **Something to keep in mind about the default awk behaviour:**
 
 By default awk uses BOTH tabs and spaces as separated, which sometimes can create issues. 
-We can use variables to control this behaviour and examples are given below.
 
+Besides using -F and -v OFS to control that behaviour you might also see some different ways that basically do the same thing:
 
-```{bash, highlight=TRUE, eval=FALSE}
+```{bash class.source = 'fold-show', eval=FALSE}
 #Print column 1 and specify that the input separator (-F) is a tab
 awk 'BEGIN{FS="\t"}{print $1}' 1_Inputfiles/Experiment1.txt 
 
@@ -169,7 +403,7 @@ awk 'BEGIN{FS="\t"}{print $1}' 1_Inputfiles/Experiment1.txt
 awk 'BEGIN{FS="\t";OFS=","}{print $1,$2}' 1_Inputfiles/Experiment1.txt  
 
 #print column 1 and then all the columns
-awk 'BEGIN{FS=OFS="\t"}  {print $1,$0}'  1_Inputfiles/Experiment1.txt
+awk 'BEGIN{FS=OFS="\t"} {print $1,$0}'  1_Inputfiles/Experiment1.txt
 ```
 
 If we look at the second example, we see that awk recognizes the tab of the input file but then for the output generated uses the semicoloon.
@@ -187,7 +421,7 @@ If we look at the second example, we see that awk recognizes the tab of the inpu
 We can use this if we want to add some extra information into our tables. 
 Later we can also do this a bit more sophisticated using **if/else** statements
 
-```{bash, highlight=TRUE, eval=FALSE}
+```{bash class.source = 'fold-show', eval=FALSE}
 #add a new column in the beginning
 awk 'BEGIN{FS=OFS="\t"}{print "redo",$0}' 1_Inputfiles/Experiment1.txt
 ```
@@ -201,21 +435,30 @@ If we run this, we see that we have a new first column followed by the original 
 We can exactly control where we add new information.
 For example, with the code below, we add the extra column between the 2nd and 3rd column of the original dataframe.
 
-```{bash, highlight=TRUE, eval=FALSE}
+```{bash class.source = 'fold-show', eval=FALSE}
 #add a new column as new third column
-$ awk 'BEGIN{FS=OFS="\t"}{print $1,$2,"redo",$3,$4,$5}' 1_Inputfiles/Experiment1.txt
+awk 'BEGIN{FS=OFS="\t"}{print $1,$2,"redo",$3,$4,$5}' 1_Inputfiles/Experiment1.txt
 
 ```
 
+**Exercixe**:
+
+Imagine we want to add a column with the T of the experiment. Add a new column at the end with 36C
+
+```{bash class.source = 'fold-hide', eval=FALSE}
+#add a new column as new third column
+awk 'BEGIN{FS=OFS="\t"}{print $0,"36C"}' 1_Inputfiles/Experiment1.txt
+
+```
 
 
 ## Change the content of an existing column
 ######################
 
-Let's say, we do not like to use the word 1_Inputfiles/Experiment in our table, but rather would say Repetition.
+Let's say, we do not like to use the word Experiment in our table, but rather would say Repetition.
 We can change the content of the first column like this:
 
-```{bash, highlight=TRUE, eval=FALSE}
+```{bash class.source = 'fold-show', eval=FALSE}
 #change the content in column 1 to**repetition**
 awk 'BEGIN{FS=OFS="\t"}{$1="Repetition1"} {print $0 }' 1_Inputfiles/Experiment1.txt
 ```
@@ -223,6 +466,17 @@ awk 'BEGIN{FS=OFS="\t"}{$1="Repetition1"} {print $0 }' 1_Inputfiles/Experiment1.
 <p align="left">
   <img width=600, height=600, src="/Users/ninadombrowski/Desktop/WorkingDir/Notebooks/Pictures/awk4.png">
 </p>
+
+
+**Exercise**
+
+After plotting the data, we realized that the measurements that we initially labelled as control and N[0.4Um]. We realized we did a mistake and did not change the N levels. Rename everything in column 2 to control.
+
+```{bash class.source = 'fold-hide', eval=FALSE}
+#qst1
+awk 'BEGIN{FS=OFS="\t"}{$2="control"} {print $0 }' 1_Inputfiles/Experiment1.txt
+```
+
 
 
 
@@ -248,8 +502,7 @@ Here, we see the output and what our arrays are:
 </p>
 
 
-```{bash, highlight=TRUE, eval=FALSE}
-
+```{bash class.source = 'fold-show', eval=FALSE}
 #split using  **x** in the 1st column and print the two arrays generated in that step
 awk 'BEGIN{FS=OFS="\t"}{split($1,a,"x")} {print $1,a[1],a[2],$2,$3}' 1_Inputfiles/Experiment1.txt
 ```
@@ -259,6 +512,16 @@ The output of this line of code should look like this:
 <p align="left">
   <img width=600, height=600, src="/Users/ninadombrowski/Desktop/WorkingDir/Notebooks/Pictures/awk5.png">
 </p>
+
+
+**Exercise**
+
+- In column 5, split after the '_'. Print the first two columns and the first and second part of the array
+
+```{bash class.source = 'fold-show', eval=FALSE}
+#qst1
+awk 'BEGIN{FS=OFS="\t"}{split($5,a,"_")} {print $1,$2,a[1],a[2]}' 1_Inputfiles/Experiment1.txt
+```
 
 
 ## Dealing with more than one column
@@ -274,12 +537,12 @@ More specifically, we want to do the following:
 
 The curly brackets allow us to separate two different commands (version 1). We can also do this by using a semicolon (version 2). 
 
-```{bash, highlight=TRUE, eval=FALSE}
+```{bash class.source = 'fold-show', eval=FALSE}
 #version 1
-awk '{split($3,a,".")} {split($4,b,".")} {print $1,$2,a[1],b[1]}' 1_Inputfiles/Experiment1.txt
+awk -F'\t' -v OFS='\t'  '{split($3,a,".")} {split($4,b,".")} {print $1,$2,a[1],b[1]}' 1_Inputfiles/Experiment1.txt
 
 #version 2
-awk '{split($3,a,"."); split($4,b,"."); print $1,$2,a[1],b[1]}' 1_Inputfiles/Experiment1.txt
+awk -F'\t' -v OFS='\t'  '{split($3,a,"."); split($4,b,"."); print $1,$2,a[1],b[1]}' 1_Inputfiles/Experiment1.txt
 ```
 
 
@@ -289,17 +552,17 @@ awk '{split($3,a,"."); split($4,b,"."); print $1,$2,a[1],b[1]}' 1_Inputfiles/Exp
 ######################
 
 We can search for patterns and if a pattern is found we can replace it with something else.
-For example, we can search for **Ex** and replace it with **1_Inputfiles/Experiment**
+For example, we can search for **Ex** and replace it with **Experiment**
 
 We can also use wildcards here. The default behaviour of wildcards is explained in more detail in the [Unix tutorial](https://github.com/ndombrowski/Unix_tutorial).
 
-```{bash, highlight=TRUE, eval=FALSE}
+```{bash class.source = 'fold-show', eval=FALSE}
 #default
-awk '{gsub(/Ex/,"1_Inputfiles/Experiment")}{print $0}' 1_Inputfiles/Experiment1.txt
+awk -F'\t' -v OFS='\t'  '{gsub(/Ex/,"Experiment")}{print $0}' 1_Inputfiles/Experiment1.txt
 
 #use gsub together with wildcards
 #Here, we replace control1 + control2 with blank
-awk '{gsub(/control[12]/,"blank")}{print $0}' 1_Inputfiles/Experiment1.txt
+awk -F'\t' -v OFS='\t'  '{gsub(/control[12]/,"blank")}{print $0}' 1_Inputfiles/Experiment1.txt
 ```
 
 The second example looks like this:
@@ -312,35 +575,63 @@ The second example looks like this:
 We can see that since we use the wildcard ([12]) both control1 and control2 are replaced with blank.
 
 
+**Exercise**
+
+- replace the `N[0.4uM]` with `nitrogen`. Do not forget that brackets mean something else for awk and we need to tell it to use the brackets literally. If you do not know how to do this, check the general Unix tutorial
+- replace the Ex1 with repetition and the control[12] with blank
+
+```{bash class.source = 'fold-hide', eval=FALSE}
+#question1
+awk -F'\t' -v OFS='\t'  '{gsub(/N\[0.4uM\]/,"nitrogen")}{print $0}' 1_Inputfiles/Experiment1.txt
+
+#question2
+awk -F'\t' -v OFS='\t'  '{gsub(/Ex1/,"Experiment"); gsub(/control[12]/,"blank")}{print $0}' 1_Inputfiles/Experiment1.txt
+
+```
+
+
 ## Only print rows that have a pattern of interest
 ######################
 
 We can also only print rows that we find relevant. I.e. we might only want to print the columns with our control measurements. Or we might want to only print the information from specific treatments, 1_Inputfiles/Metadata for certain organisms, etc... 
 
-New syntax:
+New syntax that we use here:
 
 -**?** =  Searches for any Number/Letter (exactly one)
 - **==** =  is a logical operator/Boolean expression. This one means find a pattern that is **equal** to the pattern we gave
 - **!=** =  means unequal to
 - **~** =  means find a pattern that is the same AND allow for wildcards
+- `||` or operator
 
-```{bash, highlight=TRUE, eval=FALSE}
+```{bash class.source = 'fold-show', eval=FALSE}
 #only print rows with control treatments (search across all columns)
-awk '/control?/''{print $0}' 1_Inputfiles/Experiment1.txt
+awk -F'\t' -v OFS='\t'  '/control?/''{print $0}' 1_Inputfiles/Experiment1.txt
 
 #only print rows if we find the term control2 in column2
-awk '$2=="control2"''{print $0}' 1_Inputfiles/Experiment1.txt
+awk -F'\t' -v OFS='\t'  '$2=="control2"''{print $0}' 1_Inputfiles/Experiment1.txt
 
 #only print rows wit the control in column2 (AND use wildcards)
-awk '$2~"control?"''{print $0}' 1_Inputfiles/Experiment1.txt
+awk -F'\t' -v OFS='\t'  '$2~"control?"''{print $0}' 1_Inputfiles/Experiment1.txt
 
 #print everything EXCEPT control2
-awk '$2!="control2"' 1_Inputfiles/Experiment1.txt
+awk -F'\t' -v OFS='\t'  '$2!="control2"' 1_Inputfiles/Experiment1.txt
 
 #we can search for several patterns arcoss different columns like this
 awk -F'\t' -v OFS='\t' '$2 =="N" || $3>6''{print $0}' 1_Inputfiles/Experiment1.txt
 
 ```
+
+**Exercise**
+
+- Find the rows in which the experiment was ok and where we did not have issues with contamination (the extra info is stored in column 5)
+
+```{bash class.source = 'fold-hide', eval=FALSE}
+awk -F'\t' -v OFS='\t' '$5=="#all_good"''{print $0}' 1_Inputfiles/Experiment1.txt
+#or
+awk -F'\t' -v OFS='\t' '$5~"good"''{print $0}' 1_Inputfiles/Experiment1.txt
+```
+
+
 
 
 ## Only print data if a condition is met
@@ -348,20 +639,32 @@ awk -F'\t' -v OFS='\t' '$2 =="N" || $3>6''{print $0}' 1_Inputfiles/Experiment1.t
 
 Here: Only print rows if the second column has the pattern **N**
 
-```{bash, highlight=TRUE, eval=FALSE}
+```{bash class.source = 'fold-show', eval=FALSE}
 #search pattern across the whole file 
-awk '/N/ {print $0}' 1_Inputfiles/Experiment1.txt
-
+awk -F'\t' -v OFS='\t'  '/N/ {print $0}' 1_Inputfiles/Experiment1.txt
+  
 #search pattern in specific column
-awk '$2 == "N" { print $0 }' 1_Inputfiles/Experiment1.txt
+awk -F'\t' -v OFS='\t'  '$2 ~ "N" { print $0 }' 1_Inputfiles/Experiment1.txt
 ```
 
 
 
 
 
-## Subset dataframes by using cutoffs 
+## Subset dataframes by using cutoffs  and using relational operators
 ######################
+
+###  Relational operators
+
+```{bash class.source = 'fold-show', eval=FALSE}
+awk 'BEGIN {a = 10; b = 10; if (a == b) print "a==b"}'
+
+awk 'BEGIN {a = 10; b = 20; if (a != b) print "a = "a,"b = "b,"therefore", "a!=b"}'
+	
+awk 'BEGIN {a = 10; b = 20; if (a <= b) print "a<=b"}'
+
+awk 'BEGIN {a = 10; b = 10; if (a < b) print "a==b"; else print "false"}'
+```
 
 We might also want to subset data by numeric values. I.e. we only might want to retain columns were values are larger than 10, or larger than a certain e-value, etc..
 
@@ -370,23 +673,46 @@ This can be very helpful when subsetting blast tables
 We can combine two statements using **||** , which means OR
 Alternatively, we can use **&&** , which means AND
 
-```{bash, highlight=TRUE, eval=FALSE}
+```{bash class.source = 'fold-show', eval=FALSE}
 #only print rows if the third column has values larger than 5
-awk '$3>5' 1_Inputfiles/Experiment1.txt
+awk -F'\t' -v OFS='\t'  '$3>5' 1_Inputfiles/Experiment1.txt
 
 #if the value in the third column is equal to 5.2 do NOT print
-awk '$3!=5.2' 1_Inputfiles/Experiment1.txt
+awk -F'\t' -v OFS='\t'  '$3!=5.2' 1_Inputfiles/Experiment1.txt
 
 #if the third column is larger than 5 OR the fourth column is greater than 0.2 then print
-awk '($3>5)||($4>0.2)' 1_Inputfiles/Experiment1.txt
+awk -F'\t' -v OFS='\t'  '($3>5)||($4>0.2)' 1_Inputfiles/Experiment1.txt
 
 #only print if the values in the third column are equal to or greater than 5
-awk '$3>=5.2' 1_Inputfiles/Experiment1.txt
+awk -F'\t' -v OFS='\t' '$3>=5.2' 1_Inputfiles/Experiment1.txt
 
 #only print if the third column is equal/larger than 5.2 AND the fourth column is larger than 4.5
-awk '($3>=5.2)&&($4>4.5)' 1_Inputfiles/Experiment1.txt
+awk -F'\t' -v OFS='\t' '($3>=5.2)&&($4>4.5)' 1_Inputfiles/Experiment1.txt
 ```
 
+**Exercise**
+
+- search for data, where we measured the N treatments and where the value in the third column is greater than 10
+
+```{bash class.source = 'fold-hide', eval=FALSE}
+awk -F'\t' -v OFS='\t' '($2~"N")&&($3>10)''{print $0}' 1_Inputfiles/Experiment1.txt
+
+```
+
+## Subsetting data and storing the results into different tables
+######################
+
+Remember when we split our list into separate files depending on what states people lived in? We can also do this with number and store numbers smaller than one in a new file.
+
+
+```{bash class.source = 'fold-hide', eval=FALSE}
+awk -F'\t' -v OFS='\t' '{if($3<=1)print > "small.txt";else print > "large.txt"}' 1_Inputfiles/Experiment1.txt
+
+#check if that worked
+head small.txt 
+```
+
+Using a so-called `if-else statement` we say:  If it is lesser or equal to 1, the record goes to "smallL.txt", else to "large.txt".
 
 
 ## Changing specific cells
@@ -402,13 +728,33 @@ Here, we learn several new statements that can be used in AWK:
 - **if(NR==3)** =  if we are in field 3 do sth
 - **if(NR==3) $2="P"** =  if we are in field 3 replace the value in the 2nd column with P
 
-```{bash, highlight=TRUE, eval=FALSE}
+```{bash class.source = 'fold-show', eval=FALSE}
 #change a the pattern in the 2nd column to **P** if we are in the 3rd ROW 
 awk 'BEGIN{FS="\t"; OFS="\t"}{if(NR==3) $2="P"} {print $0 }' 1_Inputfiles/Experiment1.txt
 ```
 
+**Exercise**
+
+We made an error in our comment section (column 5). Instead of `#all_good` for our second measurements, we wanted to write `#stunted_growth`. Correct this error
+
+```{bash class.source = 'fold-hide', eval=FALSE}
+#change a the pattern in the 2nd column to **P** if we are in the 3rd ROW 
+awk 'BEGIN{FS="\t"; OFS="\t"}{if(NR==2) $5="#stunted_growth"} {print $0 }' 1_Inputfiles/Experiment1.txt
+```
 
 
+## AWK and variables
+######################
+
+awk provides a "-v" option to pass arguments. Using this, we can pass the shell variable to it
+
+``````{bash class.source = 'fold-show', eval=FALSE}
+#define variable 
+x=3
+
+#add 3 to our third column
+awk -v val=$x '{print $0"-->"$3+val}' 1_Inputfiles/Experiment1.txt
+```
 
 
 ###################################################################################
@@ -417,14 +763,23 @@ awk 'BEGIN{FS="\t"; OFS="\t"}{if(NR==3) $2="P"} {print $0 }' 1_Inputfiles/Experi
 ###################################################################################
 ###################################################################################
 
-
-## Basics
+### use Arithmetic operators 
 ######################
 
-With awk we can add/substract ... values. The benefit over excel is that it works extremely fast.
+```{bash class.source = 'fold-show', eval=FALSE}
+awk 'BEGIN {a = 50; b = 20; print "(a + b) = ", (a + b)}'
 
-```{bash, highlight=TRUE, eval=FALSE} 
+awk 'BEGIN {a = 50; b = 20; print "(a - b) = ", (a - b)}'
+	
+awk 'BEGIN {a = 50; b = 20; print "(a * b) = ", (a * b)}'
 
+awk 'BEGIN {a = 50; b = 20; print "(a / b) = ", (a / b)}'
+```
+
+We can also use this on our data tables like this:
+
+
+```{bash class.source = 'fold-show', eval=FALSE}
 #add the values of the 3rd and 4th column
 awk '{print $3+$4}' 1_Inputfiles/Experiment1.txt
 
@@ -440,31 +795,42 @@ awk '{print $3*$4}' 1_Inputfiles/Experiment1.txt
 ## Using variables
 ######################
 
-### basics
+## Using one variable 
 
 Here, we create a variable named **SUM** that stores added values of the 3rd and 4th column. We can use this variable for printing.
 
-```{bash, highlight=TRUE, eval=FALSE}
+```{bash class.source = 'fold-show', eval=FALSE}
 awk '{SUM=$3+$4}{print $1,$2,SUM}' 1_Inputfiles/Experiment1.txt
 ```
 
-### creating several variables
+
+**Exercise**
+
+- Substract column 3 from colum 4 and store the result in a variable with the name 'diff'. Print the second columnd and diff
+
+```{bash class.source = 'fold-hide', eval=FALSE}
+awk '{diff=$4-$3}{print $2,diff}' 1_Inputfiles/Experiment1.txt
+```
+
+
+
+### Using several variables
 
 Here, we again create the variable **SUM**. Then, we run a second command (using the semicolon) and add a 1 to the values stored in **SUM** and create a new variable named **SUM2**
 
-```{bash, highlight=TRUE, eval=FALSE}
+```{bash class.source = 'fold-show', eval=FALSE}
 awk '{SUM=$3+$4;SUM2=SUM+1}{print $1,$2,SUM,SUM2}' 1_Inputfiles/Experiment1.txt
 ```
 
-In a more useful way we can use this to create basic functions and for example calculate the average and just print that
+In a more useful way we can use this to create basic functions and for example calculate the average and  print it:
 
-```{bash, highlight=TRUE, eval=FALSE}
+```{bash class.source = 'fold-show', eval=FALSE}
 awk '{SUM = $3+$4; avg = SUM/2}{print $1,$2,avg}' 1_Inputfiles/Experiment1.txt
 ```
 
 
 
-### Summarizing across columns
+### Summarizing data across columns
 
 <p align="left">
   <img src="/Users/ninadombrowski/Desktop/WorkingDir/Notebooks/Pictures/Row_v_Column.png">
@@ -478,7 +844,7 @@ Now, we want to add all the values of the third column together:
 - **END** =  Execute the 1st action block until the end of the file is reached = marks the end of action block 1
 
 
-```{bash, highlight=TRUE, eval=FALSE}
+```{bash class.source = 'fold-show', eval=FALSE}
 #using the variable SUM
 awk '{SUM+=$3}END{print SUM}' 1_Inputfiles/Experiment1.txt
 
@@ -486,15 +852,15 @@ awk '{SUM+=$3}END{print SUM}' 1_Inputfiles/Experiment1.txt
 awk '{New_name+=$3}END{print New_name}' 1_Inputfiles/Experiment1.txt
 
 #add sum text to the results
-awk '{SUM+=$4}END{print "The result is",SUM}' 1_Inputfiles/Experiment1.txt
+awk '{SUM+=$3}END{print "The result is",SUM}' 1_Inputfiles/Experiment1.txt
 
-#also here we can combine two actions into one command
+#also here we can combine two actions into one command, i.e. summarize the 3rd and 4th column
 awk '{SUM_Col3+=$3;SUMCol4+=$4}END{print SUM_Col3,SUMCol4}' 1_Inputfiles/Experiment1.txt
 ```
 
 If we do not use **END** this gets messed up, so be careful. Basically without this variable, we consecutively add values within the column and print the individual values. You can check this unwanted behaviour with the code below.
 
-```{bash, highlight=TRUE, eval=FALSE}
+```{bash class.source = 'fold-show', eval=FALSE}
 #not using END
 awk '{New_name+=$3}{print New_name}' 1_Inputfiles/Experiment1.txt
 ```
@@ -517,22 +883,48 @@ New elements to keep in mind:
 - **print SUM[i]** =  print each calculated sum stored in the array
 
 
-```{bash, highlight=TRUE, eval=FALSE} 
+```{bash class.source = 'fold-show', eval=FALSE}
 #using the default categories
 awk '{SUM[$2]+=$3}END{for(i in SUM) print i,SUM[i]}' 1_Inputfiles/Experiment1.txt
 
 #combining control1 and control2 into one categorie (we use pipes again, Notice we can use pipes to combine different progamms)
-sed 's/control[12]/control/g' 1_Inputfiles/Experiment1.txt | awk '{SUM[$2]+=$4}END{for(i in SUM)
-print i,SUM[i]}'
+sed 's/control[12]/control/g' 1_Inputfiles/Experiment1.txt | awk '{SUM[$2]+=$4}END{for(i in SUM)print i,SUM[i]}'
 ```
 
 
 
-### Using the FILENAME variable
+### Using the build in variables
+
+
+#### The NF command
+
+The NF command is used to keep a count of the fields within the current input record. 
+
+```{bash class.source = 'fold-show', eval=FALSE}
+awk '{print  $0"-->"NF;}' 1_Inputfiles/Experiment1.txt
+```
+
+**Question**
+
+Why does the 3 row have 6 fields?
+
+[Remember that awk usually sees both space and tab as field separator. So without specifying the tab as unique separator, `#contamination yellow_discoloration?` is seen as two separate fields.]{.spoiler}
+
+
+#### The NR command
+
+NR gives you the total number of records being processed or line number.
+
+```{bash class.source = 'fold-show', eval=FALSE}
+awk '{print $0"-->"NR;}' 1_Inputfiles/Experiment1.txt
+```
+
+
+#### The Filename command
 
 While this is not math this is incredibly useful if you have thousands of files that you want to merge (as long as you can distinguish them by the file name). For example, if we have the 100 different files with measurements from different 1_Inputfiles/Experiments, we can combine them into one document as long as they have the same layout in terms of nr. of columns and a useful header
 
-```{bash, highlight=TRUE, eval=FALSE}
+```{bash class.source = 'fold-show', eval=FALSE}
 awk '{print FILENAME,$0}' 1_Inputfiles/Experiment1.txt
 
 ```
@@ -546,37 +938,55 @@ With our example we would get something like this:
 
 Since, the **.txt** is not pretty we can also remove it by using gsub and a pipe. Pipes are explained in the general notebook but basically allow to combine two commands into one.
 
-```{bash, highlight=TRUE, eval=FALSE}
+```{bash class.source = 'fold-show', eval=FALSE}
 awk '{print FILENAME,$0}' 1_Inputfiles/Experiment1.txt | awk '{gsub(/.txt/,"")}{print $0}'
 ```
 
 
 
+#### The FNR command
 
-## Using Operators
-######################
+When awk reads from the multiple input file, awk NR variable will give the total number of records relative to all the input file. Awk FNR will give you number of records for each input file.
 
-### use Arithmetic operators 
-######################
-```{bash, highlight=TRUE, eval=FALSE}
-awk 'BEGIN {a = 50; b = 20; print "(a + b) = ", (a + b)}'
-
-awk 'BEGIN {a = 50; b = 20; print "(a - b) = ", (a - b)}'
-	
-awk 'BEGIN {a = 50; b = 20; print "(a * b) = ", (a * b)}'
-
-awk 'BEGIN {a = 50; b = 20; print "(a / b) = ", (a / b)}'
+```{bash class.source = 'fold-show', eval=FALSE}
+awk '{print FILENAME, FNR;}' 1_Inputfiles/Experiment1.txt 1_Inputfiles/Metadata 
 ```
 
 
 
+### Dealing with headers
+######################
+
+Sometimes dealing with headers can be a challenging since they are an extra column we might want to exclude if we for example want to summarize data. Now that we now about special variables, we can deal with this, for example in the `Experiment2.txt` file that comes with a header
+
+```{bash class.source = 'fold-show', eval=FALSE}
+#check how the file looks like
+head 1_Inputfiles/Experiment2.txt
+
+#remove the header
+awk 'NR!=1{print $0}' 1_Inputfiles/Experiment2.txt
+```
+
+**Exercise**
+
+- For Experiment2.txt calculate the sum of the third plus the fourth column. Do this with and without removing the header
+
+```{bash class.source = 'fold-hide', eval=FALSE}
+awk 'NR!=1{SUM=$3+$4}{print $1,$2,SUM}' 1_Inputfiles/Experiment2.txt
+
+awk '{SUM=$3+$4}{print $1,$2,SUM}' 1_Inputfiles/Experiment2.txt
+
+```
+
+
 ### use Increment and decrement operators
 ######################
+
 - ++a : increments the value of an operand by ‘1’. first increments the value of the operand, then returns the incremented value.
 - a++: first returns the value of the operand, then it decrements its value 
 - Printf = allows more option for printing
 
-```{bash, highlight=TRUE, eval=FALSE}
+```{bash class.source = 'fold-show', eval=FALSE}
 awk 'BEGIN {a = 10; b = ++a; print b}'
 
 awk 'BEGIN {a = 10; b = ++a; printf "a = %d, b = %d\n", a, b}'
@@ -586,30 +996,26 @@ awk 'BEGIN {a = 10; b = --a; printf "a = %d, b = %d\n", a, b}'
 awk 'BEGIN {a = 10; b = a--; printf "a = %d, b = %d\n", a, b}'
 ```
 
+We could for example tell awk to count the number of lines in which a specified pattern is matched and then output that ‘count’. For example, lets count how often we did control measurements?
 
-### use Relational operators
-######################
-- != unequal
-
-```{bash, highlight=TRUE, eval=FALSE}
-awk 'BEGIN {a = 10; b = 10; if (a == b) print "a==b"}'
-
-awk 'BEGIN {a = 10; b = 20; if (a != b) print "a = "a,"b = "b,"therefore", "a!=b"}'
-	
-awk 'BEGIN {a = 10; b = 20; if (a <= b) print "a<=b"}'
-
-awk 'BEGIN {a = 10; b = 10; if (a < b) print "a==b"; else print "false"}'
+```{bash class.source = 'fold-show', eval=FALSE}
+awk '/control/{++cnt} END {print "Count = ", cnt}'  1_Inputfiles/Experiment1.txt
 ```
 
-### Only print data if a condition is met
-######################
+**Exercise**
 
-```{bash, highlight=TRUE, eval=FALSE}
-#count lines where the length of column 2 is larger than 4
-awk 'length($2) > 4' marks.txt
+- Count how often the experiment was good
+- Count how many control measurements and how many nitrogen measurements we have. Do not forget about your semicolons.
+
+
+```{bash class.source = 'fold-hide', eval=FALSE}
+#qst1
+awk '/good/{++cnt} END {print "Count = ", cnt}'  1_Inputfiles/Experiment1.txt
+
+#qst2
+awk '/control/{++cnt_c};/N/{++cnt_n} END {print "Count control = ", cnt_c, "Count nitrogen = ", cnt_n}'  1_Inputfiles/Experiment1.txt
 
 ```
-
 
 
 
@@ -630,14 +1036,14 @@ New things to learn:
 - **a[$1]** =  We use the 1st Column of 1_Inputfiles/Metadata as our KEY = do we find the ‘Ex1’ in 1_Inputfiles/Metadata also in 1_Inputfiles/Experiment1.txt?
 - **a[$1]=$0** =  in 1_Inputfiles/Metadata use first column as key AND store the info from all the columns. If we only would want to have the fourth column we could use **a[$1]=$4**
 
-```{bash, highlight=TRUE, eval=FALSE}
+```{bash class.source = 'fold-show', eval=FALSE}
 awk 'FNR==NR{a[$1]=$0;next}{print $0,a[$1]}' 1_Inputfiles/Metadata 1_Inputfiles/Experiment1.txt
 ```
 
 
 If you are interested in how the first command works **FNR==NR** we can break this down to
 
-```{bash, highlight=TRUE, eval=FALSE}
+```{bash class.source = 'fold-show', eval=FALSE}
 awk '{print "NR:", NR " FNR:", FNR}' 1_Inputfiles/Metadata 1_Inputfiles/Experiment1.txt
 ```
 
@@ -654,11 +1060,112 @@ and print in one go.
 
 Below you can test what happens if we do not use **next**
 
-```{bash, highlight=TRUE, eval=FALSE}
+```{bash class.source = 'fold-show', eval=FALSE}
 #example without using next
 awk 'FNR==NR{a[$1]=$0}{print $0,a[$1]}' 1_Inputfiles/Metadata 1_Inputfiles/Experiment1.txt`
 ```
 
 The KEY **a[$1]** is important as it tells awk were to look for a common pattern that can be used for merging. In this example, both columns have **Ex1** in the first column. If we use the second column, that has no common pattern, nothing would be merged.
 
+
+
+
+
+###################################################################################
+###################################################################################
+# AWK and sed
+###################################################################################
+###################################################################################
+
+AWK and sed generally work nicely together and we can combine these two programs for our purposes using the ``|`` symbol.
+
+As an example, lets assume we already have a sed script ready that replaces the names for the states in ``cat 1_Inputfiles/nameState`` and we can use this script to pipe it into awk. Before running the command, make sure to have a look at the sed script to understand what is happening.
+
+```{bash class.source = 'fold-show', eval=FALSE}
+#check the sed script
+head 1_Inputfiles/nameState
+```
+
+We can see that we defined several lines of search and replace patterns. I.e we want sed to
+
+- replace ` MA` with `Massachusetts`
+- replace ` PA` with `Pennsylvania`
+- and so on...
+
+
+So we prepared a file with several search and replace patterns, which we can feed into sed with `-f`
+
+```{bash class.source = 'fold-show', eval=FALSE}
+#clean up the state names
+sed -f 1_Inputfiles/nameState 1_Inputfiles/list
+```
+
+If we use our pipes we can then use awk to only print the state names
+
+```{bash class.source = 'fold-show', eval=FALSE}
+#print the state names only
+sed -f 1_Inputfiles/nameState 1_Inputfiles/list | awk -F, '{print $4}'
+```
+
+In this example, awk is processing the output produced by the sed script.
+
+
+
+###################################################################################
+###################################################################################
+# AWK scripts
+###################################################################################
+###################################################################################
+
+Same as for sed, we can write awk scripts if your commands get more complicated.
+
+For example we ant to make a list for each state that lists who lives in that state
+
+For example, we can store a script that we open with ``nano byState`` and inside the script we store the following lines:
+
+```{bash class.source = 'fold-show', eval=FALSE}
+#! /bin/sh
+awk -F, '{print $4 ", " $0}' $* |
+sort |
+awk -F, '
+$1 == LastState{print "\t" $2}
+$1 != LastState{LastState = $1
+      print $1
+      print "\t" $2}
+'
+```
+
+We execute this script like this:
+
+```{bash class.source = 'fold-show', eval=FALSE}
+sed -f 1_Inputfiles/nameState 1_Inputfiles/list | sh byState  
+```
+
+To try to dissect things it is always useful to split a script apart, i.e. we can run the first lines like this
+
+```{bash class.source = 'fold-show', eval=FALSE}
+#step1
+sed -f 1_Inputfiles/nameState 1_Inputfiles/list | awk -F, '{print $4 ", " $0}' 
+
+#step2
+sed -f 1_Inputfiles/nameState 1_Inputfiles/list | awk -F, '{print $4 ", " $0}' | sort 
+
+#step3
+sed -f 1_Inputfiles/nameState 1_Inputfiles/list | awk -F, '{print $4 ", " $0}' | sort | awk -F, '$1 == LastState{print "\t" $2}$1 != LastState{LastState = $1;print $1; print "\t" $2}'
+
+
+```
+
+We see that the script:
+
+1. Adjust the state name (that is the sed part is doing this)
+2. We put the state name into the first column
+3. We sort by the different states
+
+
+In the second part of the command, we do some programming:
+
+1. We look at the first field of each record (the state) and we check if it is the same as in the previous record.
+2. If they are not the same, the name of the state is printed followed by the persons name
+3. If they are the same then only the persons name is printed
 
