@@ -1,0 +1,46 @@
+---
+title: "Welcome"
+---
+
+This tutorial shows you how to work with tables and other text files on the command line with two small tools: AWK and sed. You use them to select rows and columns, to calculate sums and means, to clean up names, and to combine information from two files. You will try every command on real biological data, a table with plant growth measurements and a set of 16S sequences.
+
+## What are AWK and sed?
+
+**AWK** is a small programming language made for tables. It reads a file one line at a time and splits each line into **fields**, the separate values in a line, like the cells in one row of a spreadsheet. You then tell AWK what to do with these fields, for example "print the second and fourth column" or "keep only the rows where the root length is above 50". The name comes from the initials of its three authors: Aho, Weinberger and Kernighan.
+
+**sed** (short for "stream editor") reads a file one line at a time and changes the text on the fly. You use it mostly to search and replace, for example to shorten a long sequence name, or to delete lines you do not need.
+
+Both tools come with almost every Linux and Mac system, they work on files of any size, and they need only one line of code for many everyday tasks. That is why you meet them in many bioinformatics scripts and tutorials.
+
+## Why learn this when an LLM can write it?
+
+LLMs (large language models, such as ChatGPT or Claude) are good at writing AWK and sed commands. So this tutorial does not aim to make you write long AWK programs from memory. Instead, after this tutorial you should be able to:
+
+- **read** a short AWK or sed command, and say what it does
+- **check** whether it does what you asked for, on your own data
+- **adapt** it, for example to use another column or another file
+- **recognize the common traps**, where a command runs without an error but gives the wrong result
+
+The last point matters most. A command that fails with an error message is easy to notice. A command that quietly skips a few rows, or treats a missing value as a zero, is not.
+
+## What you will do
+
+1. **AWK on a table**: print and select columns and rows, add a column, and calculate counts and means per group
+2. **sed basics**: search and replace text, delete lines, and change a file safely
+3. **AWK and sed on FASTA files**: count sequences, measure their lengths, clean up sequence names, and add information from a second file
+4. **Checking code from an LLM**: a short routine to test any AWK or sed command before you trust its output
+
+## Before you start
+
+You need:
+
+- **A terminal and the command line basics.** This tutorial assumes you have worked through the [basics of the CLI workshop](https://ndombrowski.github.io/cli_workshop/source/bash_intro.html): moving around with `cd` and `ls`, looking at files with `head` and `wc`, and combining commands with a pipe (`|`). It also helps if you have used `grep` and `cut`. If you have never opened a terminal, start with [Before you start](https://ndombrowski.github.io/cli_workshop/source/installation.html) of the CLI workshop.
+- **Your own computer.** All commands are meant to run on your laptop. If you already know how to use Crunchomics, the UvA computer cluster, you can also work there (see the [HPC pages of the CLI workshop](https://ndombrowski.github.io/cli_workshop/source/hpc_intro.html)).
+- **The example data.** <!-- DRAFT: how readers get the data is decided in step 3 (PLAN.md). -->
+
+::: {.callout-important title="AWK and sed are not the same on every computer"}
+There are several versions of AWK and sed. Linux systems and Crunchomics usually have the GNU versions, Macs have different (BSD) versions, and the terminal in MobaXterm may have yet another one. Most commands in this tutorial work everywhere, and where a command behaves differently, the page says so.
+<!-- DRAFT: not tested yet. Check in step 7 (PLAN.md) which platforms were tested, and adapt this box. -->
+:::
+
+Start with [AWK on a table](source/awk_table.qmd).

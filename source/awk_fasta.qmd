@@ -1,0 +1,6 @@
+---
+title: "AWK and sed on FASTA files"
+engine: knitr
+---
+
+To be written (PLAN.md, step 6).

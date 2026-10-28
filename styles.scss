@@ -1,0 +1,217 @@
+/*-- scss:defaults --*/
+
+// Colours for the exercise (question) and answer boxes, taken from the MicEco2025 course
+$exercise-border-color: #7e57c2 !default;   /* purple vertical bar */
+$exercise-header-light: #f3e8ff !default;   /* light purple header, light theme */
+$exercise-header-dark: #3b2a5c !default;    /* dark purple header, dark theme */
+
+// Colours for the notebook checkpoint boxes (blue, so they look different from the exercises and the green tips)
+$notebook-border-color: #1976d2 !default;   /* blue vertical bar */
+$notebook-header-light: #e3f2fd !default;   /* light blue header, light theme */
+$notebook-header-dark: #123a63 !default;    /* dark blue header, dark theme */
+
+// Colours for the tab headers of a tabset (::: {.panel-tabset}), cyan like the code block border
+$tab-accent-color: #31BAE9 !default;        /* top bar of the open tab */
+$tab-active-light: #e0f5fc !default;        /* open tab, light theme */
+$tab-inactive-light: #f1f1f1 !default;      /* closed tab, light theme */
+$tab-active-dark: #0f4a5e !default;         /* open tab, dark theme */
+$tab-inactive-dark: #2a2a2a !default;       /* closed tab, dark theme */
+
+// Colours for the "if something went wrong" boxes (orange, only opened when a check fails)
+$fix-border-color: #ef6c00 !default;        /* orange vertical bar */
+$fix-header-light: #fff3e0 !default;        /* light orange header, light theme */
+$fix-header-dark: #5d3a12 !default;         /* dark orange header, dark theme */
+
+
+
+/*-- scss:rules --*/
+
+// Space and a thin line between the page title and the first paragraph
+#title-block-header {
+  margin-bottom: 2rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.4);
+}
+
+// Exercise and answer boxes, used as:
+// ::: {.callout-question .callout-warning collapse="false" title="Exercise"}
+// ::: {.callout-answer .callout-warning collapse="true" title="Click me to see an answer"}
+div.callout-question.callout,
+div.callout-answer.callout {
+  border-left: 4px solid $exercise-border-color;
+
+  .callout-title-container {
+    color: #333333;
+    font-weight: 600;
+  }
+
+  .callout-icon {
+    display: inline-block !important;
+    width: 1.2rem;
+    line-height: 1.6rem;
+    text-align: center;
+    margin-right: 0.6rem;
+  }
+
+  .callout-icon::before {
+    font-size: 1.2rem;
+  }
+
+  &.callout-style-default > .callout-header {
+    background-color: $exercise-header-light;
+  }
+}
+
+div.callout-question.callout .callout-icon::before {
+  content: "🟪";
+}
+
+div.callout-answer.callout .callout-icon::before {
+  content: "☑️";
+}
+
+// Notebook checkpoint boxes, used as:
+// ::: {.callout-notebook .callout-note collapse="false" title="Notebook checkpoint: ..."}
+// with a nested answer box: ::: {.callout-notebook-answer .callout-note collapse="true" title="Compare with my notes"}
+div.callout-notebook.callout,
+div.callout-notebook-answer.callout {
+  border-left: 4px solid $notebook-border-color;
+
+  .callout-title-container {
+    color: #333333;
+    font-weight: 600;
+  }
+
+  .callout-icon {
+    display: inline-block !important;
+    width: 1.2rem;
+    line-height: 1.6rem;
+    text-align: center;
+    margin-right: 0.6rem;
+  }
+
+  .callout-icon::before {
+    font-size: 1.2rem;
+  }
+
+  &.callout-style-default > .callout-header {
+    background-color: $notebook-header-light;
+  }
+}
+
+div.callout-notebook.callout .callout-icon::before {
+  content: "📓";
+}
+
+div.callout-notebook-answer.callout .callout-icon::before {
+  content: "📝";
+}
+
+// "If something went wrong" boxes, closed by default, used as:
+// ::: {.callout-fix .callout-caution collapse="true" title="If ...: what to check"}
+div.callout-fix.callout {
+  border-left: 4px solid $fix-border-color;
+
+  .callout-title-container {
+    color: #333333;
+    font-weight: 600;
+  }
+
+  .callout-icon {
+    display: inline-block !important;
+    width: 1.2rem;
+    line-height: 1.6rem;
+    text-align: center;
+    margin-right: 0.6rem;
+  }
+
+  .callout-icon::before {
+    font-size: 1.2rem;
+  }
+
+  &.callout-style-default > .callout-header {
+    background-color: $fix-header-light;
+  }
+}
+
+// Quarto draws its own caution icon as a background image with a 1rem size,
+// so remove that image and let the emoji set its own size
+div.callout-fix.callout .callout-icon::before {
+  content: "🧰";
+  background-image: none !important;
+  width: auto !important;
+  height: auto !important;
+  // the toolbox emoji sits a bit low next to the title, so move it up slightly
+  position: relative;
+  top: -0.1rem;
+}
+
+// Tab headers of a tabset, used as:
+// ::: {.panel-tabset}
+// ### First tab title
+// ...
+// :::
+// The open tab is coloured and bold, the closed tabs are grey
+.panel-tabset .nav-tabs .nav-link {
+  background-color: $tab-inactive-light;
+  color: #555555;
+  border-top: 3px solid transparent;
+  margin-right: 0.25rem;
+}
+
+.panel-tabset .nav-tabs .nav-link:hover {
+  color: #222222;
+  border-top-color: lighten($tab-accent-color, 20%);
+}
+
+.panel-tabset .nav-tabs .nav-link.active {
+  background-color: $tab-active-light;
+  color: #222222;
+  font-weight: 600;
+  border-top: 3px solid $tab-accent-color;
+}
+
+// Dark theme: darker header and light title text
+body.quarto-dark {
+  div.callout-question.callout,
+  div.callout-answer.callout {
+    .callout-title-container {
+      color: #f0e8ff;
+    }
+
+    &.callout-style-default > .callout-header {
+      background-color: $exercise-header-dark;
+    }
+  }
+
+  div.callout-notebook.callout,
+  div.callout-notebook-answer.callout {
+    .callout-title-container {
+      color: #e3f2fd;
+    }
+
+    &.callout-style-default > .callout-header {
+      background-color: $notebook-header-dark;
+    }
+  }
+
+  div.callout-fix.callout {
+    .callout-title-container {
+      color: #fff3e0;
+    }
+
+    &.callout-style-default > .callout-header {
+      background-color: $fix-header-dark;
+    }
+  }
+
+  .panel-tabset .nav-tabs .nav-link {
+    background-color: $tab-inactive-dark;
+    color: #bbbbbb;
+  }
+
+  .panel-tabset .nav-tabs .nav-link.active {
+    background-color: $tab-active-dark;
+    color: #ffffff;
+  }
+}

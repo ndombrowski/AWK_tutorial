@@ -1,0 +1,39 @@
+project:
+  type: website
+  # Write the rendered website to docs/, so GitHub Pages can serve it from there
+  output-dir: docs
+  # Only render the .qmd pages, so README.md, CLAUDE.md, PLAN.md and the old
+  # AWK_tutorial.Rmd do not become pages
+  render:
+    - "*.qmd"
+
+website:
+  title: "Working with tables using AWK and sed"
+  site-url: https://ndombrowski.github.io/AWK_tutorial/
+  page-navigation: true
+  sidebar:
+    style: "docked"
+    search: true
+    # GitHub icon in the sidebar, links to the repository
+    tools:
+      - icon: github
+        href: https://github.com/ndombrowski/AWK_tutorial
+    contents:
+      - index.qmd
+      - source/awk_table.qmd
+      - source/sed_basics.qmd
+      - source/awk_fasta.qmd
+      - source/check_llm_code.qmd
+
+format:
+  html:
+    theme:
+      light: [lumen, styles.scss]
+      dark: [cyborg, styles.scss]
+    toc: true
+    code-copy: true
+
+engine: knitr
+execute:
+  freeze: auto
+  eval: false
