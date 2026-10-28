@@ -12,6 +12,14 @@ This tutorial shows you how to work with tables and other text files on the comm
 
 Both tools come with almost every Linux and Mac system, they work on files of any size, and they need only one line of code for many everyday tasks. That is why you meet them in many bioinformatics scripts and tutorials.
 
+## Why not just use Excel or R?
+
+For statistics and plots, R or Python are the better tools. But for many smaller jobs, AWK and sed have some real advantages:
+
+- **You keep a record of what you did.** A command can be saved in a script or a notebook, and run again on new data. A table that you change by hand in Excel leaves no record, and Excel sometimes changes your data without asking: it is known to turn gene names such as `SEPT2` into dates.
+- **The same step works on many files.** Together with a `for` loop, one command can clean the names in 50 FASTA files, or take one column from 200 sample tables.
+- **Nothing to install.** AWK and sed are already on your computer and on most computer clusters, so you do not need packages or extra software.
+
 ## Why learn this when an LLM can write it?
 
 LLMs (large language models, such as ChatGPT or Claude) are good at writing AWK and sed commands. So this tutorial does not aim to make you write long AWK programs from memory. Instead, after this tutorial you should be able to:
@@ -36,7 +44,7 @@ You need:
 
 - **A terminal and the command line basics.** This tutorial assumes you have worked through the [basics of the CLI workshop](https://ndombrowski.github.io/cli_workshop/source/bash_intro.html): moving around with `cd` and `ls`, looking at files with `head` and `wc`, and combining commands with a pipe (`|`). It also helps if you have used `grep` and `cut`. If you have never opened a terminal, start with [Before you start](https://ndombrowski.github.io/cli_workshop/source/installation.html) of the CLI workshop.
 - **Your own computer.** All commands are meant to run on your laptop. If you already know how to use Crunchomics, the UvA computer cluster, you can also work there (see the [HPC pages of the CLI workshop](https://ndombrowski.github.io/cli_workshop/source/hpc_intro.html)).
-- **The example data.** <!-- DRAFT: how readers get the data is decided in step 3 (PLAN.md). -->
+- **The example data.** You download it at the start of the first page, with two commands. It is small (about 10 kB), so it fits on any laptop.
 
 ::: {.callout-important title="AWK and sed are not the same on every computer"}
 There are several versions of AWK and sed. Linux systems and Crunchomics usually have the GNU versions, Macs have different (BSD) versions, and the terminal in MobaXterm may have yet another one. Most commands in this tutorial work everywhere, and where a command behaves differently, the page says so.
