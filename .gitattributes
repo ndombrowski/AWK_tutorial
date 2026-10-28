@@ -1,0 +1,2 @@
+# Keep the example data byte-for-byte as committed: git must not change line endings here
+data/** -text
