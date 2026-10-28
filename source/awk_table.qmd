@@ -31,12 +31,12 @@ tar -xzf awk_data.tar.gz
 # Check: you should see awk_data and awk_data.tar.gz
 ls
 
-# Check: you should see 14 files
+# Check: you should see 15 files
 ls awk_data
 ls awk_data | wc -l
 ```
 
-On this page you only need `Growth_Data.txt`. The other files are 16S sequences and two small tables, which you use on later pages.
+On this page you only need `Growth_Data.txt`. The other files are 16S sequences, two small tables, and a second version of the growth table, which you use on later pages.
 
 ::: {.callout-warning title="Draft note"}
 The download link is not tested yet: the data is not on GitHub yet. The other commands were tested on a copy of the same file.
@@ -279,9 +279,7 @@ But there is an important difference: `grep` searches the whole line, not one co
 
 ```{bash}
 grep '13' awk_data/Growth_Data.txt | wc -l
-
-# Which lines does grep find that are not 13C?
-grep '13' awk_data/Growth_Data.txt | awk -F'\t' '$2 != "13C"' | head -3
+grep '13' awk_data/Growth_Data.txt | head -3
 ```
 
 This prints:
@@ -294,7 +292,7 @@ low_P	mock	ex61	48.7	13.9
 low_P	mock	ex64	46.93	13.52
 ```
 
-In total this command gives us 36 extra lines, because `13` also appears in shoot weights such as 13.3. In contrast, AWK compares only column 2, so this cannot happen making this a much safer command. The second command also shows `!=`, which means "is not equal to".
+In total this command gives us 36 extra lines, because `13` also appears in shoot weights such as 13.3. The first lines grep finds are not even `13C` plants, but `mock` plants with such a shoot weight. In contrast, AWK compares only column 2, so this cannot happen making this a much safer command.
 
 ## Keep rows by number
 
@@ -414,7 +412,7 @@ This prints:
 Altogether, this tells us that AWK did not give an error but it did something we didn't really want. It compared the empty field with 10 as text, and empty text counts as smaller than anything. So all 15 plants without a root length passed the filter `$4 < 10`. In calculations, AWK will treat an empty field as 0, as you see further down.
 
 ::: {.callout-important title="Important: skip empty fields before you compare or calculate"}
-Before you compare or calculate with a column, keep only the rows that have a value in it, with `$4 != ""`:
+Before you compare or calculate with a column, keep only the rows that have a value in it, with `$4 != ""`. `!=` means "is not equal to", and `""` is empty text, so `$4 != ""` means "column 4 is not empty":
 
 ```{bash}
 awk -F'\t' 'NR > 1 && $4 != "" && $4 < 10' awk_data/Growth_Data.txt | wc -l

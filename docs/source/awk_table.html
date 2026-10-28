@@ -423,11 +423,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Check: you should see awk_data and awk_data.tar.gz</span></span>
 <span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span></span>
 <span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Check: you should see 14 files</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Check: you should see 15 files</span></span>
 <span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> awk_data</span>
 <span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> awk_data <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>On this page you only need <code>Growth_Data.txt</code>. The other files are 16S sequences and two small tables, which you use on later pages.</p>
+<p>On this page you only need <code>Growth_Data.txt</code>. The other files are 16S sequences, two small tables, and a second version of the growth table, which you use on later pages.</p>
 <div class="callout callout-style-default callout-warning callout-titled" title="Draft note">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -647,9 +647,7 @@ low_P mock ex61 38 6.8
 <p>But there is an important difference: <code>grep</code> searches the whole line, not one column. If you search for <code>13</code> and you get more lines:</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="st">'13'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Which lines does grep find that are not 13C?</span></span>
-<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="st">'13'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$2 != "13C"'</span> <span class="kw">|</span> <span class="fu">head</span> <span class="at">-3</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="st">'13'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">head</span> <span class="at">-3</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>211
@@ -657,7 +655,7 @@ low_P mock ex61 38 6.8
 low_P   mock    ex61    55.3    13.3
 low_P   mock    ex61    48.7    13.9
 low_P   mock    ex64    46.93   13.52</code></pre>
-<p>In total this command gives us 36 extra lines, because <code>13</code> also appears in shoot weights such as 13.3. In contrast, AWK compares only column 2, so this cannot happen making this a much safer command. The second command also shows <code>!=</code>, which means “is not equal to”.</p>
+<p>In total this command gives us 36 extra lines, because <code>13</code> also appears in shoot weights such as 13.3. The first lines grep finds are not even <code>13C</code> plants, but <code>mock</code> plants with such a shoot weight. In contrast, AWK compares only column 2, so this cannot happen making this a much safer command.</p>
 </section>
 </section>
 <section id="keep-rows-by-number" class="level2">
@@ -775,7 +773,7 @@ high_P^Imock^Iex64^I^I26$</code></pre>
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Before you compare or calculate with a column, keep only the rows that have a value in it, with <code>$4 != ""</code>:</p>
+<p>Before you compare or calculate with a column, keep only the rows that have a value in it, with <code>$4 != ""</code>. <code>!=</code> means “is not equal to”, and <code>""</code> is empty text, so <code>$4 != ""</code> means “column 4 is not empty”:</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR &gt; 1 &amp;&amp; $4 != "" &amp;&amp; $4 &lt; 10'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
