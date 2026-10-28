@@ -4,9 +4,11 @@ title: "Welcome"
 
 This tutorial shows you how to work with tables and other text files on the command line with two small tools: AWK and sed. You use them to select rows and columns, to calculate sums and means, to clean up names, and to combine information from two files. You will try every command on real biological data, a table with plant growth measurements and a set of 16S sequences.
 
+**Important: This tutorial is still work in progress, missing chapters will be added over time**
+
 ## What are AWK and sed?
 
-**AWK** is a small programming language made for tables. It reads a file one line at a time and splits each line into **fields**, the separate values in a line, like the cells in one row of a spreadsheet. You then tell AWK what to do with these fields, for example "print the second and fourth column" or "keep only the rows where the root length is above 50". The name comes from the initials of its three authors: Aho, Weinberger and Kernighan.
+**AWK** is a small programming language made for tables. It reads a file one line at a time and splits each line into **fields**, the separate values in a line, like the cells in one row of a spreadsheet. You then tell AWK what to do with these fields, for example "print the second and fourth column" or "keep only the rows where the root length is above 50". 
 
 **sed** (short for "stream editor") reads a file one line at a time and changes the text on the fly. You use it mostly to search and replace, for example to shorten a long sequence name, or to delete lines you do not need.
 
@@ -22,7 +24,7 @@ For statistics and plots, R or Python are the better tools. But for many smaller
 
 ## Why learn this when an LLM can write it?
 
-LLMs (large language models, such as ChatGPT or Claude) are good at writing AWK and sed commands. So this tutorial does not aim to make you write long AWK programs from memory. Instead, after this tutorial you should be able to:
+LLMs (large language models, such as ChatGPT or Claude) are good at writing AWK and sed commands. So it is not the goal of this tutorial to make you write long AWK programs from memory. Instead, after this tutorial you should be able to:
 
 - **read** a short AWK or sed command, and say what it does
 - **check** whether it does what you asked for, on your own data
@@ -33,14 +35,14 @@ The last point matters most. A command that fails with an error message is easy 
 
 ## What you will do
 
-1. **AWK on a table**: print and select columns and rows, add a column, and calculate counts and means per group
-2. **sed basics**: search and replace text, delete lines, and change a file safely
-3. **AWK and sed on FASTA files**: count sequences, measure their lengths, clean up sequence names, and add information from a second file
+1. **Use AWK on a table**: print and select columns and rows, add a column, and calculate counts and means per group
+2. **Learn sed basics**: search and replace text, delete lines, and change a file safely
+3. **Use AWK and sed on FASTA files**: count sequences, measure their lengths, clean up sequence names, and add information from a second file
 4. **Checking code from an LLM**: a short routine to test any AWK or sed command before you trust its output
 
 ## Before you start
 
-You need:
+To follow this tutorial you need:
 
 - **A terminal and the command line basics.** This tutorial assumes you have worked through the [basics of the CLI workshop](https://ndombrowski.github.io/cli_workshop/source/bash_intro.html): moving around with `cd` and `ls`, looking at files with `head` and `wc`, and combining commands with a pipe (`|`). It also helps if you have used `grep` and `cut`. If you have never opened a terminal, start with [Before you start](https://ndombrowski.github.io/cli_workshop/source/installation.html) of the CLI workshop.
 - **Your own computer.** All commands are meant to run on your laptop. If you already know how to use Crunchomics, the UvA computer cluster, you can also work there (see the [HPC pages of the CLI workshop](https://ndombrowski.github.io/cli_workshop/source/hpc_intro.html)).

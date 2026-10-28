@@ -1,0 +1,15 @@
+{
+  "hash": "4cd460f31f88a6c211c66e15016f0d7d",
+  "result": {
+    "engine": "knitr",
+    "markdown": "---\ntitle: \"Checking code from an LLM\"\nengine: knitr\n---\n\nTo be written (PLAN.md, step 6).\n",
+    "supporting": [],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}

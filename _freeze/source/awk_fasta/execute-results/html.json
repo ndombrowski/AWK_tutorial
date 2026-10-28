@@ -1,0 +1,15 @@
+{
+  "hash": "cdb3f6cf4ec628fc026e30dbb4b6f0f4",
+  "result": {
+    "engine": "knitr",
+    "markdown": "---\ntitle: \"AWK and sed on FASTA files\"\nengine: knitr\n---\n\nTo be written (PLAN.md, step 6).\n",
+    "supporting": [],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}

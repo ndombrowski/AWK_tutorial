@@ -11,7 +11,7 @@ The outputs on these pages come from a Linux computer (Ubuntu in WSL). On most c
 
 ## Get the data: `curl` and `tar`
 
-All example files for this tutorial come in one file, `awk_data.tar.gz`. A `.tar.gz` file packs many files into one and compresses them, similar to a `.zip` file.
+All example files for this tutorial come in one file, `awk_data.tar.gz`. A `.tar.gz` file packs many files into one and compresses them, similar to a `.zip` file. 
 
 ```{bash}
 # Go to your home folder, and make a folder for this tutorial
@@ -44,7 +44,7 @@ The download link is not tested yet: the data is not on GitHub yet. The other co
 
 ## Look at the table first
 
-Before you run any command on a table, look at it. How many lines does it have, and what separates the columns?
+Before you run any command on a table, you want to look at it first. You at leat want to know: how many lines it has, and what separates the columns?
 
 ```{bash}
 # The first 5 lines
@@ -62,10 +62,11 @@ low_P	mock	ex61	40.4	6.6
 low_P	mock	ex61	38	6.8
 low_P	mock	ex61	74.7	8.1
 low_P	mock	ex61	34.4	8.3
+
 595 awk_data/Growth_Data.txt
 ```
 
-The table has a **header**, a first line with the column names, and 594 rows of measurements. Each row is one plant:
+We see that the table has a **header**, a first line with the column names, and 594 rows of measurements. Each row is one plant and we have the following columns:
 
 - `Nutrient`: the plant grew with low or high phosphorus (`low_P`, `high_P`)
 - `Condition`: the plant was inoculated with nothing (`mock`) or with one of two bacteria (`129E`, `13C`)
@@ -73,7 +74,7 @@ The table has a **header**, a first line with the column names, and 594 rows of 
 - `Rootlength`: root length in mm
 - `FW_shoot_mg`: shoot fresh weight in mg
 
-The columns look like they are separated by spaces. You cannot see what is really there, because spaces and tabs look the same on screen. `cat -A` shows the invisible characters:
+The columns look like they are separated by spaces. However, you cannot see what is really there, because spaces and tabs look the same on screen. `cat -A` shows the invisible characters:
 
 ```{bash}
 head -3 awk_data/Growth_Data.txt | cat -A
@@ -87,7 +88,7 @@ low_P^Imock^Iex61^I40.4^I6.6$
 low_P^Imock^Iex61^I38^I6.8$
 ```
 
-`^I` is a **tab**, and `$` marks the end of each line. So this is a **tab-separated** table. You need to know this for the next step.
+Here, `^I` is a **tab**, and `$` marks the end of each line. So this tells us that we work with a **tab-separated** table. You need to know this for the next steps.
 
 ::: {.callout-tip title="Tip: cat -A on a Mac (optional)" collapse="true"}
 <!-- DRAFT: not tested on a Mac yet (step 7 in PLAN.md). -->
@@ -103,7 +104,7 @@ awk -F'\t' 'pattern { action }' file
 ```
 
 - `-F'\t'` tells AWK that the columns are separated by tabs. `-F` stands for **field separator**. A **field** is one value in a line, like one cell in a spreadsheet row.
-- `'pattern { action }'` is the AWK program, always between single quotes. The **pattern** says which lines to work on. The **action**, between curly brackets, says what to do with them.
+- `'pattern { action }'` is the AWK program, it always needs to be between single quotes. The **pattern** says which lines to work on. The **action**, between curly brackets, says what to do with them.
 - `file` is the file AWK reads.
 
 AWK reads the file one line at a time. For each line, it checks the pattern. If the line matches, AWK runs the action. You can leave out either part: without a pattern, the action runs on every line. Without an action, AWK prints the lines that match.
@@ -216,9 +217,9 @@ low_P	mock	ex61	38	6.8
 
 These commands have only a pattern and no action, so AWK prints the lines that match. `NR > 1` skips the header and keeps all 594 rows of data. You need it often, as the next sections show.
 
-## Keep rows by text
+## Subset rows by text
 
-To keep the rows of the plants grown with low phosphorus, compare column 1 with the text `low_P`:
+To keep only the rows of the plants grown with low phosphorus, compare column 1 with the text `low_P`:
 
 ```{bash}
 awk -F'\t' '$1 == "low_P"' awk_data/Growth_Data.txt | head -3
@@ -231,15 +232,14 @@ This prints:
 low_P	mock	ex61	40.4	6.6
 low_P	mock	ex61	38	6.8
 low_P	mock	ex61	74.7	8.1
+
 300
 ```
 
 Two details matter here:
 
 - Text goes between double quotes: `"low_P"`. Without quotes, AWK reads `low_P` as the name of a **variable**, a named box that holds a value. That box is empty, so no row matches.
-- To compare, use two equal signs: `==`.
-
-One equal sign does something else and this command will put a value into a field. Note here, how AWK gives you no error message and only by inspecting the output we will see that the command is doing something different to what we wanted:
+- To compare, use two equal signs: `==`. If you would use only one equal sign this command would do something else and instead put a value into a field. Note here, how AWK gives you no error message and only by inspecting the output we will see that the command is doing something different to what we wanted:
 
 ```{bash}
 # Wrong: one = instead of two
@@ -253,6 +253,7 @@ This prints:
 low_P Condition Experiment Rootlength FW_shoot_mg
 low_P mock ex61 40.4 6.6
 low_P mock ex61 38 6.8
+
 595
 ```
 
@@ -287,6 +288,7 @@ This prints:
 
 ```
 211
+
 low_P	mock	ex61	55.3	13.3
 low_P	mock	ex61	48.7	13.9
 low_P	mock	ex64	46.93	13.52
@@ -309,10 +311,11 @@ This prints:
 Nutrient	Condition	Experiment	Rootlength	FW_shoot_mg
 low_P	mock	ex61	74.7	8.1
 low_P	mock	ex61	66.5	8.9
+
 476
 ```
 
-Important: Note how the header is in the result? Column 4 of the header is the word `Rootlength`, not a number. When a value is not a number, AWK compares it as text, and in that comparison `Rootlength` counts as larger than `50`. To avoid this we need to add `NR > 1` to skip the header. `&&` means "and": both conditions must be true.
+**Important:** Note how the header is in the result? Column 4 of the header is the word `Rootlength`, not a number. When a value is not a number, AWK compares it as text, and in that comparison `Rootlength` counts as larger than `50`. To avoid this we need to add `NR > 1` to skip the header. To combine patterns we can use `&&`, which means "and": both conditions must be true.
 
 ```{bash}
 awk -F'\t' 'NR > 1 && $4 > 50' awk_data/Growth_Data.txt | wc -l
@@ -352,6 +355,7 @@ This prints:
 
 ```
 87
+
 140
 ```
 
@@ -372,12 +376,13 @@ This prints:
 
 ```
 15
+
 high_P	mock	ex61		18.2
 high_P	mock	ex64		22.4
 high_P	mock	ex64		26
 ```
 
-15 plants, but none of them has a root length below 10. Instead you will notice that these rows have no root length at all. If we use `cat -A` this will show us exactly what is in the file for these fields:
+15 plants, but if we look at the table we notice that none of them has a root length below 10. Instead you will notice that these rows have no root length at all. If we use `cat -A` this will show us exactly what is in the file for these fields:
 
 ```{bash}
 awk -F'\t' 'NR > 1 && $4 < 10' awk_data/Growth_Data.txt | head -3 | cat -A
@@ -406,7 +411,7 @@ This prints:
 8
 ```
 
-Altogether, this tells us that AWK did not give an error. It compared the empty field with 10 as text, and empty text counts as smaller than anything. So all 15 plants without a root length passed the filter `$4 < 10`. In calculations, AWK will treat an empty field as 0, as you see further down.
+Altogether, this tells us that AWK did not give an error but it did something we didn't really want. It compared the empty field with 10 as text, and empty text counts as smaller than anything. So all 15 plants without a root length passed the filter `$4 < 10`. In calculations, AWK will treat an empty field as 0, as you see further down.
 
 ::: {.callout-important title="Important: skip empty fields before you compare or calculate"}
 Before you compare or calculate with a column, keep only the rows that have a value in it, with `$4 != ""`:
@@ -446,6 +451,7 @@ This prints:
 high_P	mock	ex61		18.2
 
 18.2
+
      23 4
     572 5
 ```
@@ -560,7 +566,7 @@ awk: cmd. line:1: (FILENAME=awk_data/Growth_Data.txt FNR=123) fatal: division by
 121 shoot_per_root.txt
 ```
 
-AWK stopped at line 123, the first row with an empty root length. That is because it treated the empty field as 0, and a division by 0 is not possible. The file `shoot_per_root.txt` still exists, but it has only 121 lines instead of 594. If you missed the error message and only looked at `head`, the file would look fine. This is why you want to make it a habit to count lines after each step.
+The error message tells us that AWK stopped at line 123: the first row with an empty root length. That is because it treated the empty field as 0, and a division by 0 is not possible. The file `shoot_per_root.txt` still exists, but it has only 121 lines instead of 594. If you missed the error message and only looked at `head`, the file would look fine. This is why you want to make it a habit to count lines after each step.
 
 To fix this, you need to skip rows with an empty root length or shoot weight, and print a header for the new column. The command now has two parts, each with its own pattern and action.
 
@@ -585,6 +591,7 @@ This prints:
 Nutrient	Condition	Experiment	Rootlength	FW_shoot_mg	shoot_per_root
 low_P	mock	ex61	40.4	6.6	0.163366
 low_P	mock	ex61	38	6.8	0.178947
+
 572 shoot_per_root.txt
 ```
 
@@ -594,13 +601,75 @@ low_P	mock	ex61	38	6.8	0.178947
 When you spread a command over several lines, the opening `{` of an action must stay on the same line as its pattern. If you move the `{` to the next line, AWK reads the pattern on its own (which prints every matching line) and the action on its own (which runs on every line). You get no error, only a different result.
 :::
 
-## Count and mean per group: arrays and `END`
+## Sum and mean of a column: variables and `END`
 
-You will notice that the commands in this section are longer than the ones before. You could do the same thing in R or Python, and you might wonder why even learn them in AWK? The reason is that in bioinformatics you often only need a quick look at your data: how many plants are in each group, and do the means look sensible? AWK gives you that answer in the terminal, without starting another program or loading the table first. On a computer cluster, where R or Python may not be set up for you, AWK is always there. And because AWK reads a file one line at a time, it also works on files that are too large to open comfortably in R or Excel. For statistics and plots, R or Python remain the better tools. AWK is for the quick check before, or for cleaning up a table before you load it there.
+You will notice that the commands from here on are longer than the ones before. You could do the same thing in R or Python, and you might wonder why even learn them in AWK? The reason is that in bioinformatics you often only need a quick look at your data: how many plants are in each group, and do the means look sensible? AWK gives you that answer in the terminal, without starting another program or loading the table first. On a computer cluster, where R or Python may not be set up for you, AWK is always there. And because AWK reads a file one line at a time, it also works on files that are too large to open comfortably in R or Excel. For statistics and plots, R or Python remain the better tools. AWK is for the quick check before, or for cleaning up a table before you load it there.
 
-One quick check that is useful to do: count the plants per nutrient level. To do this AWK needs a counter for each group also called an **array**, which is a list of named boxes. `n["low_P"]` is the box for `low_P`, `n["high_P"]` the box for `high_P`. You do not need to create them first: AWK makes a box the first time you use it, and it starts at 0.
+Start with one number: the total shoot weight of all plants. For this, AWK needs a **variable**, a named box that holds a value. You do not need to create it first: AWK makes the box the first time you use it, and it starts at 0.
 
-The name `n` is your own choice (here it as shorthand for "number of plants"). You could call the array `plants` or `count` instead, and get the same result. Names such as `NR`, `NF` and `END` are different: they belong to AWK and have a fixed meaning.
+```{bash}
+awk -F'\t' 'NR > 1 && $5 != "" { sum += $5 } END { print sum }' awk_data/Growth_Data.txt
+```
+
+This prints:
+
+```
+9715.23
+```
+
+Taken apart:
+
+- `sum += $5`: add the shoot weight of this line to the box `sum`. `+=` means "add to what is already in the box".
+- `END { print sum }`: `END` is a special pattern. Its action runs once, after AWK has read the last line. By then, `sum` holds the total.
+
+The name `sum` is your own choice. You could call it `total` or `weight` instead, and get the same result. Names such as `NR`, `NF` and `END` are different: they belong to AWK and have a fixed meaning.
+
+For the mean, you need a second box that counts the plants. Here it is called `n` (short for "number of plants"), and `n++` adds 1 to it. The `;` separates two steps inside one action:
+
+```{bash}
+awk -F'\t' '
+  NR > 1 && $5 != "" { sum += $5; n++ }
+  END                { print n, sum, sum / n }
+' awk_data/Growth_Data.txt
+```
+
+This prints the number of plants, the total and the mean:
+
+```
+586 9715.23 16.5789
+```
+
+Does 586 add up? 594 plants, minus the 8 without a shoot weight, is 586.
+
+Now leave out the rule for empty fields, and then also `NR > 1`:
+
+```{bash}
+# Without $5 != ""
+awk -F'\t' '
+  NR > 1 { sum += $5; n++ }
+  END    { print n, sum, sum / n }
+' awk_data/Growth_Data.txt
+
+# Also without NR > 1
+awk -F'\t' '
+  { sum += $5; n++ }
+  END { print n, sum, sum / n }
+' awk_data/Growth_Data.txt
+```
+
+This prints:
+
+```
+594 9715.23 16.3556
+
+595 9715.23 16.3281
+```
+
+The total is the same all three times. AWK adds an empty field as 0, and the header text `FW_shoot_mg` as 0 too, so the sum does not change. But `n` still counts these lines, so the mean drops. A total that looks right does not mean that the mean is right. Look at the count as well: you expect 586.
+
+## Count and mean per group: arrays
+
+`sum` and `n` are single boxes: each holds one value for the whole file. To count the plants per nutrient level, you need one box per group. A set of named boxes like this is called an **array**. `n["low_P"]` is the box for `low_P`, `n["high_P"]` the box for `high_P`. Just like a variable, AWK makes each box the first time you use it, and it starts at 0.
 
 ```{bash}
 awk -F'\t' '
@@ -613,6 +682,7 @@ This prints:
 
 ```
 low_P 300
+
 high_P 294
 ```
 
@@ -624,7 +694,7 @@ Taken apart:
   - `++` adds 1 to that box.
 
   So after the first `low_P` row, `n["low_P"]` is 1, after the second it is 2, and so on.
-- `END { ... }`: `END` is a special pattern. Its action runs once, after AWK has read the last line.
+- `END { ... }`: as before, this runs once, after the last line.
 - `for (group in n) { print group, n[group] }`: go through all boxes in `n`. For each box, put its name into `group`, and print the name and the count.
 
 You can check the result with tools from the CLI workshop:
@@ -641,7 +711,7 @@ This prints:
     300 low_P
 ```
 
-For a mean, you need two boxes per group: the sum of the values, and the number of values. `sum[$1] += $4` adds the root length to the sum of its group.
+For a mean per group, you do the same as for the whole file, but with one `sum` box and one `n` box per group. `sum[$1] += $4` adds the root length to the sum of its group.
 
 ```{bash}
 # Without the rule for empty fields
@@ -667,7 +737,7 @@ low_P 290 59.9477
 high_P 289 90.489
 ```
 
-The `;` separates two steps inside one action. Without the rule, AWK adds 0 for each empty root length and still counts the plant. Both means come out too low, and nothing warns you.
+Without the rule, AWK adds 0 for each empty root length and still counts the plant. Both means come out too low, and nothing warns you.
 
 ### Mean per nutrient and condition
 
@@ -738,7 +808,7 @@ mock	205	16.6
 - An AWK command has the shape `awk -F'\t' 'pattern { action }' file`.
 - `$1`, `$2`, ... are the fields of a line, `$0` the whole line, `NF` the number of fields, `NR` the line number.
 - Compare with `==`, `!=`, `>`, `<`, and combine with `&&` (and) and `||` (or). Text goes in double quotes.
-- Arrays and `END` give counts, sums and means per group.
+- A variable (`sum += $5`) and `END` give a total or a mean for the whole file; an array (`sum[$1] += $5`) gives one per group.
 - Look at the table first: `cat -A` for tabs and empty fields, `NF` for the number of fields per line.
 - Empty fields cause errors without a warning: skip them with `$4 != ""` before you compare or calculate.
 - After each step, check the result: count the lines, and look at it with `head`.

@@ -11,3 +11,6 @@ PLAN.md
 # test scripts and dummy data (checked and cleaned by hand)
 _tests/
 test_tutorial/
+
+/.quarto/
+**/*.quarto_ipynb

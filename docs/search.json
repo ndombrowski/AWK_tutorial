@@ -1,0 +1,222 @@
+[
+  {
+    "objectID": "source/sed_basics.html",
+    "href": "source/sed_basics.html",
+    "title": "sed basics",
+    "section": "",
+    "text": "To be written (PLAN.md, step 5).",
+    "crumbs": [
+      "sed basics"
+    ]
+  },
+  {
+    "objectID": "source/awk_table.html",
+    "href": "source/awk_table.html",
+    "title": "AWK on a table",
+    "section": "",
+    "text": "On this page, you use AWK on a real table with plant growth measurements. You choose columns, keep the rows you need, add a new column, and calculate means per group. Along the way, you meet the most common trap when you work with tables: missing values that quietly change your results.\nThe same commands work on any table in plain text, and many bioinformatics tools write their results that way, for example BLAST, featureCounts or a GFF annotation file. With AWK you can filter or reshape such output right away, or pass it on to the next tool with a pipe, without saving it first or opening it in R. AWK never changes the file it reads: it prints the result on the screen, or into a new file if you ask for that.\nThe outputs on these pages come from a Linux computer (Ubuntu in WSL). On most computers you get the same result. Where this is not the case, the page says so.",
+    "crumbs": [
+      "AWK on a table"
+    ]
+  },
+  {
+    "objectID": "source/awk_table.html#get-the-data-curl-and-tar",
+    "href": "source/awk_table.html#get-the-data-curl-and-tar",
+    "title": "AWK on a table",
+    "section": "Get the data: curl and tar",
+    "text": "Get the data: curl and tar\nAll example files for this tutorial come in one file, awk_data.tar.gz. A .tar.gz file packs many files into one and compresses them, similar to a .zip file.\n\n# Go to your home folder, and make a folder for this tutorial\ncd ~\nmkdir awk_tutorial\ncd awk_tutorial\n\n# Download the data\n# -L: if the link sends you on to another address, follow it\n# -O: save the file under its own name, awk_data.tar.gz\ncurl -L -O \"https://raw.githubusercontent.com/ndombrowski/AWK_tutorial/main/data/awk_data.tar.gz\"\n\n# Unpack it. Used options:\n# -x extract, -z it is compressed (.gz), -f the file name follows\ntar -xzf awk_data.tar.gz\n\n# Check: you should see awk_data and awk_data.tar.gz\nls\n\n# Check: you should see 14 files\nls awk_data\nls awk_data | wc -l\n\nOn this page you only need Growth_Data.txt. The other files are 16S sequences and two small tables, which you use on later pages.\n\n\n\n\n\n\nWarningDraft note\n\n\n\nThe download link is not tested yet: the data is not on GitHub yet. The other commands were tested on a copy of the same file.",
+    "crumbs": [
+      "AWK on a table"
+    ]
+  },
+  {
+    "objectID": "source/awk_table.html#look-at-the-table-first",
+    "href": "source/awk_table.html#look-at-the-table-first",
+    "title": "AWK on a table",
+    "section": "Look at the table first",
+    "text": "Look at the table first\nBefore you run any command on a table, you want to look at it first. You at leat want to know: how many lines it has, and what separates the columns?\n\n# The first 5 lines\nhead -5 awk_data/Growth_Data.txt\n\n# The number of lines\nwc -l awk_data/Growth_Data.txt\n\nThis prints:\nNutrient    Condition   Experiment  Rootlength  FW_shoot_mg\nlow_P   mock    ex61    40.4    6.6\nlow_P   mock    ex61    38  6.8\nlow_P   mock    ex61    74.7    8.1\nlow_P   mock    ex61    34.4    8.3\n\n595 awk_data/Growth_Data.txt\nWe see that the table has a header, a first line with the column names, and 594 rows of measurements. Each row is one plant and we have the following columns:\n\nNutrient: the plant grew with low or high phosphorus (low_P, high_P)\nCondition: the plant was inoculated with nothing (mock) or with one of two bacteria (129E, 13C)\nExperiment: the experiment the plant was part of (ex61, ex64, ex65)\nRootlength: root length in mm\nFW_shoot_mg: shoot fresh weight in mg\n\nThe columns look like they are separated by spaces. However, you cannot see what is really there, because spaces and tabs look the same on screen. cat -A shows the invisible characters:\n\nhead -3 awk_data/Growth_Data.txt | cat -A\n\nThis prints:\nNutrient^ICondition^IExperiment^IRootlength^IFW_shoot_mg$\nlow_P^Imock^Iex61^I40.4^I6.6$\nlow_P^Imock^Iex61^I38^I6.8$\nHere, ^I is a tab, and $ marks the end of each line. So this tells us that we work with a tab-separated table. You need to know this for the next steps.\n\n\n\n\n\n\nTipTip: cat -A on a Mac (optional)\n\n\n\n\n\n\nOn a Mac, cat -A may not work. cat -et shows the same: tabs as ^I and line ends as $.",
+    "crumbs": [
+      "AWK on a table"
+    ]
+  },
+  {
+    "objectID": "source/awk_table.html#the-shape-of-an-awk-command",
+    "href": "source/awk_table.html#the-shape-of-an-awk-command",
+    "title": "AWK on a table",
+    "section": "The shape of an AWK command",
+    "text": "The shape of an AWK command\nEvery AWK command on this page has the same shape:\nawk -F'\\t' 'pattern { action }' file\n\n-F'\\t' tells AWK that the columns are separated by tabs. -F stands for field separator. A field is one value in a line, like one cell in a spreadsheet row.\n'pattern { action }' is the AWK program, it always needs to be between single quotes. The pattern says which lines to work on. The action, between curly brackets, says what to do with them.\nfile is the file AWK reads.\n\nAWK reads the file one line at a time. For each line, it checks the pattern. If the line matches, AWK runs the action. You can leave out either part: without a pattern, the action runs on every line. Without an action, AWK prints the lines that match.",
+    "crumbs": [
+      "AWK on a table"
+    ]
+  },
+  {
+    "objectID": "source/awk_table.html#print-choose-columns",
+    "href": "source/awk_table.html#print-choose-columns",
+    "title": "AWK on a table",
+    "section": "print: choose columns",
+    "text": "print: choose columns\nAWK gives each field of a line a number: $1 is the first field, $2 the second, and so on. $0 is the whole line. To print the first column:\n\n# Print column 1 of every line, and show the first 3 lines of the result\nawk -F'\\t' '{ print $1 }' awk_data/Growth_Data.txt | head -3\n\nThis prints:\nNutrient\nlow_P\nlow_P\nTo print several columns, separate the fields you want with a comma:\n\n# Print column 1 (Nutrient) and column 4 (Rootlength)\nawk -F'\\t' '{ print $1, $4 }' awk_data/Growth_Data.txt | head -3\n\nThis prints:\nNutrient Rootlength\nlow_P 40.4\nlow_P 38\nAWK puts a space between the printed columns. To keep the result a tab-separated table, tell AWK to use a tab in the output too. -v OFS='\\t' sets the output field separator:\n\nawk -F'\\t' -v OFS='\\t' '{ print $1, $4 }' awk_data/Growth_Data.txt | head -3\n\nThis prints:\nNutrient    Rootlength\nlow_P   40.4\nlow_P   38\nYou can do the same thing with cut -f1,4 (something you might have seen in our CLI workshop). AWK becomes more useful in the next sections, where you choose rows too.\nA quick check for any table is to count the fields in each line. NF is the number of fields in the current line:\n\n# Count the fields per line, then count how often each number occurs\nawk -F'\\t' '{ print NF }' awk_data/Growth_Data.txt | sort | uniq -c\n\nThis prints:\n    595 5\nThis tells us that all 595 lines have 5 fields. If some lines had 4 or 6, something in the table would be off and together this gives us a quick command to check that our data has the right structure.\n\n\n\n\n\n\nQuestionExercise\n\n\n\n\n\n\nPrint the columns Experiment and FW_shoot_mg, separated by a tab. Look at the first 4 lines of the result.\n\n\n\n\n\n\n\nAnswerClick me to see an answer\n\n\n\n\n\nExperiment is column 3 and FW_shoot_mg is column 5:\n\nawk -F'\\t' -v OFS='\\t' '{ print $3, $5 }' awk_data/Growth_Data.txt | head -4\n\nThis prints:\nExperiment  FW_shoot_mg\nex61    6.6\nex61    6.8\nex61    8.1",
+    "crumbs": [
+      "AWK on a table"
+    ]
+  },
+  {
+    "objectID": "source/awk_table.html#nr-the-header-line",
+    "href": "source/awk_table.html#nr-the-header-line",
+    "title": "AWK on a table",
+    "section": "NR: the header line",
+    "text": "NR: the header line\nNR is the number of the record, the line AWK is reading now. You use it in a pattern to choose lines by their position:\n\n# Only line 1, the header\nawk -F'\\t' 'NR == 1' awk_data/Growth_Data.txt\n\n# All lines after the header: show the first 2, and count them\nawk -F'\\t' 'NR &gt; 1' awk_data/Growth_Data.txt | head -2\nawk -F'\\t' 'NR &gt; 1' awk_data/Growth_Data.txt | wc -l\n\nThis prints:\nNutrient    Condition   Experiment  Rootlength  FW_shoot_mg\nlow_P   mock    ex61    40.4    6.6\nlow_P   mock    ex61    38  6.8\n594\nThese commands have only a pattern and no action, so AWK prints the lines that match. NR &gt; 1 skips the header and keeps all 594 rows of data. You need it often, as the next sections show.",
+    "crumbs": [
+      "AWK on a table"
+    ]
+  },
+  {
+    "objectID": "source/awk_table.html#subset-rows-by-text",
+    "href": "source/awk_table.html#subset-rows-by-text",
+    "title": "AWK on a table",
+    "section": "Subset rows by text",
+    "text": "Subset rows by text\nTo keep only the rows of the plants grown with low phosphorus, compare column 1 with the text low_P:\n\nawk -F'\\t' '$1 == \"low_P\"' awk_data/Growth_Data.txt | head -3\nawk -F'\\t' '$1 == \"low_P\"' awk_data/Growth_Data.txt | wc -l\n\nThis prints:\nlow_P   mock    ex61    40.4    6.6\nlow_P   mock    ex61    38  6.8\nlow_P   mock    ex61    74.7    8.1\n\n300\nTwo details matter here:\n\nText goes between double quotes: \"low_P\". Without quotes, AWK reads low_P as the name of a variable, a named box that holds a value. That box is empty, so no row matches.\nTo compare, use two equal signs: ==. If you would use only one equal sign this command would do something else and instead put a value into a field. Note here, how AWK gives you no error message and only by inspecting the output we will see that the command is doing something different to what we wanted:\n\n\n# Wrong: one = instead of two\nawk -F'\\t' '$1 = \"low_P\"' awk_data/Growth_Data.txt | head -3\nawk -F'\\t' '$1 = \"low_P\"' awk_data/Growth_Data.txt | wc -l\n\nThis prints:\nlow_P Condition Experiment Rootlength FW_shoot_mg\nlow_P mock ex61 40.4 6.6\nlow_P mock ex61 38 6.8\n\n595\nHere, every line is kept, but column 1 of every line now says low_P, even in the header, and the tabs became spaces. A quick wc -l shows the problem: 595 lines, the same as the whole file.\n\nWhy not use grep?\nIf you have followed the CLI workshop you might remember grep, which keeps lines that contain a word. For the plants with bacterium 13C, both tools give the same count:\n\ngrep '13C' awk_data/Growth_Data.txt | wc -l\nawk -F'\\t' '$2 == \"13C\"' awk_data/Growth_Data.txt | wc -l\n\nThis prints:\n175\n175\nBut there is an important difference: grep searches the whole line, not one column. If you search for 13 and you get more lines:\n\ngrep '13' awk_data/Growth_Data.txt | wc -l\n\n# Which lines does grep find that are not 13C?\ngrep '13' awk_data/Growth_Data.txt | awk -F'\\t' '$2 != \"13C\"' | head -3\n\nThis prints:\n211\n\nlow_P   mock    ex61    55.3    13.3\nlow_P   mock    ex61    48.7    13.9\nlow_P   mock    ex64    46.93   13.52\nIn total this command gives us 36 extra lines, because 13 also appears in shoot weights such as 13.3. In contrast, AWK compares only column 2, so this cannot happen making this a much safer command. The second command also shows !=, which means “is not equal to”.",
+    "crumbs": [
+      "AWK on a table"
+    ]
+  },
+  {
+    "objectID": "source/awk_table.html#keep-rows-by-number",
+    "href": "source/awk_table.html#keep-rows-by-number",
+    "title": "AWK on a table",
+    "section": "Keep rows by number",
+    "text": "Keep rows by number\nComparisons also work with numbers: &gt; (greater than), &lt; (less than), &gt;= and &lt;= (greater or less than, or equal). To keep plants with roots longer than 50 mm:\n\nawk -F'\\t' '$4 &gt; 50' awk_data/Growth_Data.txt | head -3\nawk -F'\\t' '$4 &gt; 50' awk_data/Growth_Data.txt | wc -l\n\nThis prints:\nNutrient    Condition   Experiment  Rootlength  FW_shoot_mg\nlow_P   mock    ex61    74.7    8.1\nlow_P   mock    ex61    66.5    8.9\n\n476\nImportant: Note how the header is in the result? Column 4 of the header is the word Rootlength, not a number. When a value is not a number, AWK compares it as text, and in that comparison Rootlength counts as larger than 50. To avoid this we need to add NR &gt; 1 to skip the header. To combine patterns we can use &&, which means “and”: both conditions must be true.\n\nawk -F'\\t' 'NR &gt; 1 && $4 &gt; 50' awk_data/Growth_Data.txt | wc -l\n\nThis prints:\n475\n|| means “or”: We can use this if we want at least one of the conditions to be true.\n\n# Low phosphorus and no bacteria\nawk -F'\\t' '$1 == \"low_P\" && $2 == \"mock\"' awk_data/Growth_Data.txt\n\n# Either of the two bacteria\nawk -F'\\t' '$2 == \"129E\" || $2 == \"13C\"' awk_data/Growth_Data.txt\n\n\n\n\n\n\n\nQuestionExercise\n\n\n\n\n\n\nHow many plants grew with high phosphorus and bacterium 13C?\nHow many plants have a shoot weight above 20 mg?\n\n\n\n\n\n\n\nAnswerClick me to see an answer\n\n\n\n\n\n\n# 1. Two text conditions with &&\nawk -F'\\t' '$1 == \"high_P\" && $2 == \"13C\"' awk_data/Growth_Data.txt | wc -l\n\n# 2. NR &gt; 1 keeps the header out\nawk -F'\\t' 'NR &gt; 1 && $5 &gt; 20' awk_data/Growth_Data.txt | wc -l\n\nThis prints:\n87\n\n140\nSo 87 plants grew with high phosphorus and 13C, and 140 plants have a shoot weight above 20 mg.",
+    "crumbs": [
+      "AWK on a table"
+    ]
+  },
+  {
+    "objectID": "source/awk_table.html#missing-values-empty-fields",
+    "href": "source/awk_table.html#missing-values-empty-fields",
+    "title": "AWK on a table",
+    "section": "Missing values: empty fields",
+    "text": "Missing values: empty fields\nNow look for plants with very short roots, below 10 mm:\n\nawk -F'\\t' 'NR &gt; 1 && $4 &lt; 10' awk_data/Growth_Data.txt | wc -l\nawk -F'\\t' 'NR &gt; 1 && $4 &lt; 10' awk_data/Growth_Data.txt | head -3\n\nThis prints:\n15\n\nhigh_P  mock    ex61        18.2\nhigh_P  mock    ex64        22.4\nhigh_P  mock    ex64        26\n15 plants, but if we look at the table we notice that none of them has a root length below 10. Instead you will notice that these rows have no root length at all. If we use cat -A this will show us exactly what is in the file for these fields:\n\nawk -F'\\t' 'NR &gt; 1 && $4 &lt; 10' awk_data/Growth_Data.txt | head -3 | cat -A\n\nThis prints:\nhigh_P^Imock^Iex61^I^I18.2$\nhigh_P^Imock^Iex64^I^I22.4$\nhigh_P^Imock^Iex64^I^I26$\nWe see two tabs side by side, ^I^I, with nothing between them: this is an empty field and also how a missing value often looks, for example in a table saved from Excel with empty cells. Count them per column:\n\n# Empty root length (column 4) and empty shoot weight (column 5)\nawk -F'\\t' '$4 == \"\"' awk_data/Growth_Data.txt | wc -l\nawk -F'\\t' '$5 == \"\"' awk_data/Growth_Data.txt | wc -l\n\nThis prints:\n15\n8\nAltogether, this tells us that AWK did not give an error but it did something we didn’t really want. It compared the empty field with 10 as text, and empty text counts as smaller than anything. So all 15 plants without a root length passed the filter $4 &lt; 10. In calculations, AWK will treat an empty field as 0, as you see further down.\n\n\n\n\n\n\nImportantImportant: skip empty fields before you compare or calculate\n\n\n\nBefore you compare or calculate with a column, keep only the rows that have a value in it, with $4 != \"\":\n\nawk -F'\\t' 'NR &gt; 1 && $4 != \"\" && $4 &lt; 10' awk_data/Growth_Data.txt | wc -l\n\nThis prints:\n0\nNo plant in this table has roots shorter than 10 mm.\n\n\n\nWhy -F'\\t' matters\nAWK can also run without -F'\\t'. It then splits lines at any run of spaces and tabs. For most lines in this table, the result is the same. But AWK then treats the two tabs around an empty field as one separator, and the values move one column to the left. Line 123 is the first row with an empty root length:\n\n# Line 123, and its column 4 with -F'\\t'\nawk -F'\\t' 'NR == 123' awk_data/Growth_Data.txt\nawk -F'\\t' 'NR == 123 { print $4 }' awk_data/Growth_Data.txt\n\n# Column 4 of the same line without -F'\\t'\nawk 'NR == 123 { print $4 }' awk_data/Growth_Data.txt\n\n# Number of fields per line without -F'\\t'\nawk '{ print NF }' awk_data/Growth_Data.txt | sort | uniq -c\n\nThis prints:\nhigh_P  mock    ex61        18.2\n\n18.2\n\n     23 4\n    572 5\nWith -F'\\t', column 4 of line 123 is empty (the empty line in the output). Without it, column 4 is 18.2, the shoot weight. The 23 lines with an empty field now have only 4 fields. Again there is no error. The NF check from above shows the problem right away, so it is worth running on every new table.\n\n\n\n\n\n\nQuestionExercise\n\n\n\n\n\n\nHow many plants have a shoot weight below 5 mg? First write the command without the rule from above. Then add the rule. What is the difference, and why?\n\n\n\n\n\n\n\nAnswerClick me to see an answer\n\n\n\n\n\n\n# Without the rule\nawk -F'\\t' 'NR &gt; 1 && $5 &lt; 5' awk_data/Growth_Data.txt | wc -l\n\n# With the rule: skip empty shoot weights\nawk -F'\\t' 'NR &gt; 1 && $5 != \"\" && $5 &lt; 5' awk_data/Growth_Data.txt | wc -l\n\nThis prints:\n10\n2\nOnly 2 plants have a shoot weight below 5 mg. The first command also keeps the 8 plants without a shoot weight.\n\n\n\n\n\n\n\n\n\n\n\n\nTipTip: fill empty fields with NA (optional)\n\n\n\n\n\nEmpty fields are easy to miss. One way to make them visible is to fill each empty field with NA (not available) and save the result as a new file. In this table, only column 4 and column 5 have empty fields, so you fill those two:\n\n# If column 4 is empty, put NA into it.\n# If column 5 is empty, put NA into it.\n# Then print every line.\n# The command is spread over several lines to make it easier to read\n# (more on this in \"Add a column\" below).\nawk -F'\\t' -v OFS='\\t' '\n  $4 == \"\" { $4 = \"NA\" }\n  $5 == \"\" { $5 = \"NA\" }\n  { print }\n' awk_data/Growth_Data.txt &gt; Growth_Data_NA.txt\n\n# Check: same number of lines, and line 123 now has NA\nwc -l Growth_Data_NA.txt\nawk -F'\\t' 'NR == 123' Growth_Data_NA.txt\n\nThis prints:\n595 Growth_Data_NA.txt\nhigh_P  mock    ex61    NA  18.2\nAlso here -v OFS='\\t' matters. When you change a field, AWK rebuilds the whole line and puts the output separator between the fields. Without -v OFS='\\t', that is a space. Only the changed lines get spaces, the others keep their tabs, so the file now mixes both. cat -A shows this for line 123 (changed) and line 2 (not changed) of such a file:\nhigh_P mock ex61 NA 18.2$\nlow_P^Imock^Iex61^I40.4^I6.6$\nIf you do not know which columns have empty fields, or there are many columns, you can let AWK go through all fields with a loop. You do not need to remember this form. Keep it in your notes, or ask an LLM for it and check the result as shown here. In this table it gives exactly the same file:\n\n# For each field in the line (i = 1 up to the number of fields NF):\n# if the field is empty, put NA into it. Then print the line.\nawk -F'\\t' -v OFS='\\t' '\n  {\n    for (i = 1; i &lt;= NF; i++) {\n      if ($i == \"\") { $i = \"NA\" }\n    }\n    print\n  }\n' awk_data/Growth_Data.txt\n\nNow the missing values are visible when you look at the file. Also, the columns no longer shift in tools that split at spaces and tabs, such as AWK without -F'\\t', or join and column -t with their default settings.\nBut when you do this, it’s important to know that NA does not make comparisons safe. NA is text too, and in a text comparison it counts as larger than 50:\n\nawk -F'\\t' 'NR &gt; 1 && $4 &gt; 50' Growth_Data_NA.txt | wc -l\nawk -F'\\t' 'NR &gt; 1 && $4 != \"NA\" && $4 &gt; 50' Growth_Data_NA.txt | wc -l\n\nThis prints:\n490\n475\nSo with NA, the rule stays the same, only with $4 != \"NA\" instead of $4 != \"\".",
+    "crumbs": [
+      "AWK on a table"
+    ]
+  },
+  {
+    "objectID": "source/awk_table.html#add-a-column",
+    "href": "source/awk_table.html#add-a-column",
+    "title": "AWK on a table",
+    "section": "Add a column",
+    "text": "Add a column\nAWK can calculate with fields. For example, the shoot weight per mm of root is $5 / $4. To add it as a new column at the end of each line, print the whole line $0 and then the result:\n\nawk -F'\\t' -v OFS='\\t' 'NR &gt; 1 { print $0, $5 / $4 }' awk_data/Growth_Data.txt &gt; shoot_per_root.txt\n\nwc -l shoot_per_root.txt\n\nThis prints:\nawk: cmd. line:1: (FILENAME=awk_data/Growth_Data.txt FNR=123) fatal: division by zero attempted\n121 shoot_per_root.txt\nThe error message tells us that AWK stopped at line 123: the first row with an empty root length. That is because it treated the empty field as 0, and a division by 0 is not possible. The file shoot_per_root.txt still exists, but it has only 121 lines instead of 594. If you missed the error message and only looked at head, the file would look fine. This is why you want to make it a habit to count lines after each step.\nTo fix this, you need to skip rows with an empty root length or shoot weight, and print a header for the new column. The command now has two parts, each with its own pattern and action.\nA command with several parts gets long on one line. AWK lets you spread the part between the single quotes over several lines, so you can put each pattern and its action on a line of its own. The command does exactly the same, it is only easier to read. You can copy it into your terminal as it is: the terminal waits for the closing quote before it runs the command.\n\n# Part 1: on line 1, print the current header and add a name for the new column\n# Part 2: on the other lines with both values, print the line plus the result\nawk -F'\\t' -v OFS='\\t' '\n  NR == 1                          { print $0, \"shoot_per_root\" }\n  NR &gt; 1 && $4 != \"\" && $5 != \"\"   { print $0, $5 / $4 }\n' awk_data/Growth_Data.txt &gt; shoot_per_root.txt\n\n# Check the result\nhead -3 shoot_per_root.txt\nwc -l shoot_per_root.txt\n\nThis prints:\nNutrient    Condition   Experiment  Rootlength  FW_shoot_mg shoot_per_root\nlow_P   mock    ex61    40.4    6.6 0.163366\nlow_P   mock    ex61    38  6.8 0.178947\n\n572 shoot_per_root.txt\n572 lines: the header plus 571 plants. Does that add up? 594 plants, minus 15 without a root length, minus 8 without a shoot weight, is 571. No plant misses both values, so no row is subtracted twice.\n\n\n\n\n\n\nImportantKeep the opening brace on the same line as its pattern\n\n\n\nWhen you spread a command over several lines, the opening { of an action must stay on the same line as its pattern. If you move the { to the next line, AWK reads the pattern on its own (which prints every matching line) and the action on its own (which runs on every line). You get no error, only a different result.",
+    "crumbs": [
+      "AWK on a table"
+    ]
+  },
+  {
+    "objectID": "source/awk_table.html#sum-and-mean-of-a-column-variables-and-end",
+    "href": "source/awk_table.html#sum-and-mean-of-a-column-variables-and-end",
+    "title": "AWK on a table",
+    "section": "Sum and mean of a column: variables and END",
+    "text": "Sum and mean of a column: variables and END\nYou will notice that the commands from here on are longer than the ones before. You could do the same thing in R or Python, and you might wonder why even learn them in AWK? The reason is that in bioinformatics you often only need a quick look at your data: how many plants are in each group, and do the means look sensible? AWK gives you that answer in the terminal, without starting another program or loading the table first. On a computer cluster, where R or Python may not be set up for you, AWK is always there. And because AWK reads a file one line at a time, it also works on files that are too large to open comfortably in R or Excel. For statistics and plots, R or Python remain the better tools. AWK is for the quick check before, or for cleaning up a table before you load it there.\nStart with one number: the total shoot weight of all plants. For this, AWK needs a variable, a named box that holds a value. You do not need to create it first: AWK makes the box the first time you use it, and it starts at 0.\n\nawk -F'\\t' 'NR &gt; 1 && $5 != \"\" { sum += $5 } END { print sum }' awk_data/Growth_Data.txt\n\nThis prints:\n9715.23\nTaken apart:\n\nsum += $5: add the shoot weight of this line to the box sum. += means “add to what is already in the box”.\nEND { print sum }: END is a special pattern. Its action runs once, after AWK has read the last line. By then, sum holds the total.\n\nThe name sum is your own choice. You could call it total or weight instead, and get the same result. Names such as NR, NF and END are different: they belong to AWK and have a fixed meaning.\nFor the mean, you need a second box that counts the plants. Here it is called n (short for “number of plants”), and n++ adds 1 to it. The ; separates two steps inside one action:\n\nawk -F'\\t' '\n  NR &gt; 1 && $5 != \"\" { sum += $5; n++ }\n  END                { print n, sum, sum / n }\n' awk_data/Growth_Data.txt\n\nThis prints the number of plants, the total and the mean:\n586 9715.23 16.5789\nDoes 586 add up? 594 plants, minus the 8 without a shoot weight, is 586.\nNow leave out the rule for empty fields, and then also NR &gt; 1:\n\n# Without $5 != \"\"\nawk -F'\\t' '\n  NR &gt; 1 { sum += $5; n++ }\n  END    { print n, sum, sum / n }\n' awk_data/Growth_Data.txt\n\n# Also without NR &gt; 1\nawk -F'\\t' '\n  { sum += $5; n++ }\n  END { print n, sum, sum / n }\n' awk_data/Growth_Data.txt\n\nThis prints:\n594 9715.23 16.3556\n\n595 9715.23 16.3281\nThe total is the same all three times. AWK adds an empty field as 0, and the header text FW_shoot_mg as 0 too, so the sum does not change. But n still counts these lines, so the mean drops. A total that looks right does not mean that the mean is right. Look at the count as well: you expect 586.",
+    "crumbs": [
+      "AWK on a table"
+    ]
+  },
+  {
+    "objectID": "source/awk_table.html#count-and-mean-per-group-arrays",
+    "href": "source/awk_table.html#count-and-mean-per-group-arrays",
+    "title": "AWK on a table",
+    "section": "Count and mean per group: arrays",
+    "text": "Count and mean per group: arrays\nsum and n are single boxes: each holds one value for the whole file. To count the plants per nutrient level, you need one box per group. A set of named boxes like this is called an array. n[\"low_P\"] is the box for low_P, n[\"high_P\"] the box for high_P. Just like a variable, AWK makes each box the first time you use it, and it starts at 0.\n\nawk -F'\\t' '\n  NR &gt; 1 { n[$1]++ }\n  END    { for (group in n) { print group, n[group] } }\n' awk_data/Growth_Data.txt\n\nThis prints:\nlow_P 300\n\nhigh_P 294\nTaken apart:\n\nNR &gt; 1 { n[$1]++ }: for each row of data, add 1 to the box of its nutrient level. Piece by piece:\n\nn is the name of the array, the set of boxes.\n[$1] picks one box: the box named after the value in column 1. On a low_P row that is n[\"low_P\"].\n++ adds 1 to that box.\n\nSo after the first low_P row, n[\"low_P\"] is 1, after the second it is 2, and so on.\nEND { ... }: as before, this runs once, after the last line.\nfor (group in n) { print group, n[group] }: go through all boxes in n. For each box, put its name into group, and print the name and the count.\n\nYou can check the result with tools from the CLI workshop:\n\ncut -f1 awk_data/Growth_Data.txt | sort | uniq -c\n\nThis prints:\n      1 Nutrient\n    294 high_P\n    300 low_P\nFor a mean per group, you do the same as for the whole file, but with one sum box and one n box per group. sum[$1] += $4 adds the root length to the sum of its group.\n\n# Without the rule for empty fields\nawk -F'\\t' '\n  NR &gt; 1 { sum[$1] += $4; n[$1]++ }\n  END    { for (group in sum) { print group, n[group], sum[group] / n[group] } }\n' awk_data/Growth_Data.txt\n\n# With the rule: skip empty root lengths\nawk -F'\\t' '\n  NR &gt; 1 && $4 != \"\" { sum[$1] += $4; n[$1]++ }\n  END                { for (group in sum) { print group, n[group], sum[group] / n[group] } }\n' awk_data/Growth_Data.txt\n\nThis prints:\nlow_P 300 57.9494\nhigh_P 294 88.9501\n\nlow_P 290 59.9477\nhigh_P 289 90.489\nWithout the rule, AWK adds 0 for each empty root length and still counts the plant. Both means come out too low, and nothing warns you.\n\nMean per nutrient and condition\nTo group by two columns, glue them together into one box name: $1\"-\"$2 is column 1, a dash and column 2, for example low_P-mock. The dash goes in double quotes, because it is text here. A dash appears in none of the values, so you can split the name again later if you need to.\n\nawk -F'\\t' '\n  NR &gt; 1 && $4 != \"\" { group = $1\"-\"$2; sum[group] += $4; n[group]++ }\n  END                { for (group in sum) { printf \"%s\\t%d\\t%.1f\\n\", group, n[group], sum[group] / n[group] } }\n' awk_data/Growth_Data.txt | sort\n\nThis prints:\nhigh_P-129E 103 98.4\nhigh_P-13C  85  97.7\nhigh_P-mock 101 76.4\nlow_P-129E  99  69.9\nlow_P-13C   86  64.2\nlow_P-mock  105 47.1\nTwo new parts:\n\nprintf prints with a format that you choose. %s stands for text, %d for a whole number, %.1f for a number with one decimal, \\t for a tab and \\n for a new line. The values after the format fill these places in order.\n| sort: AWK goes through the boxes in no fixed order. Sort the result, so that it is easy to read and to compare between runs.\n\n\n\n\n\n\n\nImportantForget the quotes, and the dash becomes a minus\n\n\n\nIf you write group = $1-$2 without the quotes, AWK reads the dash as a minus and subtracts column 2 from column 1. Text that does not start with a number counts as 0, so low_P and high_P both become 0, and 129E becomes 129. The command runs without an error, but prints this:\n-129    202 84.4\n-13 171 80.8\n0   206 61.5\nThree groups instead of six, and low_P and high_P plants mixed together. A quick check catches it: you expect 2 nutrient levels × 3 conditions = 6 groups, so count the lines of the output, and look at the group names.\n\n\nWithout the rule $4 != \"\", four of the six means are lower. For example, low_P with 129E gives 64.7 instead of 69.9, because the 8 plants without a root length count as 0 mm.\n\n\n\n\n\n\nQuestionExercise\n\n\n\n\n\n\nCalculate the mean shoot weight per Condition, with one decimal. How many plants are in each group?\n\n\n\n\n\n\n\nAnswerClick me to see an answer\n\n\n\n\n\nCondition is column 2, and the shoot weight is column 5. Skip the empty shoot weights:\n\nawk -F'\\t' '\n  NR &gt; 1 && $5 != \"\" { sum[$2] += $5; n[$2]++ }\n  END                { for (group in sum) { printf \"%s\\t%d\\t%.1f\\n\", group, n[group], sum[group] / n[group] } }\n' awk_data/Growth_Data.txt | sort\n\nThis prints:\n129E    208 17.6\n13C 173 15.3\nmock    205 16.6",
+    "crumbs": [
+      "AWK on a table"
+    ]
+  },
+  {
+    "objectID": "source/awk_table.html#what-you-learned",
+    "href": "source/awk_table.html#what-you-learned",
+    "title": "AWK on a table",
+    "section": "What you learned",
+    "text": "What you learned\n\nAn AWK command has the shape awk -F'\\t' 'pattern { action }' file.\n$1, $2, … are the fields of a line, $0 the whole line, NF the number of fields, NR the line number.\nCompare with ==, !=, &gt;, &lt;, and combine with && (and) and || (or). Text goes in double quotes.\nA variable (sum += $5) and END give a total or a mean for the whole file; an array (sum[$1] += $5) gives one per group.\nLook at the table first: cat -A for tabs and empty fields, NF for the number of fields per line.\nEmpty fields cause errors without a warning: skip them with $4 != \"\" before you compare or calculate.\nAfter each step, check the result: count the lines, and look at it with head.\n\nYou do not need to learn these commands by heart. Instead, keep your own notes: a text file or notebook with the commands you have checked, each with one line on what it does and which trap it avoids (for example “skips empty fields in column 4”). A checked command in your notes is worth more than one you half remember, and more than a new one from an LLM that you still have to check.\nOn the next page, sed basics, you change text in a file: search and replace, delete lines, and clean up a file with Windows line endings.",
+    "crumbs": [
+      "AWK on a table"
+    ]
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Welcome",
+    "section": "",
+    "text": "This tutorial shows you how to work with tables and other text files on the command line with two small tools: AWK and sed. You use them to select rows and columns, to calculate sums and means, to clean up names, and to combine information from two files. You will try every command on real biological data, a table with plant growth measurements and a set of 16S sequences.\nImportant: This tutorial is still work in progress, missing chapters will be added over time",
+    "crumbs": [
+      "Welcome"
+    ]
+  },
+  {
+    "objectID": "index.html#what-are-awk-and-sed",
+    "href": "index.html#what-are-awk-and-sed",
+    "title": "Welcome",
+    "section": "What are AWK and sed?",
+    "text": "What are AWK and sed?\nAWK is a small programming language made for tables. It reads a file one line at a time and splits each line into fields, the separate values in a line, like the cells in one row of a spreadsheet. You then tell AWK what to do with these fields, for example “print the second and fourth column” or “keep only the rows where the root length is above 50”.\nsed (short for “stream editor”) reads a file one line at a time and changes the text on the fly. You use it mostly to search and replace, for example to shorten a long sequence name, or to delete lines you do not need.\nBoth tools come with almost every Linux and Mac system, they work on files of any size, and they need only one line of code for many everyday tasks. That is why you meet them in many bioinformatics scripts and tutorials.",
+    "crumbs": [
+      "Welcome"
+    ]
+  },
+  {
+    "objectID": "index.html#why-not-just-use-excel-or-r",
+    "href": "index.html#why-not-just-use-excel-or-r",
+    "title": "Welcome",
+    "section": "Why not just use Excel or R?",
+    "text": "Why not just use Excel or R?\nFor statistics and plots, R or Python are the better tools. But for many smaller jobs, AWK and sed have some real advantages:\n\nYou keep a record of what you did. A command can be saved in a script or a notebook, and run again on new data. A table that you change by hand in Excel leaves no record, and Excel sometimes changes your data without asking: it is known to turn gene names such as SEPT2 into dates.\nThe same step works on many files. Together with a for loop, one command can clean the names in 50 FASTA files, or take one column from 200 sample tables.\nNothing to install. AWK and sed are already on your computer and on most computer clusters, so you do not need packages or extra software.",
+    "crumbs": [
+      "Welcome"
+    ]
+  },
+  {
+    "objectID": "index.html#why-learn-this-when-an-llm-can-write-it",
+    "href": "index.html#why-learn-this-when-an-llm-can-write-it",
+    "title": "Welcome",
+    "section": "Why learn this when an LLM can write it?",
+    "text": "Why learn this when an LLM can write it?\nLLMs (large language models, such as ChatGPT or Claude) are good at writing AWK and sed commands. So it is not the goal of this tutorial to make you write long AWK programs from memory. Instead, after this tutorial you should be able to:\n\nread a short AWK or sed command, and say what it does\ncheck whether it does what you asked for, on your own data\nadapt it, for example to use another column or another file\nrecognize the common traps, where a command runs without an error but gives the wrong result\n\nThe last point matters most. A command that fails with an error message is easy to notice. A command that quietly skips a few rows, or treats a missing value as a zero, is not.",
+    "crumbs": [
+      "Welcome"
+    ]
+  },
+  {
+    "objectID": "index.html#what-you-will-do",
+    "href": "index.html#what-you-will-do",
+    "title": "Welcome",
+    "section": "What you will do",
+    "text": "What you will do\n\nUse AWK on a table: print and select columns and rows, add a column, and calculate counts and means per group\nLearn sed basics: search and replace text, delete lines, and change a file safely\nUse AWK and sed on FASTA files: count sequences, measure their lengths, clean up sequence names, and add information from a second file\nChecking code from an LLM: a short routine to test any AWK or sed command before you trust its output",
+    "crumbs": [
+      "Welcome"
+    ]
+  },
+  {
+    "objectID": "index.html#before-you-start",
+    "href": "index.html#before-you-start",
+    "title": "Welcome",
+    "section": "Before you start",
+    "text": "Before you start\nTo follow this tutorial you need:\n\nA terminal and the command line basics. This tutorial assumes you have worked through the basics of the CLI workshop: moving around with cd and ls, looking at files with head and wc, and combining commands with a pipe (|). It also helps if you have used grep and cut. If you have never opened a terminal, start with Before you start of the CLI workshop.\nYour own computer. All commands are meant to run on your laptop. If you already know how to use Crunchomics, the UvA computer cluster, you can also work there (see the HPC pages of the CLI workshop).\nThe example data. You download it at the start of the first page, with two commands. It is small (about 10 kB), so it fits on any laptop.\n\n\n\n\n\n\n\nImportantAWK and sed are not the same on every computer\n\n\n\nThere are several versions of AWK and sed. Linux systems and Crunchomics usually have the GNU versions, Macs have different (BSD) versions, and the terminal in MobaXterm may have yet another one. Most commands in this tutorial work everywhere, and where a command behaves differently, the page says so. \n\n\nStart with AWK on a table.",
+    "crumbs": [
+      "Welcome"
+    ]
+  },
+  {
+    "objectID": "source/awk_fasta.html",
+    "href": "source/awk_fasta.html",
+    "title": "AWK and sed on FASTA files",
+    "section": "",
+    "text": "To be written (PLAN.md, step 6).",
+    "crumbs": [
+      "AWK and sed on FASTA files"
+    ]
+  },
+  {
+    "objectID": "source/check_llm_code.html",
+    "href": "source/check_llm_code.html",
+    "title": "Checking code from an LLM",
+    "section": "",
+    "text": "To be written (PLAN.md, step 6).",
+    "crumbs": [
+      "Checking code from an LLM"
+    ]
+  }
+]

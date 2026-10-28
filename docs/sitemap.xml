@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://ndombrowski.github.io/AWK_tutorial/source/sed_basics.html</loc>
+    <lastmod>2026-10-28T06:51:13.292Z</lastmod>
+  </url>
+  <url>
+    <loc>https://ndombrowski.github.io/AWK_tutorial/source/awk_table.html</loc>
+    <lastmod>2026-10-28T10:19:32.906Z</lastmod>
+  </url>
+  <url>
+    <loc>https://ndombrowski.github.io/AWK_tutorial/index.html</loc>
+    <lastmod>2026-10-28T10:01:07.963Z</lastmod>
+  </url>
+  <url>
+    <loc>https://ndombrowski.github.io/AWK_tutorial/source/awk_fasta.html</loc>
+    <lastmod>2026-10-28T06:51:14.138Z</lastmod>
+  </url>
+  <url>
+    <loc>https://ndombrowski.github.io/AWK_tutorial/source/check_llm_code.html</loc>
+    <lastmod>2026-10-28T06:51:14.994Z</lastmod>
+  </url>
+</urlset>

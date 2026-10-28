@@ -1,0 +1,15 @@
+{
+  "hash": "84742cc52b29b911ff1b7ad7df6d8df8",
+  "result": {
+    "engine": "knitr",
+    "markdown": "---\ntitle: \"sed basics\"\nengine: knitr\n---\n\nTo be written (PLAN.md, step 5).\n",
+    "supporting": [],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}
