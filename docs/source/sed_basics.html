@@ -65,7 +65,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../">
-<link href="../source/awk_fasta.html" rel="next">
 <link href="../source/awk_table.html" rel="prev">
 <script src="../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
@@ -328,18 +327,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <div class="sidebar-item-container"> 
   <a href="../source/sed_basics.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text">sed basics</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../source/awk_fasta.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">AWK and sed on FASTA files</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../source/check_llm_code.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Checking code from an LLM</span></a>
   </div>
 </li>
     </ul>
@@ -978,7 +965,7 @@ LjRoot44^IMicrobacterium$
 <li>Change a file safely: work on a copy, write to a new file, check with <code>wc -l</code> and <code>diff</code>, then replace. With <code>sed -i</code>, keep a backup (<code>-i.bak</code>), and think about what happens if the command runs twice.</li>
 <li>Windows line endings (<code>\r</code>, <code>^M</code> in <code>cat -A</code>) make text matches on the last column fail without an error. Find them with <code>file</code> or <code>cat -A</code>, and remove them with <code>sed 's/\r$//'</code>.</li>
 </ul>
-<p>On the next page, <a href="../source/awk_fasta.html">AWK and sed on FASTA files</a>, you use both tools on 16S sequences.</p>
+<p>On the next page, <a href="awk_fasta.qmd">AWK and sed on FASTA files</a>, you use both tools on 16S sequences.</p>
 
 
 </section>
@@ -1404,9 +1391,6 @@ LjRoot44^IMicrobacterium$
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="../source/awk_fasta.html" class="pagination-link" aria-label="AWK and sed on FASTA files">
-        <span class="nav-page-text">AWK and sed on FASTA files</span> <i class="bi bi-arrow-right-short"></i>
-      </a>
   </div>
 </nav>
 </div> <!-- /content -->

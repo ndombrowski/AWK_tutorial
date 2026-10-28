@@ -100,6 +100,66 @@
     ]
   },
   {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Welcome",
+    "section": "",
+    "text": "This tutorial shows you how to work with tables and other text files on the command line with two small tools: AWK and sed. You use them to select rows and columns, to calculate sums and means, to clean up names, and to combine information from two files. You will try every command on real biological data, a table with plant growth measurements and a set of 16S sequences.\nImportant: This tutorial is still work in progress, missing chapters will be added over time",
+    "crumbs": [
+      "Welcome"
+    ]
+  },
+  {
+    "objectID": "index.html#what-are-awk-and-sed",
+    "href": "index.html#what-are-awk-and-sed",
+    "title": "Welcome",
+    "section": "What are AWK and sed?",
+    "text": "What are AWK and sed?\nAWK is a small programming language made for tables. It reads a file one line at a time and splits each line into fields, the separate values in a line, like the cells in one row of a spreadsheet. You then tell AWK what to do with these fields, for example “print the second and fourth column” or “keep only the rows where the root length is above 50”.\nsed (short for “stream editor”) reads a file one line at a time and changes the text on the fly. You use it mostly to search and replace, for example to shorten a long sequence name, or to delete lines you do not need.\nBoth tools come with almost every Linux and Mac system, they work on files of any size, and they need only one line of code for many everyday tasks. That is why you meet them in many bioinformatics scripts and tutorials.",
+    "crumbs": [
+      "Welcome"
+    ]
+  },
+  {
+    "objectID": "index.html#why-not-just-use-excel-or-r",
+    "href": "index.html#why-not-just-use-excel-or-r",
+    "title": "Welcome",
+    "section": "Why not just use Excel or R?",
+    "text": "Why not just use Excel or R?\nFor statistics and plots, R or Python are the better tools. But for many smaller jobs, AWK and sed have some real advantages:\n\nYou keep a record of what you did. A command can be saved in a script or a notebook, and run again on new data. A table that you change by hand in Excel leaves no record, and Excel sometimes changes your data without asking: it is known to turn gene names such as SEPT2 into dates.\nThe same step works on many files. Together with a for loop, one command can clean the names in 50 FASTA files, or take one column from 200 sample tables.\nNothing to install. AWK and sed are already on your computer and on most computer clusters, so you do not need packages or extra software.",
+    "crumbs": [
+      "Welcome"
+    ]
+  },
+  {
+    "objectID": "index.html#why-learn-this-when-an-llm-can-write-it",
+    "href": "index.html#why-learn-this-when-an-llm-can-write-it",
+    "title": "Welcome",
+    "section": "Why learn this when an LLM can write it?",
+    "text": "Why learn this when an LLM can write it?\nLLMs (large language models, such as ChatGPT or Claude) are good at writing AWK and sed commands. So it is not the goal of this tutorial to make you write long AWK programs from memory. Instead, after this tutorial you should be able to:\n\nread a short AWK or sed command, and say what it does\ncheck whether it does what you asked for, on your own data\nadapt it, for example to use another column or another file\nrecognize the common traps, where a command runs without an error but gives the wrong result\n\nThe last point matters most. A command that fails with an error message is easy to notice. A command that quietly skips a few rows, or treats a missing value as a zero, is not.",
+    "crumbs": [
+      "Welcome"
+    ]
+  },
+  {
+    "objectID": "index.html#what-you-will-do",
+    "href": "index.html#what-you-will-do",
+    "title": "Welcome",
+    "section": "What you will do",
+    "text": "What you will do\n\nUse AWK on a table: print and select columns and rows, add a column, and calculate counts and means per group\nLearn sed basics: search and replace text, delete lines, and change a file safely\nUse AWK and sed on FASTA files: count sequences, measure their lengths, clean up sequence names, and add information from a second file (in planning)\nChecking code from an LLM: a short routine to test any AWK or sed command before you trust its output (in planning)",
+    "crumbs": [
+      "Welcome"
+    ]
+  },
+  {
+    "objectID": "index.html#before-you-start",
+    "href": "index.html#before-you-start",
+    "title": "Welcome",
+    "section": "Before you start",
+    "text": "Before you start\nTo follow this tutorial you need:\n\nA terminal and the command line basics. This tutorial assumes you have worked through the basics of the CLI workshop: moving around with cd and ls, looking at files with head and wc, and combining commands with a pipe (|). It also helps if you have used grep and cut. If you have never opened a terminal, start with Before you start of the CLI workshop.\nYour own computer. All commands are meant to run on your laptop. If you already know how to use Crunchomics, the UvA computer cluster, you can also work there (see the HPC pages of the CLI workshop).\nThe example data. You download it at the start of the first page, with two commands. It is small (about 10 kB), so it fits on any laptop.\n\n\n\n\n\n\n\nImportantAWK and sed are not the same on every computer\n\n\n\nThere are several versions of AWK and sed. Linux systems and Crunchomics usually have the GNU versions, Macs have different (BSD) versions, and the terminal in MobaXterm may have yet another one. Most commands in this tutorial work everywhere, and where a command behaves differently, the page says so. \n\n\nStart with AWK on a table.",
+    "crumbs": [
+      "Welcome"
+    ]
+  },
+  {
     "objectID": "source/awk_table.html",
     "href": "source/awk_table.html",
     "title": "AWK on a table",
@@ -227,86 +287,6 @@
     "text": "What you learned\n\nAn AWK command has the shape awk -F'\\t' 'pattern { action }' file.\n$1, $2, … are the fields of a line, $0 the whole line, NF the number of fields, NR the line number.\nCompare with ==, !=, &gt;, &lt;, and combine with && (and) and || (or). Text goes in double quotes.\nA variable (sum += $5) and END give a total or a mean for the whole file; an array (sum[$1] += $5) gives one per group.\nLook at the table first: cat -A for tabs and empty fields, NF for the number of fields per line.\nEmpty fields cause errors without a warning: skip them with $4 != \"\" before you compare or calculate.\nAfter each step, check the result: count the lines, and look at it with head.\n\nYou do not need to learn these commands by heart. Instead, keep your own notes: a text file or notebook with the commands you have checked, each with one line on what it does and which trap it avoids (for example “skips empty fields in column 4”). A checked command in your notes is worth more than one you half remember, and more than a new one from an LLM that you still have to check.\nOn the next page, sed basics, you change text in a file: search and replace, delete lines, and clean up a file with Windows line endings.",
     "crumbs": [
       "AWK on a table"
-    ]
-  },
-  {
-    "objectID": "index.html",
-    "href": "index.html",
-    "title": "Welcome",
-    "section": "",
-    "text": "This tutorial shows you how to work with tables and other text files on the command line with two small tools: AWK and sed. You use them to select rows and columns, to calculate sums and means, to clean up names, and to combine information from two files. You will try every command on real biological data, a table with plant growth measurements and a set of 16S sequences.\nImportant: This tutorial is still work in progress, missing chapters will be added over time",
-    "crumbs": [
-      "Welcome"
-    ]
-  },
-  {
-    "objectID": "index.html#what-are-awk-and-sed",
-    "href": "index.html#what-are-awk-and-sed",
-    "title": "Welcome",
-    "section": "What are AWK and sed?",
-    "text": "What are AWK and sed?\nAWK is a small programming language made for tables. It reads a file one line at a time and splits each line into fields, the separate values in a line, like the cells in one row of a spreadsheet. You then tell AWK what to do with these fields, for example “print the second and fourth column” or “keep only the rows where the root length is above 50”.\nsed (short for “stream editor”) reads a file one line at a time and changes the text on the fly. You use it mostly to search and replace, for example to shorten a long sequence name, or to delete lines you do not need.\nBoth tools come with almost every Linux and Mac system, they work on files of any size, and they need only one line of code for many everyday tasks. That is why you meet them in many bioinformatics scripts and tutorials.",
-    "crumbs": [
-      "Welcome"
-    ]
-  },
-  {
-    "objectID": "index.html#why-not-just-use-excel-or-r",
-    "href": "index.html#why-not-just-use-excel-or-r",
-    "title": "Welcome",
-    "section": "Why not just use Excel or R?",
-    "text": "Why not just use Excel or R?\nFor statistics and plots, R or Python are the better tools. But for many smaller jobs, AWK and sed have some real advantages:\n\nYou keep a record of what you did. A command can be saved in a script or a notebook, and run again on new data. A table that you change by hand in Excel leaves no record, and Excel sometimes changes your data without asking: it is known to turn gene names such as SEPT2 into dates.\nThe same step works on many files. Together with a for loop, one command can clean the names in 50 FASTA files, or take one column from 200 sample tables.\nNothing to install. AWK and sed are already on your computer and on most computer clusters, so you do not need packages or extra software.",
-    "crumbs": [
-      "Welcome"
-    ]
-  },
-  {
-    "objectID": "index.html#why-learn-this-when-an-llm-can-write-it",
-    "href": "index.html#why-learn-this-when-an-llm-can-write-it",
-    "title": "Welcome",
-    "section": "Why learn this when an LLM can write it?",
-    "text": "Why learn this when an LLM can write it?\nLLMs (large language models, such as ChatGPT or Claude) are good at writing AWK and sed commands. So it is not the goal of this tutorial to make you write long AWK programs from memory. Instead, after this tutorial you should be able to:\n\nread a short AWK or sed command, and say what it does\ncheck whether it does what you asked for, on your own data\nadapt it, for example to use another column or another file\nrecognize the common traps, where a command runs without an error but gives the wrong result\n\nThe last point matters most. A command that fails with an error message is easy to notice. A command that quietly skips a few rows, or treats a missing value as a zero, is not.",
-    "crumbs": [
-      "Welcome"
-    ]
-  },
-  {
-    "objectID": "index.html#what-you-will-do",
-    "href": "index.html#what-you-will-do",
-    "title": "Welcome",
-    "section": "What you will do",
-    "text": "What you will do\n\nUse AWK on a table: print and select columns and rows, add a column, and calculate counts and means per group\nLearn sed basics: search and replace text, delete lines, and change a file safely\nUse AWK and sed on FASTA files: count sequences, measure their lengths, clean up sequence names, and add information from a second file\nChecking code from an LLM: a short routine to test any AWK or sed command before you trust its output",
-    "crumbs": [
-      "Welcome"
-    ]
-  },
-  {
-    "objectID": "index.html#before-you-start",
-    "href": "index.html#before-you-start",
-    "title": "Welcome",
-    "section": "Before you start",
-    "text": "Before you start\nTo follow this tutorial you need:\n\nA terminal and the command line basics. This tutorial assumes you have worked through the basics of the CLI workshop: moving around with cd and ls, looking at files with head and wc, and combining commands with a pipe (|). It also helps if you have used grep and cut. If you have never opened a terminal, start with Before you start of the CLI workshop.\nYour own computer. All commands are meant to run on your laptop. If you already know how to use Crunchomics, the UvA computer cluster, you can also work there (see the HPC pages of the CLI workshop).\nThe example data. You download it at the start of the first page, with two commands. It is small (about 10 kB), so it fits on any laptop.\n\n\n\n\n\n\n\nImportantAWK and sed are not the same on every computer\n\n\n\nThere are several versions of AWK and sed. Linux systems and Crunchomics usually have the GNU versions, Macs have different (BSD) versions, and the terminal in MobaXterm may have yet another one. Most commands in this tutorial work everywhere, and where a command behaves differently, the page says so. \n\n\nStart with AWK on a table.",
-    "crumbs": [
-      "Welcome"
-    ]
-  },
-  {
-    "objectID": "source/awk_fasta.html",
-    "href": "source/awk_fasta.html",
-    "title": "AWK and sed on FASTA files",
-    "section": "",
-    "text": "To be written (PLAN.md, step 6).",
-    "crumbs": [
-      "AWK and sed on FASTA files"
-    ]
-  },
-  {
-    "objectID": "source/check_llm_code.html",
-    "href": "source/check_llm_code.html",
-    "title": "Checking code from an LLM",
-    "section": "",
-    "text": "To be written (PLAN.md, step 6).",
-    "crumbs": [
-      "Checking code from an LLM"
     ]
   }
 ]

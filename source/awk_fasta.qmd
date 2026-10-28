@@ -3,4 +3,775 @@ title: "AWK and sed on FASTA files"
 engine: knitr
 ---
 
-To be written (PLAN.md, step 6).
+On this page, you use AWK and sed on DNA sequences. You count sequences, measure how long each one is, give them shorter names, and add the genus of each strain from a second table. That last step, combining two files by a shared name, is one of the most common jobs in bioinformatics, and one where small mistakes give a wrong result without any error message.
+
+The sequences are 16S rRNA gene sequences of 11 bacterial strains. You use the same folder as on the previous pages, with the data in `awk_data/`.
+
+## Look at the files first
+
+The sequences are stored in the **FASTA** format, one file per strain:
+
+```{bash}
+# The * stands for any text, so this lists all files ending in .fasta
+ls awk_data/*.fasta
+```
+
+This prints:
+
+```
+awk_data/GCF_000009425.fasta
+awk_data/GCF_000253315.fasta
+awk_data/GCF_000714595.fasta
+awk_data/GCF_014058685.fasta
+awk_data/LjRoot303.fasta
+awk_data/LjRoot44.fasta
+awk_data/LjRoot59.fasta
+awk_data/LjRoot60.fasta
+awk_data/Root401.fasta
+awk_data/Root68.fasta
+awk_data/Root935.fasta
+```
+
+Look at the start of two of them:
+
+```{bash}
+head -3 awk_data/Root68.fasta
+head -2 awk_data/GCF_000714595.fasta
+```
+
+This prints:
+
+```
+>Root68
+AGAGTTTGATCATGGCTCAGATTGAACGCTGGCGGCAGGCCTAACACATGCAAGTCGAGCGGATGACAGGAGCTTGCTCC
+TGAATTCAGCGGCGGACGGGTGAGTAATGCCTAGGAATCTGCCTGGTAGTGGGGGACAACGTTTCGAAAGGAACGCTAAT
+
+>GCF_000714595-ECOLIN_RS01105_1
+AAATTGAAGAGTTTGATCATGGCTCAGATTGAACGCTGGCGGCAGGCCTAACACATGCAAGTCGAACGGTAACAGGAATC
+```
+
+A FASTA file has two kinds of lines:
+
+- A **header** line starts with `>` and holds the name of the sequence.
+- The lines below it hold the sequence itself, until the next header. Here, each sequence is split over several lines of 80 letters.
+
+The `Root` files hold one sequence each. The `GCF` files hold all 16S copies found in one genome, so they hold several sequences. Their names start with the genome ID, followed by a dash and more text.
+
+## Count the sequences
+
+Each sequence has exactly one header, so counting the headers counts the sequences. In `grep`, as in sed, `^` means "the start of the line", so `'^>'` finds lines that start with `>`. `grep -c` counts these lines:
+
+```{bash}
+# Per file
+grep -c '^>' awk_data/*.fasta
+
+# All files together
+cat awk_data/*.fasta | grep -c '^>'
+```
+
+This prints:
+
+```
+awk_data/GCF_000009425.fasta:6
+awk_data/GCF_000253315.fasta:6
+awk_data/GCF_000714595.fasta:9
+awk_data/GCF_014058685.fasta:7
+awk_data/LjRoot303.fasta:1
+awk_data/LjRoot44.fasta:1
+awk_data/LjRoot59.fasta:1
+awk_data/LjRoot60.fasta:1
+awk_data/Root401.fasta:1
+awk_data/Root68.fasta:1
+awk_data/Root935.fasta:1
+
+35
+```
+
+35 sequences in total, 9 of them from genome `GCF_000714595`.
+
+::: {.callout-important title="Always put quotes around '^>'"}
+In the shell, `>` means "write the output into this file". Without the quotes, `grep -c ^> awk_data/Root68.fasta` would not count anything. Instead the shell empties `Root68.fasta` to write into it, and `grep` waits for you to type something (stop it with `Ctrl+C`). 
+:::
+
+## Sequence length in two steps
+
+AWK can tell you how many characters a line has with `length($0)`. But if you use it on a FASTA file, you get the length of each line, not of each sequence:
+
+```{bash}
+# The headers in this file: only one, so one sequence
+grep '^>' awk_data/Root68.fasta
+
+# For every line that does not start with >, print its length
+awk '!/^>/ { print length($0) }' awk_data/Root68.fasta | head -3
+awk '!/^>/ { print length($0) }' awk_data/Root68.fasta | tail -2
+awk '!/^>/ { print length($0) }' awk_data/Root68.fasta | wc -l
+```
+
+This prints:
+
+```
+>Root68
+
+80
+80
+80
+
+80
+26
+
+18
+```
+
+Two new parts in this command:
+
+- `/^>/` is a pattern that keeps lines that match the text between the slashes, here: lines that start with `>`. It works like `grep '^>'`.
+- `!` means "not". So `!/^>/` keeps the lines that do **not** start with `>`, the sequence lines.
+
+Root68 has one header, so it holds one sequence, but AWK prints 18 lengths: 17 lines of 80 letters and a last line of 26. To get one length per sequence, you work in two steps. First, you put each sequence on one line. Then, you measure each line. You can check the result after each step.
+
+### Step 1: one line per sequence
+
+```{bash}
+# Header line: end the sequence line before it (except on line 1),
+#              print the header, and go to the next line.
+# Other lines: print the letters without a new line, so they join up.
+# At the end:  end the last sequence line.
+cat awk_data/*.fasta | awk '
+  /^>/  { if (NR > 1) { printf "\n" }; print; next }
+        { printf "%s", $0 }
+  END   { printf "\n" }
+' > sequences_oneline.fasta
+
+# Check: 35 headers and 35 sequence lines
+wc -l sequences_oneline.fasta
+grep -c '^>' sequences_oneline.fasta
+
+# Look at the first 4 lines, only the first 60 characters of each
+head -4 sequences_oneline.fasta | cut -c1-60
+```
+
+This prints:
+
+```
+70 sequences_oneline.fasta
+
+35
+
+>GCF_000009425-LLMG_RS02645_19
+TTATTTGAGAGTTTGATCCTGGCTCAGGACGAACGCTGGCGGCGTGCCTAATACATGCAA
+>GCF_000009425-LLMG_RS10890_60
+TTATTTGAGAGTTTGATCCTGGCTCAGGACGAACGCTGGCGGCGTGCCTAATACATGCAA
+```
+
+70 lines: one header and one sequence line for each of the 35 sequences. Taken apart:
+
+- `printf "%s", $0` prints the line without a new line at the end (page 1 introduced `printf`). The next sequence line is printed right after it, so all lines of one sequence end up on one line.
+- `printf "\n"` prints only a new line. On a header line, this ends the sequence before it. On line 1 there is no sequence before it yet, which is why it sits inside `if (NR > 1)`.
+- `next` tells AWK: stop working on this line, and go to the next one. Without `next`, AWK would also run the second part, `printf "%s", $0`, on the header, and glue the header to its sequence.
+- `END { printf "\n" }` ends the last sequence, which has no header after it.
+
+You do not need to remember this command. Keep it in your notes, or use seqkit (see the tip below), and check the result as shown here.
+
+### Step 2: measure each sequence
+
+Now each sequence is one line, so `length($0)` is the length of the sequence. Remember the name from the header, and print it with the length of the line below it. The `sed` at the end removes the `>` at the start of each name:
+
+```{bash}
+# Header line: remember it in the variable seq_name, go to the next line.
+# Sequence line: print the name and the length of the line.
+awk -v OFS='\t' '
+  /^>/  { seq_name = $0; next }
+        { print seq_name, length($0) }
+' sequences_oneline.fasta | sed 's/^>//' > lengths.tsv
+
+# Check
+wc -l lengths.tsv
+head -3 lengths.tsv
+```
+
+This prints:
+
+```
+35 lengths.tsv
+
+GCF_000009425-LLMG_RS02645_19	1547
+GCF_000009425-LLMG_RS10890_60	1547
+GCF_000009425-LLMG_RS12185_65	1547
+```
+
+One line per sequence, with the name and the length. To see the shortest and the longest sequence, sort by column 2. In `sort -k2,2n`, `-k2,2` means "sort by column 2" and `n` means "as numbers":
+
+```{bash}
+sort -k2,2n lengths.tsv | head -1
+sort -k2,2n lengths.tsv | tail -1
+```
+
+This prints:
+
+```
+GCF_000714595-ECOLIN_RS27490_147	1363
+GCF_000714595-ECOLIN_RS22205_97	1726
+```
+
+All 35 sequences are between 1363 and 1726 letters long. A good sanity check is to ask whether the length of Root68 match the 17 × 80 + 26 = 1386 letters from above? 
+
+```{bash}
+grep 'Root68' lengths.tsv
+```
+
+This prints:
+
+```
+Root68	1386
+```
+
+::: {.callout-tip title="Tip: seqkit, a tool made for sequence files (optional)" collapse="true"}
+For real work with FASTA files, a tool made for sequences is often simpler than AWK. seqkit is one example. It does both steps from this section in one command each:
+
+```{bash}
+# Name and length of each sequence
+seqkit fx2tab -n -l awk_data/*.fasta > seqkit_lengths.tsv
+cmp seqkit_lengths.tsv lengths.tsv && echo 'identical'
+
+# One line per sequence
+seqkit seq -w 0 awk_data/*.fasta > seqkit_oneline.fasta
+cmp seqkit_oneline.fasta sequences_oneline.fasta && echo 'identical'
+```
+
+This prints:
+
+```
+identical
+identical
+```
+
+seqkit gives exactly the same files as the AWK commands above, so it is also a good way to check them. You need to install seqkit first, though. AWK is already on almost every system, and the same AWK patterns work on any text file, not only on sequences.
+:::
+
+::: {.callout-question .callout-warning collapse="false" title="Exercise"}
+1. What is the total length of all 16S copies of genome `GCF_000714595`? Use `lengths.tsv` and AWK.
+
+::: {.callout-answer .callout-warning collapse="true" title="Click me to see an answer"}
+```{bash}
+# 1. Keep the lines of this genome, then add up column 2
+grep 'GCF_000714595' lengths.tsv | wc -l
+grep 'GCF_000714595' lengths.tsv | awk '{ sum += $2 } END { print sum }'
+```
+
+This prints:
+
+```
+9
+13787
+```
+
+9 sequences with 13,787 letters in total.
+:::
+:::
+
+## Shorter names with sed: spot the problem
+
+Names like `GCF_000714595-ECOLIN_RS01105_1` are long. For a figure, for example a tree, you may want shorter ones. The one thing you want to avoid when you change names: two sequences end up with the same name.
+
+First, look at how the names are built. Each `GCF` name has two parts, separated by a dash: the genome ID (`GCF_000714595`), then a name for this one 16S copy within the genome (`ECOLIN_RS01105_1`). All 28 `GCF` names have exactly one dash. The 7 `Root` names have no dash, because each `Root` file holds only one sequence. So the dash is the place where you can cut a name, and each version below cuts in a different way.
+
+### Version 1: remove everything from the dash
+
+In a regular expression, `*` means "the character before it, any number of times, or not at all". So `.*` means "any text", and `-.*` means "a dash and everything after it":
+
+```{bash}
+grep '^>' sequences_oneline.fasta | sed 's/-.*//' | head -3
+
+# Duplicate names
+grep '^>' sequences_oneline.fasta | sed 's/-.*//' | sort | uniq -d
+```
+
+This prints:
+
+```
+>GCF_000009425
+>GCF_000009425
+>GCF_000009425
+
+>GCF_000009425
+>GCF_000253315
+>GCF_000714595
+>GCF_014058685
+```
+
+This version generates a problem: all 16S copies of one genome now have the same name, for example 9 times `>GCF_000714595`. The check shows this right away. This version is useful for something else, though: it gives the genome ID, which you need further down.
+
+### Version 2: from the dash to the underscore
+
+This version keeps the number at the end: it replaces the dash and everything up to an underscore with a single underscore:
+
+```{bash}
+grep '^>' sequences_oneline.fasta | sed 's/-.*_/_/' | head -3
+
+# Number of duplicate names
+grep '^>' sequences_oneline.fasta | sed 's/-.*_/_/' | sort | uniq -d | wc -l
+```
+
+This prints:
+
+```
+>GCF_000009425_19
+>GCF_000009425_60
+>GCF_000009425_65
+
+0
+```
+
+No duplicates, so the check passes. But look at the names: the whole middle part, `LLMG_RS02645`, is gone, not only `LLMG`. That is because `.*` takes as much text as it can. There are two underscores after the dash, and `.*_` runs all the way to the **last** one. This is called a **greedy** match.
+
+The new names also cause a second problem. For genome `GCF_000714595`, this version makes names such as `GCF_000714595_1`. The genus table you use further down also has an entry called `GCF_000714595_1`, but none of your sequences belongs to it (you find this out further down). Names that look like IDs from another file are easy to mix up later. A check that passes does not mean the result is what you want, so always look at it too.
+
+### Version 3: from the dash to the first underscore
+
+To stop at the **first** underscore, you need "any text, but without underscores". Square brackets hold a list of characters, and a `^` right after the opening bracket turns the list around: `[^_]` means "any one character, except an underscore". So `-[^_]*_` means "a dash, then any characters that are not an underscore, then the first underscore":
+
+```{bash}
+grep '^>' sequences_oneline.fasta | sed 's/-[^_]*_/_/' | head -3
+grep '^>' sequences_oneline.fasta | sed 's/-[^_]*_/_/' | tail -3
+
+# Number of duplicate names
+grep '^>' sequences_oneline.fasta | sed 's/-[^_]*_/_/' | sort | uniq -d | wc -l
+```
+
+This prints:
+
+```
+>GCF_000009425_RS02645_19
+>GCF_000009425_RS10890_60
+>GCF_000009425_RS12185_65
+
+>Root401
+>Root68
+>Root935
+
+0
+```
+
+Only the letters between the dash and the first underscore (`-LLMG`) are gone, the rest of the name stays. The names stay unique, and the `Root` names, which have no dash, do not change.
+
+::: {.callout-question .callout-warning collapse="false" title="Exercise"}
+1. Use version 3 on the whole file `sequences_oneline.fasta`, not only the headers, and save the result as `sequences_clean.fasta`.
+2. Check the result: Does it have the same number of lines? Are there duplicate names? Are the sequence lines unchanged? Tip: `cmp` from the last page compares two files.
+
+::: {.callout-answer .callout-warning collapse="true" title="Click me to see an answer"}
+```{bash}
+# 1. The sequence lines have no dash, so sed only changes the headers
+sed 's/-[^_]*_/_/' sequences_oneline.fasta > sequences_clean.fasta
+
+# 2a. The same number of lines
+wc -l sequences_oneline.fasta sequences_clean.fasta
+
+# 2b. No duplicate names
+grep '^>' sequences_clean.fasta | sort | uniq -d | wc -l
+
+# 2c. Save the sequence lines of both files, and compare them
+grep -v '^>' sequences_oneline.fasta > seq_before.txt
+grep -v '^>' sequences_clean.fasta > seq_after.txt
+cmp seq_before.txt seq_after.txt && echo 'identical'
+```
+
+This prints:
+
+```
+    70 sequences_oneline.fasta
+    70 sequences_clean.fasta
+   140 total
+
+0
+
+identical
+```
+:::
+:::
+
+## Add the genus: combine two files
+
+::: {.callout-note title="The most advanced part of this tutorial"}
+Combining two files with AWK is harder than anything before it. If it does not make sense on the first read, that is normal: take your time, and run each step yourself. What matters most is that you recognise the `NR == FNR` pattern when you see it, for example in code from an LLM, and that you know the checks in "Check the result" below. These checks work no matter which command did the combining.
+:::
+
+The table `accession_to_genus.tsv` gives the genus of each strain:
+
+```{bash}
+cat awk_data/accession_to_genus.tsv
+```
+
+This prints:
+
+```
+LjRoot303	Streptomyces
+LjRoot44	Microbacterium
+LjRoot59	Pseudomonas
+LjRoot60	Pseudoxanthomonas
+Root935	Flavobacterium
+Root401	Pseudomonas
+Root68	Pseudomonas
+GCF_014058685	Lactobacillus
+GCF_000009425	Lactococcus
+GCF_000253315	Streptococcus
+GCF_000714595	Escherichia
+GCF_000714595_1	Escherichia
+GCF_000714595_2	Escherichia
+```
+
+You want to add the genus to each line of `lengths.tsv`. The two files share a name, which you can use to match their lines. But for the `GCF` sequences, the names in the two files are not the same: `lengths.tsv` has the full name (`GCF_000714595-ECOLIN_RS01105_1`), the genus table only the genome ID (`GCF_000714595`). So again you work in two steps: first add the genome ID as a column, then add the genus.
+
+### Step 1: add the genome ID
+
+The genome ID is the name without the dash and everything after it, just like version 1 of the sed commands above. AWK has its own version of sed's `s`, called `sub` (for "substitute"):
+
+```{bash}
+# Copy the name into the variable id, remove everything from the dash in id,
+# and print the name, the ID and the length.
+awk -F'\t' -v OFS='\t' '{ id = $1; sub(/-.*/, "", id); print $1, id, $2 }' lengths.tsv > lengths_id.tsv
+
+# Check
+wc -l lengths_id.tsv
+head -3 lengths_id.tsv
+tail -2 lengths_id.tsv
+```
+
+This prints:
+
+```
+35 lengths_id.tsv
+
+GCF_000009425-LLMG_RS02645_19	GCF_000009425	1547
+GCF_000009425-LLMG_RS10890_60	GCF_000009425	1547
+GCF_000009425-LLMG_RS12185_65	GCF_000009425	1547
+
+Root68	Root68	1386
+Root935	Root935	1502
+```
+
+`sub(/-.*/, "", id)` means: in the variable `id`, replace the first match of `-.*` with `""`, which is empty text. `sub` changes the variable you give it. That is why the name is first copied into `id`: `$1` itself stays as it is, and you can print both. Names without a dash, like `Root68`, stay the same.
+
+### Step 2: add the genus
+
+AWK can read two files, one after the other. The command below first reads the genus table and remembers the genus of each ID. Then it reads `lengths_id.tsv` and adds the remembered genus to each line:
+
+```{bash}
+awk -F'\t' -v OFS='\t' '
+  NR == FNR  { genus[$1] = $2; next }
+             { print $0, genus[$2] }
+' awk_data/accession_to_genus.tsv lengths_id.tsv > lengths_genus.tsv
+
+# Check
+wc -l lengths_genus.tsv
+head -3 lengths_genus.tsv
+tail -2 lengths_genus.tsv
+```
+
+This prints:
+
+```
+35 lengths_genus.tsv
+
+GCF_000009425-LLMG_RS02645_19	GCF_000009425	1547	Lactococcus
+GCF_000009425-LLMG_RS10890_60	GCF_000009425	1547	Lactococcus
+GCF_000009425-LLMG_RS12185_65	GCF_000009425	1547	Lactococcus
+
+Root68	Root68	1386	Pseudomonas
+Root935	Root935	1502	Flavobacterium
+```
+
+To understand what this command exactly does, lets look closer at the individual parts:
+
+You will see `NR == FNR` in many AWK commands that combine two files, so it is worth taking it apart.
+
+**`NR` and `FNR`.** You know `NR` from page 1: the line number. When AWK reads several files, `NR` keeps counting across all of them. `FNR` is the line number within the current file, and starts at 1 again in each new file. `FILENAME` holds the name of the current file. You can see the difference where AWK moves from the first file to the second (`sed -n '12,15p'` prints lines 12 to 15):
+
+```{bash}
+awk '{ print FILENAME, NR, FNR }' awk_data/accession_to_genus.tsv lengths_id.tsv | sed -n '12,15p'
+```
+
+This prints:
+
+```
+awk_data/accession_to_genus.tsv 12 12
+awk_data/accession_to_genus.tsv 13 13
+lengths_id.tsv 14 1
+lengths_id.tsv 15 2
+```
+
+In the first file, `NR` and `FNR` are the same. From the second file on, they differ. So the pattern `NR == FNR` is true only while AWK reads the first file.
+
+**The first part**, `NR == FNR { genus[$1] = $2; next }`, runs only on the genus table. Here, `genus` is an array, a set of named boxes, as on page 1. Take line 7 of the genus table:
+
+```
+Root68	Pseudomonas
+```
+
+Here `$1` is `Root68` and `$2` is `Pseudomonas`. So `genus[$1] = $2` means `genus["Root68"] = "Pseudomonas"`: make a box named after the ID in column 1, and put the genus from column 2 into it. The ID is the name of the box, because the ID is what you look up later. The genus is what goes inside, because that is what you want back. Then `next` goes to the next line, so the second part does not run on the genus table.
+
+You can look inside the boxes after AWK has read the whole genus table:
+
+```{bash}
+awk -F'\t' '
+  { genus[$1] = $2 }
+  END { print genus["Root68"]; print genus["GCF_000714595"] }
+' awk_data/accession_to_genus.tsv
+```
+
+This prints:
+
+```
+Pseudomonas
+Escherichia
+```
+
+**The second part**, `{ print $0, genus[$2] }`, has no pattern, so it runs on every line that gets this far: only the lines of `lengths_id.tsv`. Take the line of Root68 in that file:
+
+```
+Root68	Root68	1386
+```
+
+Now `$2` is the ID, `Root68`, because in this file the ID is in column 2. So `genus[$2]` is `genus["Root68"]`, the box filled in the first part, and AWK prints:
+
+```
+Root68	Root68	1386	Pseudomonas
+```
+
+Note that `$1` and `$2` always mean the columns of the line AWK is reading at that moment. In the genus table, `$2` is the genus. In `lengths_id.tsv`, `$2` is the ID. So you choose the column numbers for each file separately.
+
+**The order of the files matters.** The table you look things up in comes first, the table you add to comes second.
+
+::: {.callout-important title="Forget next, and the first file ends up in the result"}
+Without `next`, the second part also runs on the lines of the genus table. You get no error:
+
+```{bash}
+awk -F'\t' -v OFS='\t' '
+  NR == FNR  { genus[$1] = $2 }
+             { print $0, genus[$2] }
+' awk_data/accession_to_genus.tsv lengths_id.tsv > lengths_genus_nonext.tsv
+
+wc -l lengths_genus_nonext.tsv
+head -3 lengths_genus_nonext.tsv
+```
+
+This prints:
+
+```
+48 lengths_genus_nonext.tsv
+
+LjRoot303	Streptomyces
+LjRoot44	Microbacterium
+LjRoot59	Pseudomonas
+```
+
+You get 48 lines instead of 35: the 13 lines of the genus table, each with an empty column added, and then the 35 lines you wanted. The line count shows the problem right away.
+:::
+
+::: {.callout-tip title="Tip: the same command without NR == FNR (optional)" collapse="true"}
+If you find `NR == FNR` and `next` hard to read, you can write the same steps out with `if` and `else`, using the file name. It gives exactly the same file:
+
+```{bash}
+# If AWK reads the genus table: remember the genus of each ID.
+# Else (the other file): print the line and the genus of its ID.
+awk -F'\t' -v OFS='\t' '
+  {
+    if (FILENAME == "awk_data/accession_to_genus.tsv") {
+      genus[$1] = $2
+    } else {
+      print $0, genus[$2]
+    }
+  }
+' awk_data/accession_to_genus.tsv lengths_id.tsv > lengths_genus_ifelse.tsv
+
+cmp lengths_genus.tsv lengths_genus_ifelse.tsv && echo 'identical'
+```
+
+This prints:
+
+```
+identical
+```
+
+The file name in the command must be written exactly as in the list of files at the end. You will see the short `NR == FNR` form more often, so it helps to recognise both.
+:::
+
+### Check the result
+
+When AWK looks for a box that does not exist, for example for an ID that is not in the genus table, it gets empty text. There is no error. To see what that looks like, make a copy of the genus table with a typo, `Root86` instead of `Root68`, and run the same command with it:
+
+```{bash}
+sed 's/^Root68/Root86/' awk_data/accession_to_genus.tsv > genus_typo.tsv
+
+awk -F'\t' -v OFS='\t' '
+  NR == FNR  { genus[$1] = $2; next }
+             { print $0, genus[$2] }
+' genus_typo.tsv lengths_id.tsv > lengths_genus_typo.tsv
+
+wc -l lengths_genus_typo.tsv
+grep 'Root68' lengths_genus_typo.tsv | cat -A
+```
+
+This prints:
+
+```
+35 lengths_genus_typo.tsv
+
+Root68^IRoot68^I1386^I$
+```
+
+Still 35 lines, so the line count does not catch this. Only `cat -A` shows that the last column of Root68 is empty: a tab, then the end of the line. Two checks find such problems in a join.
+
+**Check 1: lines without a genus.** Count the empty fields in column 4, as on page 1:
+
+```{bash}
+awk -F'\t' '$4 == ""' lengths_genus.tsv | wc -l
+awk -F'\t' '$4 == ""' lengths_genus_typo.tsv | wc -l
+```
+
+This prints:
+
+```
+0
+1
+```
+
+**Check 2: entries in the genus table without a sequence.** Turn the command around: read `lengths_id.tsv` first and remember which IDs it has, then print the lines of the genus table whose ID was not seen. `($1 in seen)` is true if a box with that name exists, and `!` turns it around:
+
+```{bash}
+awk -F'\t' '
+  NR == FNR        { seen[$2] = 1; next }
+  !($1 in seen)
+' lengths_id.tsv awk_data/accession_to_genus.tsv
+```
+
+This prints:
+
+```
+GCF_000714595_1	Escherichia
+GCF_000714595_2	Escherichia
+```
+
+Two entries in the genus table have no sequence. That is fine here, as long as you expected it. In your own data, it may point to a name that is written differently in the two files.
+
+::: {.callout-question .callout-warning collapse="false" title="Exercise"}
+1. How many sequences are there per genus? Use `lengths_genus.tsv`.
+2. What is the mean sequence length per genus, without decimals? Use an array, as on page 1.
+
+::: {.callout-answer .callout-warning collapse="true" title="Click me to see an answer"}
+```{bash}
+# 1. The genus is column 4
+cut -f4 lengths_genus.tsv | sort | uniq -c
+
+# 2. Sum and count per genus (the length is column 3)
+awk -F'\t' '
+  { sum[$4] += $3; n[$4]++ }
+  END { for (g in sum) { printf "%s\t%d\t%.0f\n", g, n[g], sum[g] / n[g] } }
+' lengths_genus.tsv | sort
+```
+
+This prints:
+
+```
+      9 Escherichia
+      1 Flavobacterium
+      7 Lactobacillus
+      6 Lactococcus
+      1 Microbacterium
+      3 Pseudomonas
+      1 Pseudoxanthomonas
+      6 Streptococcus
+      1 Streptomyces
+
+Escherichia	9	1532
+Flavobacterium	1	1502
+Lactobacillus	7	1573
+Lactococcus	6	1547
+Microbacterium	1	1513
+Pseudomonas	3	1479
+Pseudoxanthomonas	1	1533
+Streptococcus	6	1548
+Streptomyces	1	1474
+```
+
+`lengths_genus.tsv` has no header, so you do not need `NR > 1` here.
+:::
+:::
+
+## Windows line endings in a join
+
+On the [sed page](sed_basics.qmd#windows-line-endings), you met the hidden `\r` that Windows puts at the end of each line. Here is what it does to a join. Run the same command with the Windows version of the genus table:
+
+```{bash}
+awk -F'\t' -v OFS='\t' '
+  NR == FNR  { genus[$1] = $2; next }
+             { print $0, genus[$2] }
+' awk_data/accession_to_genus_windows.tsv lengths_id.tsv > lengths_genus_win.tsv
+
+wc -l lengths_genus_win.tsv
+tail -2 lengths_genus_win.tsv
+tail -2 lengths_genus_win.tsv | cat -A
+```
+
+This prints:
+
+```
+35 lengths_genus_win.tsv
+
+Root68	Root68	1386	Pseudomonas
+Root935	Root935	1502	Flavobacterium
+
+Root68^IRoot68^I1386^IPseudomonas^M$
+Root935^IRoot935^I1502^IFlavobacterium^M$
+```
+
+The line count is right, and on screen the result looks fine. But `cat -A` shows that the `\r` (`^M`) came along with the genus. Each genus is now `Pseudomonas\r` instead of `Pseudomonas`, so the next command that looks for a genus finds nothing:
+
+```{bash}
+awk -F'\t' '$4 == "Pseudomonas"' lengths_genus.tsv | wc -l
+awk -F'\t' '$4 == "Pseudomonas"' lengths_genus_win.tsv | wc -l
+```
+
+This prints:
+
+```
+3
+0
+```
+
+The fix is the same as on the sed page: remove the `\r` from the genus table first, then join.
+
+```{bash}
+sed 's/\r$//' awk_data/accession_to_genus_windows.tsv > genus_fixed.tsv
+
+awk -F'\t' -v OFS='\t' '
+  NR == FNR  { genus[$1] = $2; next }
+             { print $0, genus[$2] }
+' genus_fixed.tsv lengths_id.tsv > lengths_genus_fixed.tsv
+
+cmp lengths_genus_fixed.tsv lengths_genus.tsv && echo 'identical'
+```
+
+This prints:
+
+```
+identical
+```
+
+::: {.callout-important title="Git Bash hides this problem"}
+In Git Bash on Windows, AWK drops the `\r` when it reads the file. There, the join with the Windows genus table gives exactly the same result as with the clean one, and you find 3 `Pseudomonas` sequences. On Linux, for example on a computer cluster, you find 0. Check new files with `file` or `cat -A` before you combine them, whatever system you work on.
+:::
+
+## What you learned
+
+- A FASTA file has header lines starting with `>` and sequence lines below them. Count the sequences with `grep -c '^>'`, always with the quotes.
+- `/^>/` as an AWK pattern keeps the header lines, `!/^>/` the other lines.
+- A sequence may span several lines. Put each sequence on one line first, then measure it with `length($0)`. Check the result with another method.
+- `next` skips the rest of the command for the current line.
+- In a regular expression, `.*` is any text, and it takes as much as it can (greedy). `[^_]*` is any text without an underscore.
+- After shortening names, check for duplicates with `sort | uniq -d`, and look at the names yourself.
+- `sub(/old/, "new", variable)` is AWK's version of sed's `s`.
+- `NR == FNR { box[$1] = $2; next } { print $0, box[$2] }` combines two files: the lookup table first, the table you add to second.
+- A missing ID gives an empty field, not an error. After a join, count the empty fields and look for entries that were not used.
+- A Windows line ending in the lookup table travels into your result. Remove it before the join.
+
+On the next page, [Checking AWK or sed code from an LLM](check_llm_code.qmd), you put these checks together into a routine for any command you did not write yourself.

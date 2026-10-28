@@ -37,8 +37,8 @@ The last point matters most. A command that fails with an error message is easy 
 
 1. **Use AWK on a table**: print and select columns and rows, add a column, and calculate counts and means per group
 2. **Learn sed basics**: search and replace text, delete lines, and change a file safely
-3. **Use AWK and sed on FASTA files**: count sequences, measure their lengths, clean up sequence names, and add information from a second file
-4. **Checking code from an LLM**: a short routine to test any AWK or sed command before you trust its output
+3. **Use AWK and sed on FASTA files**: count sequences, measure their lengths, clean up sequence names, and add information from a second file (in planning)
+4. **Checking code from an LLM**: a short routine to test any AWK or sed command before you trust its output (in planning)
 
 ## Before you start
 
