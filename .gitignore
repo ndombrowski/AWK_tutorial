@@ -2,3 +2,11 @@
 .Rhistory
 .RData
 .Ruserdata
+
+# Notes for working on the tutorial, not part of the site
+CLAUDE.md
+PLAN.md
+.claude/settings.local.json
+
+# test scripts and dummy data (checked and cleaned by hand)
+_tests/
