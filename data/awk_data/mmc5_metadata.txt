@@ -1,0 +1,28 @@
+strain	Order	Family	Genus	compartment	host	nifH	Taxonomy group	optimal dpi	Media	RGP	Colonization
+Root123D2	Rhizobiales	Bradyrhizobiaceae	Afipia	Root	Arabidopsis	FALSE	Bradyrhizobium	8	50% TSB	TRUE	NA
+Root381	Rhizobiales	Bradyrhizobiaceae	Bosea	Root	Arabidopsis	FALSE	Bradyrhizobium	3	TY	TRUE	NA
+USDA61	Rhizobiales	Bradyrhizobiaceae	Bradyrhizobium	Nodule	Legume	TRUE	Bradyrhizobium	8	TY	FALSE	NA
+Root635	Rhizobiales	Hyphomicrobiaceae	Devosia	Root	Arabidopsis	FALSE	Hyphomicrobiaceae	3	TY	FALSE	FALSE
+Root685	Rhizobiales	Hyphomicrobiaceae	Devosia	Root	Arabidopsis	FALSE	Hyphomicrobiaceae	3	TY	FALSE	FALSE
+R7A	Rhizobiales	Phyllobacteriaceae	Mesorhizobium	Nodule	Legume	TRUE	Mesorhizobium	3	TY	TRUE	NA
+Root157	Rhizobiales	Phyllobacteriaceae	Mesorhizobium	Root	Arabidopsis	FALSE	Mesorhizobium	3	TY	FALSE	FALSE
+Root695	Rhizobiales	Phyllobacteriaceae	Mesorhizobium	Root	Arabidopsis	FALSE	Mesorhizobium	3	TY	TRUE	TRUE
+CIAT899	Rhizobiales	Rhizobiaceae	Rhizobium	Nodule	Legume	TRUE	Rhizobium spp.	2	TY	TRUE	NA
+R129_E	Rhizobiales	Rhizobiaceae	Rhizobium	Root	Arabidopsis	FALSE	Rhizobium spp.	2	TY	TRUE	TRUE
+R129_N	Rhizobiales	Rhizobiaceae	Rhizobium	Root	Arabidopsis	FALSE	Rhizobium spp.	2	TY	TRUE	NA
+R13_A	Rhizobiales	Rhizobiaceae	Rhizobium	Root	Arabidopsis	TRUE	Rhizobium spp.	3	TY	TRUE	NA
+R13_C	Rhizobiales	Rhizobiaceae	Rhizobium	Root	Arabidopsis	FALSE	Rhizobium spp.	3	TY	TRUE	NA
+Rg	Rhizobiales	Rhizobiaceae	Rhizobium	Root	Arabidopsis	FALSE	Rhizobium spp.	2	TY	TRUE	NA
+Root149	Rhizobiales	Rhizobiaceae	Rhizobium	Root	Arabidopsis	FALSE	Rhizobium spp.	2	TY	TRUE	NA
+NGR234	Rhizobiales	Rhizobiaceae	Ensifer	Nodule	Legume	TRUE	Sinorhizobium	3	TY	FALSE	TRUE
+Root142	Rhizobiales	Rhizobiaceae	Ensifer	Root	Arabidopsis	FALSE	Sinorhizobium	2	TY	TRUE	TRUE
+Root423	Rhizobiales	Rhizobiaceae	Ensifer	Root	Arabidopsis	FALSE	Sinorhizobium	2	TY	TRUE	NA
+C58	Rhizobiales	Rhizobiaceae	Rhizobium	Nodule	Legume	FALSE	Agrobacterium	2	TY	TRUE	NA
+Root491	Rhizobiales	Rhizobiaceae	Rhizobium	Root	Arabidopsis	FALSE	Agrobacterium	2	TY	TRUE	NA
+Root1497	Sphingomonadales	Sphingomonadaceae	Sphingopyxis	Root	Arabidopsis	FALSE	Sphingomonadales	2	50% TSB	FALSE	TRUE
+Root154	Sphingomonadales	Sphingomonadaceae		Root	Arabidopsis	FALSE	Sphingomonadales	3	50% TSB	FALSE	TRUE
+Root241	Sphingomonadales	Sphingomonadaceae	Sphingomonas	Root	Arabidopsis	FALSE	Sphingomonadales	2	50% TSB	FALSE	TRUE
+Root720	Sphingomonadales	Sphingomonadaceae	Sphingomonas	Root	Arabidopsis	FALSE	Sphingomonadales	2	50% TSB	FALSE	TRUE
+Root342	Caulobacterales	Caulobacteraceae	Caulobacter	Root	Arabidopsis	FALSE	Caulobacterales	3	50% TSB	FALSE	TRUE
+Root700	Caulobacterales	Caulobacteraceae		Root	Arabidopsis	FALSE	Caulobacterales	2	50% TSB	FALSE	TRUE
+Root77	Caulobacterales	Caulobacteraceae		Root	Arabidopsis	FALSE	Caulobacterales	2	50% TSB	FALSE	TRUE

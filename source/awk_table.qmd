@@ -31,12 +31,12 @@ tar -xzf awk_data.tar.gz
 # Check: you should see awk_data and awk_data.tar.gz
 ls
 
-# Check: you should see 15 files
+# Check: you should see 14 files
 ls awk_data
 ls awk_data | wc -l
 ```
 
-On this page you only need `Growth_Data.txt`. The other files are 16S sequences, two small tables, and a second version of the growth table, which you use on later pages.
+On this page you only need `Growth_Data.txt`. The other files are 16S sequences, a table with information on bacterial strains, and a second version of the growth table, which you use on later pages.
 
 ::: {.callout-warning title="Draft note"}
 The download link is not tested yet: the data is not on GitHub yet. The other commands were tested on a copy of the same file.

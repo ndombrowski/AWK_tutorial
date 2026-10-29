@@ -407,63 +407,83 @@ This prints:
 
 ## Change a file safely
 
-So far, sed only printed its result, or you saved it in a new file. Sometimes you want to change a file itself, for example to correct a name in a table you keep using. Do this on a copy, never on your original data. Here you work on a copy of the genus table, so the file in `awk_data/` stays as it is for the next page:
+So far, sed only printed its result, or you saved it in a new file. Sometimes you want to change a file itself, for example to correct a name in a table you keep using. Do this on a copy, never on your original data.
+
+For the rest of this page, you use a second table, `mmc5_metadata.txt`. It describes 27 bacterial strains, for example their taxonomy and the plant they were isolated from. It comes from a [published study](https://www.cell.com/cell-host-microbe/fulltext/S1931-3128(18)30318-4), and two of its strains are the bacteria `129E` and `13C` from the growth data. On the next page, you combine the two tables.
+
+Make a copy, so the file in `awk_data/` stays as it is, and look at the strains isolated from legumes. The table has 12 columns, so `cut -f1,6` shows only the strain name (column 1) and the host plant (column 6):
 
 ```{bash}
-cp awk_data/accession_to_genus.tsv genus.tsv
-head -3 genus.tsv
+cp awk_data/mmc5_metadata.txt metadata.txt
+grep 'Legume' metadata.txt | cut -f1,6
 ```
 
 This prints:
 
 ```
-LjRoot303	Streptomyces
-LjRoot44	Microbacterium
-LjRoot59	Pseudomonas
+USDA61	Legume
+R7A	Legume
+CIAT899	Legume
+NGR234	Legume
+C58	Legume
 ```
 
-The safe way to change a file has three steps: write the result to a new file, check it, and only then replace the old file with the new one. Say you want `Escherichia_coli` instead of `Escherichia`:
+The safe way to change a file has three steps: write the result to a new file, check it, and only then replace the old file with the new one. Say you want `Legume_host` instead of `Legume`:
 
 ```{bash}
 # 1. Write the result to a new file
-sed 's/Escherichia/Escherichia_coli/' genus.tsv > genus_new.tsv
+sed 's/Legume/Legume_host/' metadata.txt > metadata_new.txt
 
 # 2. Check: the same number of lines, and only the lines you wanted changed
-wc -l genus.tsv genus_new.tsv
-diff genus.tsv genus_new.tsv
+wc -l metadata.txt metadata_new.txt
+diff metadata.txt metadata_new.txt | cut -f1,6
 ```
 
 This prints:
 
 ```
- 13 genus.tsv
- 13 genus_new.tsv
- 26 total
+  28 metadata.txt
+  28 metadata_new.txt
+  56 total
 
-11,13c11,13
-< GCF_000714595	Escherichia
-< GCF_000714595_1	Escherichia
-< GCF_000714595_2	Escherichia
+4c4
+< USDA61	Legume
 ---
-> GCF_000714595	Escherichia_coli
-> GCF_000714595_1	Escherichia_coli
-> GCF_000714595_2	Escherichia_coli
+> USDA61	Legume_host
+7c7
+< R7A	Legume
+---
+> R7A	Legume_host
+10c10
+< CIAT899	Legume
+---
+> CIAT899	Legume_host
+17c17
+< NGR234	Legume
+---
+> NGR234	Legume_host
+20c20
+< C58	Legume
+---
+> C58	Legume_host
 ```
 
-`diff` compares two files line by line and prints only the lines that differ. `11,13c11,13` means: lines 11 to 13 were changed. Lines starting with `<` come from the first file, lines starting with `>` from the second. So exactly three lines changed, the way you wanted. Now replace the old file:
+`diff` compares two files line by line and prints only the lines that differ. `4c4` means: line 4 was changed. Lines starting with `<` come from the first file, lines starting with `>` from the second. `diff` prints whole lines, which are long in this table, so `| cut -f1,6` keeps only the strain and the host. Lines such as `4c4` have no tab, and `cut` prints them as they are. So exactly five lines changed, the way you wanted. Now replace the old file:
 
 ```{bash}
 # 3. Replace the old file with the new one
-mv genus_new.tsv genus.tsv
-grep 'Escherichia' genus.tsv
+mv metadata_new.txt metadata.txt
+grep 'Legume' metadata.txt | cut -f1,6
 ```
 
 This prints:
 
 ```
-GCF_000714595	Escherichia_coli
-GCF_000714595_1	Escherichia_coli
-GCF_000714595_2	Escherichia_coli
+USDA61	Legume_host
+R7A	Legume_host
+CIAT899	Legume_host
+NGR234	Legume_host
+C58	Legume_host
 ```
 
 ### `sed -i`: change the file itself
@@ -471,48 +491,103 @@ GCF_000714595_2	Escherichia_coli
 sed can also change a file directly, with the option `-i` (for "in place"). It does the three steps above in one go, but without the check. This is often were mistakes happen. Say you forgot that you already made the change, and run the command again, this time with `-i`:
 
 ```{bash}
-sed -i 's/Escherichia/Escherichia_coli/' genus.tsv
-grep 'Escherichia' genus.tsv
+sed -i 's/Legume/Legume_host/' metadata.txt
+grep 'Legume' metadata.txt | cut -f1,6
 ```
 
 This prints:
 
 ```
-GCF_000714595	Escherichia_coli_coli
-GCF_000714595_1	Escherichia_coli_coli
-GCF_000714595_2	Escherichia_coli_coli
+USDA61	Legume_host_host
+R7A	Legume_host_host
+CIAT899	Legume_host_host
+NGR234	Legume_host_host
+C58	Legume_host_host
 ```
 
-`Escherichia_coli` still contains `Escherichia`, so sed added `_coli` a second time. sed gives no warning, and the old version of the file is gone. This happens easily when you run a script or a notebook a second time.
+`Legume_host` still contains `Legume`, so sed added `_host` a second time. sed gives no warning, and the old version of the file is gone. This happens easily when you run a script or a notebook a second time.
 
-If you use `-i`, let sed keep a backup copy. With `-i.bak`, sed saves the old version as `genus.tsv.bak` before it changes the file:
+If you use `-i`, let sed keep a backup copy. With `-i.bak`, sed saves the old version as `metadata.txt.bak` before it changes the file:
 
 ```{bash}
-sed -i.bak 's/_coli_coli/_coli/' genus.tsv
-ls genus*
-grep 'Escherichia' genus.tsv
-grep 'Escherichia' genus.tsv.bak
+sed -i.bak 's/Legume_host_host/Legume_host/' metadata.txt
+ls metadata*
+grep 'Legume' metadata.txt | cut -f1,6
+grep 'Legume' metadata.txt.bak | cut -f1,6
 ```
 
 This prints:
 
 ```
-genus.tsv
-genus.tsv.bak
+metadata.txt
+metadata.txt.bak
 
-GCF_000714595	Escherichia_coli
-GCF_000714595_1	Escherichia_coli
-GCF_000714595_2	Escherichia_coli
+USDA61	Legume_host
+R7A	Legume_host
+CIAT899	Legume_host
+NGR234	Legume_host
+C58	Legume_host
 
-GCF_000714595	Escherichia_coli_coli
-GCF_000714595_1	Escherichia_coli_coli
-GCF_000714595_2	Escherichia_coli_coli
+USDA61	Legume_host_host
+R7A	Legume_host_host
+CIAT899	Legume_host_host
+NGR234	Legume_host_host
+C58	Legume_host_host
 ```
 
 ::: {.callout-important title="Before you use sed -i"}
 - Work on a copy, not on your original data.
 - If you are not sure, write to a new file first and check it with `wc -l` and `diff`.
-- Ask yourself what happens if the command runs twice. A change like `s/Escherichia/Escherichia_coli/` grows each time, `s/Escherichia_coli_coli/Escherichia_coli/` does not.
+- Ask yourself what happens if the command runs twice. A change like `s/Legume/Legume_host/` grows each time, `s/Legume_host_host/Legume_host/` does not.
+:::
+
+::: {.callout-question .callout-warning collapse="false" title="Exercise"}
+1. Add `_host` to every host in column 6 of `awk_data/mmc5_metadata.txt`, and save the result in a new file. First look at which hosts there are. Do it once with sed, and once with AWK. Tip: on the [AWK page](awk_table.qmd#mean-per-nutrient-and-condition), you glued text together with `$1"-"$2`.
+2. Check both results: count the values in column 6, and compare the two files.
+
+::: {.callout-answer .callout-warning collapse="true" title="Click me to see an answer"}
+```{bash}
+# Which hosts are there?
+cut -f6 awk_data/mmc5_metadata.txt | sort | uniq -c
+
+# 1a. sed: one change per host
+sed 's/Legume/Legume_host/; s/Arabidopsis/Arabidopsis_host/' awk_data/mmc5_metadata.txt > hosts_sed.txt
+
+# 1b. AWK: glue _host to column 6, on every line after the header
+awk -F'\t' -v OFS='\t' 'NR > 1 { $6 = $6 "_host" } { print }' awk_data/mmc5_metadata.txt > hosts_awk.txt
+
+# 2. Check
+cut -f6 hosts_sed.txt | sort | uniq -c
+cut -f6 hosts_awk.txt | sort | uniq -c
+cmp hosts_sed.txt hosts_awk.txt && echo 'identical'
+```
+
+This prints:
+
+```
+     22 Arabidopsis
+      5 Legume
+      1 host
+
+     22 Arabidopsis_host
+      5 Legume_host
+      1 host
+
+     22 Arabidopsis_host
+      5 Legume_host
+      1 host
+
+identical
+```
+
+Both commands give the same file, and most strains turn out to come from *Arabidopsis*, like the plants in the growth data. The sed version works here because you looked first: there are only two hosts, and these two words appear nowhere else in the table. With many different hosts, you would need one change for each.
+
+The AWK version changes column 6 on every line, whatever is in it. `$6 "_host"` glues the text `_host` to the value in column 6. Three mistakes give a wrong result without an error:
+
+- Without `NR > 1`, the header becomes `host_host`.
+- Run the command a second time, on `hosts_awk.txt`, and you get `Arabidopsis_host_host`, as with `sed -i` above.
+- Without the double quotes around `_host`, AWK reads `_host` as the name of an empty variable, and nothing changes.
+:::
 :::
 
 ::: {.callout-tip title="Tip: sed on a Mac (optional)" collapse="true"}
@@ -524,48 +599,54 @@ The sed on a Mac is a different version (BSD sed). Two differences matter for th
 
 Every line in a text file ends with an invisible character that says "a new line starts here". Linux and Mac use one character for this, written as `\n`. Windows uses two: `\r\n`. A table saved on Windows, for example from Excel, may therefore have a hidden `\r` at the end of every line. You do not see it on screen, but AWK and grep on Linux see it as part of the last column.
 
-The file `accession_to_genus_windows.tsv` holds the same table as `accession_to_genus.tsv`, but with Windows line endings. `file` tells you what kind of text a file holds:
+The metadata table was saved from Excel on Windows. `file` tells you what kind of text a file holds. Compare it with the growth data:
 
 ```{bash}
-file awk_data/accession_to_genus.tsv awk_data/accession_to_genus_windows.tsv
+file awk_data/Growth_Data.txt awk_data/mmc5_metadata.txt
 ```
 
 This prints:
 
 ```
-awk_data/accession_to_genus.tsv:         ASCII text
-awk_data/accession_to_genus_windows.tsv: ASCII text, with CRLF line terminators
+awk_data/Growth_Data.txt:   ASCII text
+awk_data/mmc5_metadata.txt: ASCII text, with CRLF line terminators
 ```
 
-`CRLF` is the name for the Windows line ending `\r\n`. Now see what it does. Count the rows with genus `Pseudomonas` in both files:
+`CRLF` is the name for the Windows line ending `\r\n`. Now see what it does. Column 12, the last column, holds `TRUE`, `FALSE` or `NA`. Count these values with the tools from the CLI workshop, and then let AWK count the rows with `TRUE`:
 
 ```{bash}
-awk -F'\t' '$2 == "Pseudomonas"' awk_data/accession_to_genus.tsv | wc -l
-awk -F'\t' '$2 == "Pseudomonas"' awk_data/accession_to_genus_windows.tsv | wc -l
+cut -f12 awk_data/mmc5_metadata.txt | sort | uniq -c
+awk -F'\t' '$12 == "TRUE"' awk_data/mmc5_metadata.txt | wc -l
 ```
 
 This prints:
 
 ```
-3
+      1 Colonization
+      3 FALSE
+     13 NA
+     11 TRUE
+
 0
 ```
 
-No error, but we get 0 instead of 3 for the Windows file. That happens, because in the Windows file, column 2 is `Pseudomonas\r`, not `Pseudomonas`. With `head`, the two files look the same but we can check the file with `cat -A`, which shows the `\r` as `^M`:
+`cut` shows 11 rows with `TRUE`, but AWK finds 0, and there is no error. That happens because column 12 is `TRUE\r`, not `TRUE`. The `\r` is invisible on screen, also in the output of `cut` above. `cat -A` shows it as `^M`. Column 12 is the last column, so `cut -f1,12` gives a short view of the strain name and the line end:
 
 ```{bash}
-head -2 awk_data/accession_to_genus_windows.tsv
-head -2 awk_data/accession_to_genus_windows.tsv | cat -A
+head -3 awk_data/mmc5_metadata.txt | cut -f1,12
+head -3 awk_data/mmc5_metadata.txt | cut -f1,12 | cat -A
 ```
 
 This prints:
 
 ```
-LjRoot303	Streptomyces
-LjRoot44	Microbacterium
+strain	Colonization
+Root123D2	NA
+Root381	NA
 
-LjRoot303^IStreptomyces^M$
-LjRoot44^IMicrobacterium^M$
+strain^IColonization^M$
+Root123D2^INA^M$
+Root381^INA^M$
 ```
 
 ### Remove the `\r` with sed
@@ -573,50 +654,47 @@ LjRoot44^IMicrobacterium^M$
 To remove the `\r`, replace it with nothing. In sed, `\r` stands for this character, and `$` means "the end of the line". So `s/\r$//` removes a `\r` only where it sits at the end of a line:
 
 ```{bash}
-sed 's/\r$//' awk_data/accession_to_genus_windows.tsv > genus_fixed.tsv
+sed 's/\r$//' awk_data/mmc5_metadata.txt > mmc5_metadata_fixed.txt
 
-# Check: file type, the hidden characters, the number of lines, and the count from before
-file genus_fixed.tsv
-head -2 genus_fixed.tsv | cat -A
-wc -l genus_fixed.tsv
-awk -F'\t' '$2 == "Pseudomonas"' genus_fixed.tsv | wc -l
+# Check: file type, the hidden characters, the number of lines and characters,
+# and the count from before
+file mmc5_metadata_fixed.txt
+head -3 mmc5_metadata_fixed.txt | cut -f1,12 | cat -A
+wc -l mmc5_metadata_fixed.txt
+wc -c awk_data/mmc5_metadata.txt mmc5_metadata_fixed.txt
+awk -F'\t' '$12 == "TRUE"' mmc5_metadata_fixed.txt | wc -l
 ```
 
 This prints:
 
 ```
-genus_fixed.tsv: ASCII text
+mmc5_metadata_fixed.txt: ASCII text
 
-LjRoot303^IStreptomyces$
-LjRoot44^IMicrobacterium$
+strain^IColonization$
+Root123D2^INA$
+Root381^INA$
 
-13 genus_fixed.tsv
+28 mmc5_metadata_fixed.txt
 
-3
+2808 awk_data/mmc5_metadata.txt
+2780 mmc5_metadata_fixed.txt
+5588 total
+
+11
 ```
 
-The `^M` is gone, and AWK finds the 3 rows again. Here you can also check that the result is exactly the clean file:
-
-```{bash}
-cmp genus_fixed.tsv awk_data/accession_to_genus.tsv && echo 'identical'
-```
-
-This prints:
-
-```
-identical
-```
+The `^M` is gone, and AWK finds the 11 rows. `wc -c` counts characters: the fixed file has 28 lines and 28 characters fewer, one `\r` per line. Keep `mmc5_metadata_fixed.txt`, you use it on the next page.
 
 ::: {.callout-important title="Git Bash hides this problem"}
-The outputs on this page come from Linux (Ubuntu in WSL). In Git Bash on Windows, AWK and grep ignore the `\r`: they find 3 rows with `Pseudomonas` in both files. The file still has the `\r`, though, and `file`, `cat -A` and sed show it in Git Bash too. As soon as you use the file on Linux, for example on a computer cluster, the problem appears. So check new files with `file` or `cat -A`, whatever system you work on.
+The outputs on this page come from Linux (Ubuntu in WSL). In Git Bash on Windows, AWK and grep ignore the `\r`: they find 11 rows with `TRUE` also in the original file. The file still has the `\r`, though, and `file`, `cat -A` and sed show it in Git Bash too. As soon as you use the file on Linux, for example on a computer cluster, the problem appears. So check new files with `file` or `cat -A`, whatever system you work on.
 :::
 
-::: {.callout-tip title="Tip: remove the \\r with tr (optional)" collapse="true"}
+::: {.callout-tip title="Tip: remove the `\\r` with tr (optional)" collapse="true"}
 You will often see another command for the same job: `tr -d '\r'` deletes every `\r` in a file. `tr` reads only from a pipe or with `<`, not from a file name:
 
 ```{bash}
-tr -d '\r' < awk_data/accession_to_genus_windows.tsv > genus_fixed_tr.tsv
-cmp genus_fixed_tr.tsv awk_data/accession_to_genus.tsv && echo 'identical'
+tr -d '\r' < awk_data/mmc5_metadata.txt > mmc5_metadata_fixed_tr.txt
+cmp mmc5_metadata_fixed_tr.txt mmc5_metadata_fixed.txt && echo 'identical'
 ```
 
 This prints:
@@ -639,4 +717,4 @@ Both commands give the same result here.
 - Change a file safely: work on a copy, write to a new file, check with `wc -l` and `diff`, then replace. With `sed -i`, keep a backup (`-i.bak`), and think about what happens if the command runs twice.
 - Windows line endings (`\r`, `^M` in `cat -A`) make text matches on the last column fail without an error. Find them with `file` or `cat -A`, and remove them with `sed 's/\r$//'`.
 
-On the next page, [AWK and sed on FASTA files](awk_fasta.qmd), you use both tools on 16S sequences.
+On the next page, [Combining two files](awk_join.qmd), you add information from the strain metadata to the growth data.

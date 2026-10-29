@@ -10,9 +10,10 @@ upstream, decide whether to update the copy, and if so, check the numbers in the
 |---|---|---|---|
 | `Growth_Data.txt` | R_cookbook repo, `data/Growth_Data.txt` | commit `4da730d` (2026-10-19) | 2026-10-28 |
 | 11 `*.fasta` files (16S sequences) | MicEco2025 repo, `data/*.fasta.gz` (https://github.com/ndombrowski/MicEco2025/tree/main/data) | last commit on `data/`: `e66b6eb` (2026-03-24) | 2026-10-28 |
-| `accession_to_genus.tsv` | MicEco2025 repo, `data/accession_to_genus.tsv` | as above | 2026-10-28 |
-| `accession_to_genus_windows.tsv` | made from `accession_to_genus.tsv` (Windows line endings) | | 2026-10-28 |
+| `accession_to_genus.tsv` (**removed 2026-10-29**) | MicEco2025 repo, `data/accession_to_genus.tsv` | as above | 2026-10-28 |
+| `accession_to_genus_windows.tsv` (**removed 2026-10-29**) | made from `accession_to_genus.tsv` (Windows line endings) | | 2026-10-28 |
 | `Growth_Data_dutch.csv` | made from `Growth_Data.txt` (semicolons, decimal commas) | | 2026-10-28 |
+| `mmc5_metadata.txt` | supplementary table `mmc5.xlsx`, sheet `metadata`, of https://www.cell.com/cell-host-microbe/fulltext/S1931-3128(18)30318-4 (local copy in R_cookbook `data/mmc5.xlsx`); reuse OK (Nina is an author) | | 2026-10-29 |
 
 Changes to the source files:
 
@@ -24,6 +25,8 @@ Changes to the source files:
   to teach the `\r` trap.
 - `Growth_Data_dutch.csv`: the growth table with `;` between the columns and decimal commas,
   for the sed page (another column separator, and changing it back with one sed command).
+- `mmc5_metadata.txt`: not changed after the export. The Windows line endings (CRLF) are kept on
+  purpose: they are what a real Excel export on Windows gives, and the join page teaches them.
 
 ## Commands
 
@@ -86,6 +89,25 @@ sed 's/,/./g; s/;/\t/g' awk_data/Growth_Data_dutch.csv | cmp - awk_data/Growth_D
 Checks (2026-10-28): 595 lines, 15,811 bytes (same as `Growth_Data.txt`), LF line endings,
 empty fields kept (line 123: `high_P;mock;ex61;;18,2`), round trip identical.
 
+### Added later: the strain metadata
+
+Exported by Nina from Excel (2026-10-29), sheet `metadata` of `mmc5.xlsx`, saved directly as
+`data/awk_data/mmc5_metadata.txt`. Export option: "Text (tab-delimited)".
+No commands were run on it.
+
+Checks (2026-10-29, Git Bash, and against the `.xlsx` read with R `readxl`):
+
+- `file`: "ASCII text, with CRLF line terminators" (no byte order mark)
+- 28 lines (header + 27 strains), 2,808 bytes, ends with `\r\n`
+- 12 tab-separated fields in every line (`awk -F'\t' '{ print NF }' | sort | uniq -c`: 28 x 12)
+- columns: strain, Order, Family, Genus, compartment, host, nifH, Taxonomy group, optimal dpi,
+  Media, RGP, Colonization
+- missing values in two forms: `Genus` is an empty field for Root154, Root700 and Root77 (empty
+  cells in Excel); `Colonization` holds the text `NA` 13 times
+- no value has spaces before or after it; some values contain spaces (`50% TSB`, `Rhizobium spp.`,
+  header `Taxonomy group`)
+- strains `R129_E` and `R13_C` are the strains `129E` and `13C` in `Growth_Data.txt` (Nina, 2026-10-29)
+
 ## Folder layout and the reader download
 
 Readers download one file, `data/awk_data.tar.gz`, and unpack it into a folder `awk_data/`.
@@ -115,9 +137,16 @@ Build the `.tar.gz` in Git Bash, not in WSL on the Windows folder (`/mnt/c/...`)
 stored all files as `rwxrwxrwx` (executable), while Git Bash stores them as `rw-r--r--`.
 Check with `tar -tzvf awk_data.tar.gz | head -3`.
 
+Changed 2026-10-29: the two genus tables (`accession_to_genus.tsv`, `accession_to_genus_windows.tsv`)
+were removed from `data/awk_data/` (the join now uses the strain metadata; still in git history), and
+`mmc5_metadata.txt` was added. The commands above that make the genus tables are kept as a record.
+Rebuilt in Git Bash with the same `tar -czf` command: 14 files, 13,643 bytes, all `rw-r--r--`.
+Check (`_tests/check_tarball_4.sh`): unpacked, all 14 md5 checksums identical to `data/awk_data/`,
+only `mmc5_metadata.txt` has CRLF line endings.
+
 ## Line endings and git
 
 `.gitattributes` (repo root) holds `data/** -text`, so git never changes line endings in `data/`.
 This matters because this computer has `core.autocrlf=true`. `.gitattributes` must be committed
 together with, or before, `data/`. After cloning the repo on another computer, check with
-`file data/awk_data/*` that only the `_windows` file has CRLF line endings.
+`file data/awk_data/*` that only `mmc5_metadata.txt` has CRLF line endings.
