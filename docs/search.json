@@ -180,6 +180,66 @@
     ]
   },
   {
+    "objectID": "source/awk_fasta.html",
+    "href": "source/awk_fasta.html",
+    "title": "AWK and sed on FASTA files",
+    "section": "",
+    "text": "This page is optional. On it, you use AWK and sed on DNA sequences. You count sequences, see why a line in a sequence file is not the same as a sequence, and give the sequences shorter names without giving two of them the same name.\nThe sequences are 16S rRNA gene sequences of 11 bacterial strains. You use the same folder as on the previous pages, with the data in awk_data/.",
+    "crumbs": [
+      "AWK and sed on FASTA files"
+    ]
+  },
+  {
+    "objectID": "source/awk_fasta.html#look-at-the-files-first",
+    "href": "source/awk_fasta.html#look-at-the-files-first",
+    "title": "AWK and sed on FASTA files",
+    "section": "Look at the files first",
+    "text": "Look at the files first\nThe sequences are stored in the FASTA format, one file per strain:\n\n# The * stands for any text, so this lists all files ending in .fasta\nls awk_data/*.fasta\n\nThis prints:\nawk_data/GCF_000009425.fasta\nawk_data/GCF_000253315.fasta\nawk_data/GCF_000714595.fasta\nawk_data/GCF_014058685.fasta\nawk_data/LjRoot303.fasta\nawk_data/LjRoot44.fasta\nawk_data/LjRoot59.fasta\nawk_data/LjRoot60.fasta\nawk_data/Root401.fasta\nawk_data/Root68.fasta\nawk_data/Root935.fasta\nLook at the start of two of them:\n\nhead -3 awk_data/Root68.fasta\nhead -2 awk_data/GCF_000714595.fasta\n\nThis prints:\n&gt;Root68\nAGAGTTTGATCATGGCTCAGATTGAACGCTGGCGGCAGGCCTAACACATGCAAGTCGAGCGGATGACAGGAGCTTGCTCC\nTGAATTCAGCGGCGGACGGGTGAGTAATGCCTAGGAATCTGCCTGGTAGTGGGGGACAACGTTTCGAAAGGAACGCTAAT\n\n&gt;GCF_000714595-ECOLIN_RS01105_1\nAAATTGAAGAGTTTGATCATGGCTCAGATTGAACGCTGGCGGCAGGCCTAACACATGCAAGTCGAACGGTAACAGGAATC\nA FASTA file has two kinds of lines:\n\nA header line starts with &gt; and holds the name of the sequence.\nThe lines below it hold the sequence itself, until the next header. Here, each sequence is split over several lines of 80 letters.\n\nThe Root files hold one sequence each. The GCF files hold all 16S copies found in one genome, so they hold several sequences. Their names start with the genome ID, followed by a dash and more text.",
+    "crumbs": [
+      "AWK and sed on FASTA files"
+    ]
+  },
+  {
+    "objectID": "source/awk_fasta.html#count-the-sequences",
+    "href": "source/awk_fasta.html#count-the-sequences",
+    "title": "AWK and sed on FASTA files",
+    "section": "Count the sequences",
+    "text": "Count the sequences\nEach sequence has exactly one header, so counting the headers counts the sequences. In grep, as in sed, ^ means “the start of the line”, so '^&gt;' finds lines that start with &gt;. grep -c counts these lines:\n\n# Per file\ngrep -c '^&gt;' awk_data/*.fasta\n\n# All files together\ncat awk_data/*.fasta | grep -c '^&gt;'\n\nThis prints:\nawk_data/GCF_000009425.fasta:6\nawk_data/GCF_000253315.fasta:6\nawk_data/GCF_000714595.fasta:9\nawk_data/GCF_014058685.fasta:7\nawk_data/LjRoot303.fasta:1\nawk_data/LjRoot44.fasta:1\nawk_data/LjRoot59.fasta:1\nawk_data/LjRoot60.fasta:1\nawk_data/Root401.fasta:1\nawk_data/Root68.fasta:1\nawk_data/Root935.fasta:1\n\n35\n35 sequences in total, 9 of them from genome GCF_000714595.\n\n\n\n\n\n\nImportantAlways put quotes around ‘^&gt;’\n\n\n\nIn the shell, &gt; means “write the output into this file”. Without the quotes, grep -c ^&gt; awk_data/Root68.fasta would not count anything. Instead the shell empties Root68.fasta to write into it, and grep waits for you to type something (stop it with Ctrl+C).",
+    "crumbs": [
+      "AWK and sed on FASTA files"
+    ]
+  },
+  {
+    "objectID": "source/awk_fasta.html#line-length-is-not-sequence-length",
+    "href": "source/awk_fasta.html#line-length-is-not-sequence-length",
+    "title": "AWK and sed on FASTA files",
+    "section": "Line length is not sequence length",
+    "text": "Line length is not sequence length\nAWK can tell you how many characters a line has with length($0). But if you use it on a FASTA file, you get the length of each line, not of each sequence:\n\n# The headers in this file: only one, so one sequence\ngrep '^&gt;' awk_data/Root68.fasta\n\n# For every line that does not start with &gt;, print its length\nawk '!/^&gt;/ { print length($0) }' awk_data/Root68.fasta | head -3\nawk '!/^&gt;/ { print length($0) }' awk_data/Root68.fasta | tail -2\nawk '!/^&gt;/ { print length($0) }' awk_data/Root68.fasta | wc -l\n\nThis prints:\n&gt;Root68\n\n80\n80\n80\n\n80\n26\n\n18\nTwo new parts in this command:\n\n/^&gt;/ is a pattern that keeps lines that match the text between the slashes, here: lines that start with &gt;. It works like grep '^&gt;'.\n! means “not”. So !/^&gt;/ keeps the lines that do not start with &gt;, the sequence lines.\n\nRoot68 has one header, so it holds one sequence, but AWK prints 18 lengths: 17 lines of 80 letters and a last line of 26. The sequence is 17 × 80 + 26 = 1386 letters long.\nlength() is still useful on other files. It works on any text, also on a single column: length($1) gives the number of characters in column 1.\nTo get one length per sequence, you would have to add up the line lengths of each sequence. AWK can do that, but a tool made for sequence files does it in one command and leaves less room for mistakes. The tip below shows one.\n\n\n\n\n\n\nTipTip: seqkit, a tool made for sequence files (optional)\n\n\n\n\n\nseqkit is one example of a tool made for sequence files. seqkit fx2tab turns a FASTA file into a table. With -n it keeps only the names (not the sequences), and with -l it adds the length of each sequence:\n\n# Name and length of one sequence\nseqkit fx2tab -n -l awk_data/Root68.fasta\n\n# Name and length of all sequences, saved as a table\nseqkit fx2tab -n -l awk_data/*.fasta &gt; lengths.tsv\nwc -l lengths.tsv\nhead -3 lengths.tsv\n\nThis prints:\nRoot68  1386\n\n35 lengths.tsv\n\nGCF_000009425-LLMG_RS02645_19   1547\nGCF_000009425-LLMG_RS10890_60   1547\nGCF_000009425-LLMG_RS12185_65   1547\nRoot68 is 1386 letters long, the same as the sum of its line lengths above. To see the shortest and the longest sequence, sort by column 2. In sort -k2,2n, -k2,2 means “sort by column 2” and n means “as numbers”:\n\nsort -k2,2n lengths.tsv | head -1\nsort -k2,2n lengths.tsv | tail -1\n\nThis prints:\nGCF_000714595-ECOLIN_RS27490_147    1363\nGCF_000714595-ECOLIN_RS22205_97 1726\nAll 35 sequences are between 1363 and 1726 letters long. You need to install seqkit first, though. AWK is already on almost every system, and the same AWK patterns work on any text file, not only on sequences.",
+    "crumbs": [
+      "AWK and sed on FASTA files"
+    ]
+  },
+  {
+    "objectID": "source/awk_fasta.html#shorter-names-with-sed-spot-the-problem",
+    "href": "source/awk_fasta.html#shorter-names-with-sed-spot-the-problem",
+    "title": "AWK and sed on FASTA files",
+    "section": "Shorter names with sed: spot the problem",
+    "text": "Shorter names with sed: spot the problem\nNames like GCF_000714595-ECOLIN_RS01105_1 are long. For a figure, for example a tree, you may want shorter ones. The one thing you want to avoid when you change names: two sequences end up with the same name.\nFirst, look at how the names are built. Each GCF name has two parts, separated by a dash: the genome ID (GCF_000714595), then a name for this one 16S copy within the genome (ECOLIN_RS01105_1). All 28 GCF names have exactly one dash. The 7 Root names have no dash, because each Root file holds only one sequence. So the dash is the place where you can cut a name, and each version below cuts in a different way.\n\nVersion 1: remove everything from the dash\nIn a regular expression, * means “the character before it, any number of times, or not at all”. So .* means “any text”, and -.* means “a dash and everything after it”:\n\ncat awk_data/*.fasta | grep '^&gt;' | sed 's/-.*//' | head -3\n\n# Duplicate names\ncat awk_data/*.fasta | grep '^&gt;' | sed 's/-.*//' | sort | uniq -d\n\nThis prints:\n&gt;GCF_000009425\n&gt;GCF_000009425\n&gt;GCF_000009425\n\n&gt;GCF_000009425\n&gt;GCF_000253315\n&gt;GCF_000714595\n&gt;GCF_014058685\nThis version generates a problem: all 16S copies of one genome now have the same name, for example 9 times &gt;GCF_000714595. The check shows this right away. This version is still useful if all you need is the genome ID, but not as new names for the sequences.\n\n\nVersion 2: from the dash to the underscore\nThis version keeps the number at the end: it replaces the dash and everything up to an underscore with a single underscore:\n\ncat awk_data/*.fasta | grep '^&gt;' | sed 's/-.*_/_/' | head -3\n\n# Number of duplicate names\ncat awk_data/*.fasta | grep '^&gt;' | sed 's/-.*_/_/' | sort | uniq -d | wc -l\n\nThis prints:\n&gt;GCF_000009425_19\n&gt;GCF_000009425_60\n&gt;GCF_000009425_65\n\n0\nNo duplicates, so the check passes. But look at the names: the whole middle part, LLMG_RS02645, is gone, not only LLMG. That is because .* takes as much text as it can. There are two underscores after the dash, and .*_ runs all the way to the last one. This is called a greedy match. A check that passes does not mean the result is what you want, so always look at the names too.\n\n\nVersion 3: from the dash to the first underscore\nTo stop at the first underscore, you need “any text, but without underscores”. Square brackets hold a list of characters, and a ^ right after the opening bracket turns the list around: [^_] means “any one character, except an underscore”. So -[^_]*_ means “a dash, then any characters that are not an underscore, then the first underscore”:\n\ncat awk_data/*.fasta | grep '^&gt;' | sed 's/-[^_]*_/_/' | head -3\ncat awk_data/*.fasta | grep '^&gt;' | sed 's/-[^_]*_/_/' | tail -3\n\n# Number of duplicate names\ncat awk_data/*.fasta | grep '^&gt;' | sed 's/-[^_]*_/_/' | sort | uniq -d | wc -l\n\nThis prints:\n&gt;GCF_000009425_RS02645_19\n&gt;GCF_000009425_RS10890_60\n&gt;GCF_000009425_RS12185_65\n\n&gt;Root401\n&gt;Root68\n&gt;Root935\n\n0\nOnly the letters between the dash and the first underscore (-LLMG) are gone, the rest of the name stays. The names stay unique, and the Root names, which have no dash, do not change.\n\n\n\n\n\n\nQuestionExercise\n\n\n\n\n\n\nUse version 3 on all FASTA files together (cat awk_data/*.fasta), not only on the headers, and save the result as sequences_clean.fasta.\nCheck the result: Does it have the same number of lines? Are there duplicate names? Are the sequence lines unchanged? Tip: cmp from the sed page compares two files.\n\n\n\n\n\n\n\nAnswerClick me to see an answer\n\n\n\n\n\n\n# 1. The sequence lines have no dash, so sed only changes the headers\ncat awk_data/*.fasta | sed 's/-[^_]*_/_/' &gt; sequences_clean.fasta\n\n# 2a. The same number of lines\ncat awk_data/*.fasta | wc -l\nwc -l sequences_clean.fasta\n\n# 2b. No duplicate names\ngrep '^&gt;' sequences_clean.fasta | sort | uniq -d | wc -l\n\n# 2c. Save the sequence lines before and after, and compare them\ncat awk_data/*.fasta | grep -v '^&gt;' &gt; seq_before.txt\ngrep -v '^&gt;' sequences_clean.fasta &gt; seq_after.txt\ncmp seq_before.txt seq_after.txt && echo 'identical'\n\nThis prints:\n727\n727 sequences_clean.fasta\n\n0\n\nidentical",
+    "crumbs": [
+      "AWK and sed on FASTA files"
+    ]
+  },
+  {
+    "objectID": "source/awk_fasta.html#what-you-learned",
+    "href": "source/awk_fasta.html#what-you-learned",
+    "title": "AWK and sed on FASTA files",
+    "section": "What you learned",
+    "text": "What you learned\n\nA FASTA file has header lines starting with &gt; and sequence lines below them. Count the sequences with grep -c '^&gt;', always with the quotes.\n/^&gt;/ as an AWK pattern keeps the header lines, !/^&gt;/ the other lines.\nlength($0) gives the length of a line, length($1) the length of column 1. A sequence may span several lines, so for sequence lengths use a tool made for sequence files, such as seqkit.\nIn a regular expression, .* is any text, and it takes as much as it can (greedy). [^_]* is any text without an underscore.\nAfter shortening names, check for duplicates with sort | uniq -d, and look at the names yourself.\n\nOn the next page, Checking AWK or sed code from an LLM, you put these checks together into a routine for any command you did not write yourself.",
+    "crumbs": [
+      "AWK and sed on FASTA files"
+    ]
+  },
+  {
     "objectID": "index.html",
     "href": "index.html",
     "title": "Welcome",
@@ -224,7 +284,7 @@
     "href": "index.html#what-you-will-do",
     "title": "Welcome",
     "section": "What you will do",
-    "text": "What you will do\n\nUse AWK on a table: print and select columns and rows, add a column, and calculate counts and means per group\nLearn sed basics: search and replace text, delete lines, change a file safely, and remove Windows line endings\nUse more of AWK: change text in one column (gsub), search one column (~), pass a value into AWK (-v), split a value into parts (split), and read BEGIN, which you see often in code from an LLM or a forum\nCombine two files: add information from the strain table to the growth data, make names match, and check the result\nUse AWK and sed on FASTA files (optional): count sequences and clean up sequence names (in planning)\nCheck code from an LLM: a short routine to test any AWK or sed command before you trust its output (in planning)",
+    "text": "What you will do\n\nUse AWK on a table: print and select columns and rows, add a column, and calculate counts and means per group\nLearn sed basics: search and replace text, delete lines, change a file safely, and remove Windows line endings\nUse more of AWK: change text in one column (gsub), search one column (~), pass a value into AWK (-v), split a value into parts (split), and read BEGIN, which you see often in code from an LLM or a forum\nCombine two files: add information from the strain table to the growth data, make names match, and check the result\nUse AWK and sed on FASTA files (optional): count sequences and clean up sequence names\nCheck code from an LLM: a short routine to test any AWK or sed command before you trust its output (in planning)",
     "crumbs": [
       "Welcome"
     ]

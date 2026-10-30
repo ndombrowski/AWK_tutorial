@@ -65,6 +65,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../">
+<link href="../source/awk_fasta.html" rel="next">
 <link href="../source/awk_more.html" rel="prev">
 <script src="../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
@@ -339,6 +340,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <div class="sidebar-item-container"> 
   <a href="../source/awk_join.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text">Combining two files</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../source/awk_fasta.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">AWK and sed on FASTA files</span></a>
   </div>
 </li>
     </ul>
@@ -923,7 +930,7 @@ low_P   mock    ex61    38  6.8
 <li>A missing name gives an empty field, not an error. After a join, count the lines, count the empty fields and see which names they belong to, and look for entries that were not used. Read the names these checks print, not only the counts.</li>
 <li>A Windows line ending travels into your result when you add the last column. Remove it before the join.</li>
 </ul>
-<p>The next page, <a href="awk_fasta.qmd">AWK and sed on FASTA files</a>, is optional. It uses AWK and sed on sequence files. After it, <a href="check_llm_code.qmd">Checking code from an LLM</a> puts the checks from all pages together.</p>
+<p>The next page, <a href="../source/awk_fasta.html">AWK and sed on FASTA files</a>, is optional. It uses AWK and sed on sequence files. After it, <a href="check_llm_code.qmd">Checking code from an LLM</a> puts the checks from all pages together.</p>
 
 
 </section>
@@ -1349,6 +1356,9 @@ low_P   mock    ex61    38  6.8
       </a>          
   </div>
   <div class="nav-page nav-page-next">
+      <a href="../source/awk_fasta.html" class="pagination-link" aria-label="AWK and sed on FASTA files">
+        <span class="nav-page-text">AWK and sed on FASTA files</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
   </div>
 </nav>
 </div> <!-- /content -->

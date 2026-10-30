@@ -6,8 +6,7 @@ project:
   # AWK_tutorial.Rmd do not become pages
   render:
     - "*.qmd"
-    # Not part of the site yet (awk_fasta is more advanced, still undecided)
-    - "!source/awk_fasta.qmd"
+    # Not part of the site yet (not written yet)
     - "!source/check_llm_code.qmd"
 
 website:
@@ -27,6 +26,7 @@ website:
       - source/sed_basics.qmd
       - source/awk_more.qmd
       - source/awk_join.qmd
+      - source/awk_fasta.qmd
 
 format:
   html:
