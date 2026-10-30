@@ -3,12 +3,12 @@ title: "sed basics"
 engine: knitr
 ---
 
-On this page, you use sed to change text: you replace one piece of text with another, delete lines you do not need, and turn a file with another column separator into the tab-separated table. You will use these command to clean up a file that was saved on Windows and that contains a problem that can quietly break your AWK commands.
+On this page, you use sed to change text: you replace one piece of text with another, delete lines you do not need, and turn a file with another column separator into the tab-separated table. At the end you will use these commands to clean up a file that was saved on Windows and that contains a problem that can quietly break your AWK commands.
 
 Why would you change text with a command, and not by hand? Two jobs come up again and again in biology:
 
-- **Making names match.** One table calls a sample `Sample-01`, another `Sample_01`. Before you can combine the two tables, in AWK or in R, the names must be written the same way.
-- **Cleaning a file before another tool reads it.** A table may use commas as decimal symbol, have extra lines at the top, or come with Windows line endings. Some tools stop with an unclear error message on such a file. Others read it without complaint, but wrongly.
+-   **Making names match.** One table calls a sample `Sample-01`, another `Sample_01`. Before you can combine the two tables, in AWK or in R, the names must be written the same way.
+-   **Cleaning a file before another tool reads it.** A table may use commas as decimal symbol, have extra lines at the top, or come with Windows line endings. Some tools stop with an unclear error message on such a file. Others read it without complaint, but wrongly.
 
 sed does both jobs with one short command, and like AWK, it never changes the file it reads unless you ask for that. You use the same folder as on the [last page](awk_table.qmd), with the data in `awk_data/`.
 
@@ -16,13 +16,13 @@ sed does both jobs with one short command, and like AWK, it never changes the fi
 
 The command you use most often in sed is `s`, for **substitute** (replace):
 
-```
+```         
 sed 's/old/new/' file
 ```
 
-- `s` tells sed to replace text.
-- `old` is the text to look for, and `new` the text to put in its place. The three slashes `/` separate the parts.
-- The part between single quotes is the sed command. Like in AWK, it always goes between single quotes.
+-   `s` tells sed to replace text.
+-   `old` is the text to look for, and `new` the text to put in its place. The three slashes `/` separate the parts.
+-   The part between single quotes is the sed command. Like in AWK, it always goes between single quotes.
 
 sed reads the file one line at a time, makes the change on each line where it finds `old`, and prints every line, changed or not. For example, to shorten `low_P` to `low`:
 
@@ -32,10 +32,10 @@ sed 's/low_P/low/' awk_data/Growth_Data.txt | head -3
 
 This prints:
 
-```
-Nutrient	Condition	Experiment	Rootlength	FW_shoot_mg
-low	mock	ex61	40.4	6.6
-low	mock	ex61	38	6.8
+```         
+Nutrient    Condition   Experiment  Rootlength  FW_shoot_mg
+low mock    ex61    40.4    6.6
+low mock    ex61    38  6.8
 ```
 
 The file itself is not changed. sed only printed a changed version on the screen:
@@ -46,15 +46,15 @@ head -3 awk_data/Growth_Data.txt
 
 This prints:
 
-```
-Nutrient	Condition	Experiment	Rootlength	FW_shoot_mg
-low_P	mock	ex61	40.4	6.6
-low_P	mock	ex61	38	6.8
+```         
+Nutrient    Condition   Experiment  Rootlength  FW_shoot_mg
+low_P   mock    ex61    40.4    6.6
+low_P   mock    ex61    38  6.8
 ```
 
 ## The `g` flag: change every match in a line
 
-Say you want a comma-separated table instead of a tab-separated one. In sed, `\t` stands for a tab, so you replace `\t` with `,`:
+Say you want a comma-separated table instead of a tab-separated one. In sed, `\t` stands for a tab, and you can use this to replace `\t` with `,`:
 
 ```{bash}
 sed 's/\t/,/' awk_data/Growth_Data.txt | head -3
@@ -62,13 +62,13 @@ sed 's/\t/,/' awk_data/Growth_Data.txt | head -3
 
 This prints:
 
-```
-Nutrient,Condition	Experiment	Rootlength	FW_shoot_mg
-low_P,mock	ex61	40.4	6.6
-low_P,mock	ex61	38	6.8
+```         
+Nutrient,Condition  Experiment  Rootlength  FW_shoot_mg
+low_P,mock  ex61    40.4    6.6
+low_P,mock  ex61    38  6.8
 ```
 
-We see that this command didn't exactly do what we wanted and only the first tab of each line became a comma. That is because by default, `s` changes only the **first** match in a line. To change every match, add the **flag** `g` (for "global") after the last slash. A flag is a letter that changes how a command works:
+You see that this command didn't exactly do what you wanted: only the first tab of each line became a comma. That is because by default, `s` changes only the **first** match in a line. To change every match, add the **flag** `g` (for "global") after the last slash. A flag is a letter that changes how a command works:
 
 ```{bash}
 sed 's/\t/,/g' awk_data/Growth_Data.txt | head -3
@@ -76,7 +76,7 @@ sed 's/\t/,/g' awk_data/Growth_Data.txt | head -3
 
 This prints:
 
-```
+```         
 Nutrient,Condition,Experiment,Rootlength,FW_shoot_mg
 low_P,mock,ex61,40.4,6.6
 low_P,mock,ex61,38,6.8
@@ -90,15 +90,15 @@ sed 's/\t/,/g' awk_data/Growth_Data.txt | awk -F',' '{ print NF }' | sort | uniq
 
 This prints:
 
-```
+```         
     595 5
 ```
 
 All 595 lines have 5 fields, so every tab was replaced.
 
-::: {.callout-question .callout-warning collapse="false" title="Exercise"}
-1. Replace `mock` with `control`, and look at the first 3 lines of the result.
-2. How many lines contain `control` after the change (use `grep` for this task)? Afterwards, confirm the number with AWK: how many lines have `mock` in column 2 in the original file?
+:::: {.callout-question .callout-warning collapse="false" title="Exercise"}
+1.  Replace `mock` with `control`, and look at the first 3 lines of the result.
+2.  How many lines contain `control` after the change (use `grep` for this task)? Afterwards, confirm the number with AWK: how many lines have `mock` in column 2 in the original file?
 
 ::: {.callout-answer .callout-warning collapse="true" title="Click me to see an answer"}
 ```{bash}
@@ -112,18 +112,19 @@ awk -F'\t' '$2 == "mock"' awk_data/Growth_Data.txt | wc -l
 
 This prints:
 
-```
-Nutrient	Condition	Experiment	Rootlength	FW_shoot_mg
-low_P	control	ex61	40.4	6.6
-low_P	control	ex61	38	6.8
+```         
+Nutrient    Condition   Experiment  Rootlength  FW_shoot_mg
+low_P   control ex61    40.4    6.6
+low_P   control ex61    38  6.8
 
 209
+
 209
 ```
 
 Both give 209, so sed changed exactly the 209 `mock` plants. `mock` appears at most once per line, so you do not need the `g` flag here.
 :::
-:::
+::::
 
 ## Special characters: the dot
 
@@ -135,12 +136,12 @@ sed 's/./,/g' awk_data/Growth_Data.txt | head -2
 
 This prints:
 
-```
+```         
 ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 ,,,,,,,,,,,,,,,,,,,,,,,,
 ```
 
-We see that every character, letters and tabs included, became a comma. To look for a real dot, you need to put a backslash `\` before it in order to take away the special meaning from `.`:
+You see that every character, letters and tabs included, became a comma. To look for a real dot, you need to put a backslash `\` before it in order to take away the special meaning from `.`:
 
 ```{bash}
 sed 's/\./,/g' awk_data/Growth_Data.txt | head -3
@@ -148,10 +149,10 @@ sed 's/\./,/g' awk_data/Growth_Data.txt | head -3
 
 This prints:
 
-```
-Nutrient	Condition	Experiment	Rootlength	FW_shoot_mg
-low_P	mock	ex61	40,4	6,6
-low_P	mock	ex61	38	6,8
+```         
+Nutrient    Condition   Experiment  Rootlength  FW_shoot_mg
+low_P   mock    ex61    40,4    6,6
+low_P   mock    ex61    38  6,8
 ```
 
 You can do a quick sanity check: the number of lines with a comma after the change should equal the number of lines with a dot before. In `grep`, the dot is special too, so you need the backslash there as well:
@@ -163,7 +164,7 @@ grep -c '\.' awk_data/Growth_Data.txt
 
 This prints:
 
-```
+```         
 590
 590
 ```
@@ -181,18 +182,18 @@ sed 's/13/X/g' awk_data/Growth_Data.txt | grep 'X' | head -3
 
 This prints:
 
-```
+```         
 211
 
-low_P	mock	ex61	55.3	X.3
-low_P	mock	ex61	48.7	X.9
-low_P	mock	ex64	46.93	X.52
+low_P   mock    ex61    55.3    X.3
+low_P   mock    ex61    48.7    X.9
+low_P   mock    ex64    46.93   X.52
 ```
 
 211 lines changed, but only 175 plants have bacterium `13C`. The first lines with an `X` are not even `13C` plants: they are `mock` plants whose shoot weight 13.3 became X.3, without any warning. Two ways to avoid this:
 
-- Make the text you look for more specific: `13C` appears only in column 2.
-- If the change must happen in one column only, use AWK, which can compare and change a single field.
+-   Make the text you look for more specific: `13C` appears only in column 2.
+-   If the change must happen in one column only, use AWK, which can compare and change a single field.
 
 ```{bash}
 # More specific text
@@ -204,7 +205,7 @@ awk -F'\t' -v OFS='\t' '$2 == "13C" { $2 = "strain13C" } { print }' awk_data/Gro
 
 This prints:
 
-```
+```         
 175
 175
 ```
@@ -221,7 +222,7 @@ sed 's/low_P/low/; s/high_P/high/' awk_data/Growth_Data.txt | cut -f1 | sort | u
 
 This prints:
 
-```
+```         
       1 Nutrient
     294 high
     300 low
@@ -229,7 +230,7 @@ This prints:
 
 ### A file with another column separator
 
-Not every table separates its columns with tabs. The file `Growth_Data_dutch.csv` holds the same growth data, but with semicolons between the columns and commas as decimal symbol. You may get files like this from a spreadsheet program. Look at it first, as always:
+Not every table separates its columns with tabs. The file `Growth_Data_dutch.csv` holds the same growth data, but with semicolons between the columns and commas as decimal symbol. You may get files like this from a spreadsheet program. That is a key reason to always look at your data first before you do anything with it:
 
 ```{bash}
 head -3 awk_data/Growth_Data_dutch.csv | cat -A
@@ -237,7 +238,7 @@ head -3 awk_data/Growth_Data_dutch.csv | cat -A
 
 This prints:
 
-```
+```         
 Nutrient;Condition;Experiment;Rootlength;FW_shoot_mg$
 low_P;mock;ex61;40,4;6,6$
 low_P;mock;ex61;38;6,8$
@@ -251,11 +252,11 @@ awk -F';' '{ print NF }' awk_data/Growth_Data_dutch.csv | sort | uniq -c
 
 This prints:
 
-```
+```         
     595 5
 ```
 
-To turn this file into a tab-separated table with decimal points, you need two changes: commas to dots, and semicolons to tabs.
+If you wanted to turn this file into a tab-separated table with decimal points, you need two changes: commas to dots, and semicolons to tabs.
 
 In the code below, you may wonder why `s/,/./g` needs no backslash before the dot. The dot is special only in the part you look for, the `old` part. In the `new` part, it is just a dot. Here you look for a comma, which has no special meaning, and put a dot in its place.
 
@@ -272,10 +273,10 @@ awk -F'\t' '{ print NF }' Growth_Data_from_csv.txt | sort | uniq -c
 
 This prints:
 
-```
-Nutrient	Condition	Experiment	Rootlength	FW_shoot_mg
-low_P	mock	ex61	40.4	6.6
-low_P	mock	ex61	38	6.8
+```         
+Nutrient    Condition   Experiment  Rootlength  FW_shoot_mg
+low_P   mock    ex61    40.4    6.6
+low_P   mock    ex61    38  6.8
 
 595 Growth_Data_from_csv.txt
 
@@ -290,13 +291,13 @@ cmp Growth_Data_from_csv.txt awk_data/Growth_Data.txt && echo 'identical'
 
 This prints:
 
-```
+```         
 identical
 ```
 
-::: {.callout-question .callout-warning collapse="false" title="Exercise"}
-1. Turn `Growth_Data_dutch.csv` into a real comma-separated file: commas between the columns, and dots as decimal symbol. Check the result with `head` and with the number of fields per line.
-2. Now swap the order of the two changes in your command. What happens, and why?
+:::: {.callout-question .callout-warning collapse="false" title="Exercise"}
+1.  Turn `Growth_Data_dutch.csv` into a real comma-separated file: commas between the columns, and dots as decimal symbol. Check the result with `head` and with the number of fields per line.
+2.  Now swap the order of the two changes in your command. What happens, and why?
 
 ::: {.callout-answer .callout-warning collapse="true" title="Click me to see an answer"}
 ```{bash}
@@ -311,7 +312,7 @@ sed 's/;/,/g; s/,/./g' awk_data/Growth_Data_dutch.csv | awk -F',' '{ print NF }'
 
 This prints:
 
-```
+```         
 Nutrient,Condition,Experiment,Rootlength,FW_shoot_mg
 low_P,mock,ex61,40.4,6.6
 low_P,mock,ex61,38,6.8
@@ -325,11 +326,11 @@ low_P.mock.ex61.38.6.8
 
 In the second command, sed first turns the semicolons into commas. The second change then turns **all** commas into dots, the new column separators included. Each line is now one single field. sed runs the changes in the order you write them, and each change works on the result of the one before.
 :::
-:::
+::::
 
 ## Delete lines
 
-Besides `s`, sed has a command `d` to **delete** lines. In front of `d`, you say which lines: a line number, or a pattern between slashes. To delete the header, line 1:
+Besides `s`, sed has a command `d` to **delete** lines. In front of `d`, you say which lines you want to delete and you can use a line number, or a pattern between slashes. To delete the header, line 1:
 
 ```{bash}
 sed '1d' awk_data/Growth_Data.txt | head -2
@@ -338,14 +339,14 @@ sed '1d' awk_data/Growth_Data.txt | wc -l
 
 This prints:
 
-```
-low_P	mock	ex61	40.4	6.6
-low_P	mock	ex61	38	6.8
+```         
+low_P   mock    ex61    40.4    6.6
+low_P   mock    ex61    38  6.8
 
 594
 ```
 
-To delete every line that contains `high_P` we can do the following (and also compare with AWK):
+To delete every line that contains `high_P`, use a pattern (and compare with AWK):
 
 ```{bash}
 sed '/high_P/d' awk_data/Growth_Data.txt | wc -l
@@ -354,7 +355,7 @@ awk -F'\t' '$1 != "high_P"' awk_data/Growth_Data.txt | wc -l
 
 This prints:
 
-```
+```         
 301
 301
 ```
@@ -374,18 +375,18 @@ sed -n '2,4p' awk_data/Growth_Data.txt
 
 This prints:
 
-```
-high_P	mock	ex61		18.2
-low_P	mock	ex61	40.4	6.6
-low_P	mock	ex61	38	6.8
-low_P	mock	ex61	74.7	8.1
+```         
+high_P  mock    ex61        18.2
+low_P   mock    ex61    40.4    6.6
+low_P   mock    ex61    38  6.8
+low_P   mock    ex61    74.7    8.1
 ```
 
 `awk 'NR == 123'` from the last page does the same.
 :::
 
-::: {.callout-question .callout-warning collapse="false" title="Exercise"}
-1. Delete the header and all plants from experiment `ex65`, with one sed command. How many lines are left? Check the number with AWK.
+:::: {.callout-question .callout-warning collapse="false" title="Exercise"}
+1.  Delete the header and all plants from experiment `ex65`, with one sed command. How many lines are left? Check the number with AWK.
 
 ::: {.callout-answer .callout-warning collapse="true" title="Click me to see an answer"}
 ```{bash}
@@ -398,12 +399,12 @@ awk -F'\t' 'NR > 1 && $3 != "ex65"' awk_data/Growth_Data.txt | wc -l
 
 This prints:
 
-```
+```         
 399
 399
 ```
 :::
-:::
+::::
 
 ## Change a file safely
 
@@ -411,7 +412,7 @@ So far, sed only printed its result, or you saved it in a new file. Sometimes yo
 
 For the rest of this page, you use a second table, `mmc5_metadata.txt`. It describes 27 bacterial strains, for example their taxonomy and the plant they were isolated from. It comes from a [published study](https://www.cell.com/cell-host-microbe/fulltext/S1931-3128(18)30318-4), and two of its strains are the bacteria `129E` and `13C` from the growth data. On the next page, you combine the two tables.
 
-Make a copy, so the file in `awk_data/` stays as it is, and look at the strains isolated from legumes. The table has 12 columns, so `cut -f1,6` shows only the strain name (column 1) and the host plant (column 6):
+Make a copy, so the file in `awk_data/` stays as it is, and look at the strains isolated from legumes. The table has 12 columns, and with `cut -f1,6` you only look at the strain name (column 1) and the host plant (column 6):
 
 ```{bash}
 cp awk_data/mmc5_metadata.txt metadata.txt
@@ -420,12 +421,12 @@ grep 'Legume' metadata.txt | cut -f1,6
 
 This prints:
 
-```
-USDA61	Legume
-R7A	Legume
-CIAT899	Legume
-NGR234	Legume
-C58	Legume
+```         
+USDA61  Legume
+R7A Legume
+CIAT899 Legume
+NGR234  Legume
+C58 Legume
 ```
 
 The safe way to change a file has three steps: write the result to a new file, check it, and only then replace the old file with the new one. Say you want `Legume_host` instead of `Legume`:
@@ -441,31 +442,31 @@ diff metadata.txt metadata_new.txt | cut -f1,6
 
 This prints:
 
-```
+```         
   28 metadata.txt
   28 metadata_new.txt
   56 total
 
 4c4
-< USDA61	Legume
+< USDA61    Legume
 ---
 > USDA61	Legume_host
 7c7
 < R7A	Legume
 ---
-> R7A	Legume_host
+> R7A   Legume_host
 10c10
-< CIAT899	Legume
+< CIAT899   Legume
 ---
 > CIAT899	Legume_host
 17c17
 < NGR234	Legume
 ---
-> NGR234	Legume_host
+> NGR234    Legume_host
 20c20
-< C58	Legume
+< C58   Legume
 ---
-> C58	Legume_host
+> C58   Legume_host
 ```
 
 `diff` compares two files line by line and prints only the lines that differ. `4c4` means: line 4 was changed. Lines starting with `<` come from the first file, lines starting with `>` from the second. `diff` prints whole lines, which are long in this table, so `| cut -f1,6` keeps only the strain and the host. Lines such as `4c4` have no tab, and `cut` prints them as they are. So exactly five lines changed, the way you wanted. Now replace the old file:
@@ -478,17 +479,17 @@ grep 'Legume' metadata.txt | cut -f1,6
 
 This prints:
 
-```
-USDA61	Legume_host
-R7A	Legume_host
-CIAT899	Legume_host
-NGR234	Legume_host
-C58	Legume_host
+```         
+USDA61  Legume_host
+R7A Legume_host
+CIAT899 Legume_host
+NGR234  Legume_host
+C58 Legume_host
 ```
 
 ### `sed -i`: change the file itself
 
-sed can also change a file directly, with the option `-i` (for "in place"). It does the three steps above in one go, but without the check. This is often were mistakes happen. Say you forgot that you already made the change, and run the command again, this time with `-i`:
+sed can also change a file directly, with the option `-i` (for "in place"). It does the three steps above in one go, but without the check. This is often where mistakes happen. Say you forgot that you already made the change, and run the command again, this time with `-i`:
 
 ```{bash}
 sed -i 's/Legume/Legume_host/' metadata.txt
@@ -497,12 +498,12 @@ grep 'Legume' metadata.txt | cut -f1,6
 
 This prints:
 
-```
-USDA61	Legume_host_host
-R7A	Legume_host_host
-CIAT899	Legume_host_host
-NGR234	Legume_host_host
-C58	Legume_host_host
+```         
+USDA61  Legume_host_host
+R7A Legume_host_host
+CIAT899 Legume_host_host
+NGR234  Legume_host_host
+C58 Legume_host_host
 ```
 
 `Legume_host` still contains `Legume`, so sed added `_host` a second time. sed gives no warning, and the old version of the file is gone. This happens easily when you run a script or a notebook a second time.
@@ -518,32 +519,32 @@ grep 'Legume' metadata.txt.bak | cut -f1,6
 
 This prints:
 
-```
+```         
 metadata.txt
 metadata.txt.bak
 
-USDA61	Legume_host
-R7A	Legume_host
-CIAT899	Legume_host
-NGR234	Legume_host
-C58	Legume_host
+USDA61  Legume_host
+R7A Legume_host
+CIAT899 Legume_host
+NGR234  Legume_host
+C58 Legume_host
 
-USDA61	Legume_host_host
-R7A	Legume_host_host
-CIAT899	Legume_host_host
-NGR234	Legume_host_host
-C58	Legume_host_host
+USDA61  Legume_host_host
+R7A Legume_host_host
+CIAT899 Legume_host_host
+NGR234  Legume_host_host
+C58 Legume_host_host
 ```
 
 ::: {.callout-important title="Before you use sed -i"}
-- Work on a copy, not on your original data.
-- If you are not sure, write to a new file first and check it with `wc -l` and `diff`.
-- Ask yourself what happens if the command runs twice. A change like `s/Legume/Legume_host/` grows each time, `s/Legume_host_host/Legume_host/` does not.
+-   Work on a copy, not on your original data.
+-   If you are not sure, write to a new file first and check it with `wc -l` and `diff`.
+-   Ask yourself what happens if the command runs twice. A change like `s/Legume/Legume_host/` grows each time, `s/Legume_host_host/Legume_host/` does not.
 :::
 
-::: {.callout-question .callout-warning collapse="false" title="Exercise"}
-1. Add `_host` to every host in column 6 of `awk_data/mmc5_metadata.txt`, and save the result in a new file. First look at which hosts there are. Do it once with sed, and once with AWK. Tip: on the [AWK page](awk_table.qmd#mean-per-nutrient-and-condition), you glued text together with `$1"-"$2`.
-2. Check both results: count the values in column 6, and compare the two files.
+:::: {.callout-question .callout-warning collapse="false" title="Exercise"}
+1.  Add `_host` to every host in column 6 of `awk_data/mmc5_metadata.txt`, and save the result in a new file. First look at which hosts there are. Do it once with sed, and once with AWK. Tip: on the [AWK page](awk_table.qmd#mean-per-nutrient-and-condition), you glued text together with `$1"-"$2`.
+2.  Check both results: count the values in column 6, and compare the two files.
 
 ::: {.callout-answer .callout-warning collapse="true" title="Click me to see an answer"}
 ```{bash}
@@ -564,7 +565,7 @@ cmp hosts_sed.txt hosts_awk.txt && echo 'identical'
 
 This prints:
 
-```
+```         
      22 Arabidopsis
       5 Legume
       1 host
@@ -584,22 +585,23 @@ Both commands give the same file, and most strains turn out to come from *Arabid
 
 The AWK version changes column 6 on every line, whatever is in it. `$6 "_host"` glues the text `_host` to the value in column 6. Three mistakes give a wrong result without an error:
 
-- Without `NR > 1`, the header becomes `host_host`.
-- Run the command a second time, on `hosts_awk.txt`, and you get `Arabidopsis_host_host`, as with `sed -i` above.
-- Without the double quotes around `_host`, AWK reads `_host` as the name of an empty variable, and nothing changes.
+-   Without `NR > 1`, the header becomes `host_host`.
+-   Run the command a second time, on `hosts_awk.txt`, and you get `Arabidopsis_host_host`, as with `sed -i` above.
+-   Without the double quotes around `_host`, AWK reads `_host` as the name of an empty variable, and nothing changes.
 :::
-:::
+::::
 
 ::: {.callout-tip title="Tip: sed on a Mac (optional)" collapse="true"}
-<!-- DRAFT: not tested on a Mac yet (step 7 in PLAN.md). Written from general knowledge. -->
+<!-- DRAFT: not tested on a Mac yet -->
+
 The sed on a Mac is a different version (BSD sed). Two differences matter for this page: `sed -i` needs a backup ending after it (`sed -i '' ...` for no backup, or `sed -i.bak ...`), and `\t` may not mean a tab in the text you look for. If a command from this page does not work on your Mac, this is a likely reason.
 :::
 
 ## Windows line endings
 
-Every line in a text file ends with an invisible character that says "a new line starts here". Linux and Mac use one character for this, written as `\n`. Windows uses two: `\r\n`. A table saved on Windows, for example from Excel, may therefore have a hidden `\r` at the end of every line. You do not see it on screen, but AWK and grep on Linux see it as part of the last column.
+Every line in a text file ends with an invisible character that says "a new line starts here". Linux and Mac use one character for this, written as `\n`. Windows uses two: `\r\n`. A table saved on Windows, for example from Excel, may therefore have a hidden `\r` at the end of every line. You do not see it on screen, but AWK and grep on Linux see it as part of the last column and this can create silent errors that you will only catch if you closely inspect the output of your commands.
 
-The metadata table was saved from Excel on Windows. `file` tells you what kind of text a file holds. Compare it with the growth data:
+The metadata table you use below was saved from Excel on a Windows PC. `file` tells you what kind of text a file holds. Compare it with the growth data:
 
 ```{bash}
 file awk_data/Growth_Data.txt awk_data/mmc5_metadata.txt
@@ -607,7 +609,7 @@ file awk_data/Growth_Data.txt awk_data/mmc5_metadata.txt
 
 This prints:
 
-```
+```         
 awk_data/Growth_Data.txt:   ASCII text
 awk_data/mmc5_metadata.txt: ASCII text, with CRLF line terminators
 ```
@@ -621,7 +623,7 @@ awk -F'\t' '$12 == "TRUE"' awk_data/mmc5_metadata.txt | wc -l
 
 This prints:
 
-```
+```         
       1 Colonization
       3 FALSE
      13 NA
@@ -630,7 +632,7 @@ This prints:
 0
 ```
 
-`cut` shows 11 rows with `TRUE`, but AWK finds 0, and there is no error. That happens because column 12 is `TRUE\r`, not `TRUE`. The `\r` is invisible on screen, also in the output of `cut` above. `cat -A` shows it as `^M`. Column 12 is the last column, so `cut -f1,12` gives a short view of the strain name and the line end:
+`cut` shows 11 rows with `TRUE`, but AWK finds 0, and there is no error. That happens because column 12 is `TRUE\r`, not `TRUE` and therefore the AWK pattern matches nothing. The problem for you is that `\r` is invisible on screen, also in the output of `cut` above. You can use `cat -A`, which shows the Windows line ending as `^M`. Since column 12 is the last column you can use `cut -f1,12` to have a short view of the strain name and the line end:
 
 ```{bash}
 head -3 awk_data/mmc5_metadata.txt | cut -f1,12
@@ -639,10 +641,10 @@ head -3 awk_data/mmc5_metadata.txt | cut -f1,12 | cat -A
 
 This prints:
 
-```
-strain	Colonization
-Root123D2	NA
-Root381	NA
+```         
+strain  Colonization
+Root123D2   NA
+Root381 NA
 
 strain^IColonization^M$
 Root123D2^INA^M$
@@ -667,7 +669,7 @@ awk -F'\t' '$12 == "TRUE"' mmc5_metadata_fixed.txt | wc -l
 
 This prints:
 
-```
+```         
 mmc5_metadata_fixed.txt: ASCII text
 
 strain^IColonization$
@@ -699,7 +701,7 @@ cmp mmc5_metadata_fixed_tr.txt mmc5_metadata_fixed.txt && echo 'identical'
 
 This prints:
 
-```
+```         
 identical
 ```
 
@@ -708,13 +710,13 @@ Both commands give the same result here.
 
 ## What you learned
 
-- `sed 's/old/new/' file` replaces the first match in each line, `s/old/new/g` every match.
-- The text you look for is a regular expression: `.` means any character, `\.` a real dot. `\t` is a tab, `\r` the hidden Windows character, `$` the end of a line.
-- sed looks at the whole line, not at columns. Make the text you look for specific, or use AWK to change one column.
-- Separate several changes with `;`. They run in the order you write them.
-- `sed '1d'` deletes line 1, `sed '/text/d'` every line that contains `text`.
-- Check which character separates the columns before you use a file, also when it ends in `.csv`.
-- Change a file safely: work on a copy, write to a new file, check with `wc -l` and `diff`, then replace. With `sed -i`, keep a backup (`-i.bak`), and think about what happens if the command runs twice.
-- Windows line endings (`\r`, `^M` in `cat -A`) make text matches on the last column fail without an error. Find them with `file` or `cat -A`, and remove them with `sed 's/\r$//'`.
+-   `sed 's/old/new/' file` replaces the first match in each line, `s/old/new/g` every match.
+-   The text you look for is a regular expression: `.` means any character, `\.` a real dot. `\t` is a tab, `\r` the hidden Windows character, `$` the end of a line.
+-   sed looks at the whole line, not at columns. Make the text you look for specific, or use AWK to change one column.
+-   Separate several changes with `;`. They run in the order you write them.
+-   `sed '1d'` deletes line 1, `sed '/text/d'` every line that contains `text`.
+-   Check which character separates the columns before you use a file, also when it ends in `.csv`.
+-   Change a file safely: work on a copy, write to a new file, check with `wc -l` and `diff`, then replace. With `sed -i`, keep a backup (`-i.bak`), and think about what happens if the command runs twice.
+-   Windows line endings (`\r`, `^M` in `cat -A`) make text matches on the last column fail without an error. Find them with `file` or `cat -A`, and remove them with `sed 's/\r$//'`.
 
 On the next page, [Combining two files](awk_join.qmd), you add information from the strain metadata to the growth data.

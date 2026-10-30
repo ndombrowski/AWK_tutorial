@@ -2,55 +2,56 @@
 title: "Welcome"
 ---
 
-This tutorial shows you how to work with tables and other text files on the command line with two small tools: AWK and sed. You use them to select rows and columns, to calculate sums and means, to clean up names, and to combine information from two files. You will try every command on real biological data, a table with plant growth measurements and a set of 16S sequences.
+This tutorial shows you how to work with tables and other text files on the command line with two small tools: AWK and sed. You can use these tools to select rows and columns, to calculate sums and means, to clean up names, and to combine information from two files. You will try every command on real biological data: a table with plant growth measurements, and a table with information on the bacterial strains used in that experiment.
 
 **Important: This tutorial is still work in progress, missing chapters will be added over time**
 
 ## What are AWK and sed?
 
-**AWK** is a small programming language made for tables. It reads a file one line at a time and splits each line into **fields**, the separate values in a line, like the cells in one row of a spreadsheet. You then tell AWK what to do with these fields, for example "print the second and fourth column" or "keep only the rows where the root length is above 50". 
+**AWK** is a small programming language made for tables. It reads a file one line at a time and splits each line into **fields**, the separate values in a line, like the cells in one row of a spreadsheet. You then tell AWK what to do with these fields, for example "print the second and fourth column" or "keep only the rows where the root length is above 50".
 
 **sed** (short for "stream editor") reads a file one line at a time and changes the text on the fly. You use it mostly to search and replace, for example to shorten a long sequence name, or to delete lines you do not need.
 
 Both tools come with almost every Linux and Mac system, they work on files of any size, and they need only one line of code for many everyday tasks. That is why you meet them in many bioinformatics scripts and tutorials.
 
-## Why not just use Excel or R?
+## Why not just use Excel, R or Python?
 
 For statistics and plots, R or Python are the better tools. But for many smaller jobs, AWK and sed have some real advantages:
 
-- **You keep a record of what you did.** A command can be saved in a script or a notebook, and run again on new data. A table that you change by hand in Excel leaves no record, and Excel sometimes changes your data without asking: it is known to turn gene names such as `SEPT2` into dates.
-- **The same step works on many files.** Together with a `for` loop, one command can clean the names in 50 FASTA files, or take one column from 200 sample tables.
-- **Nothing to install.** AWK and sed are already on your computer and on most computer clusters, so you do not need packages or extra software.
+-   **You keep a record of what you did.** A command can be saved in a script or a notebook, and run again on new data. A table that you change by hand in Excel leaves no record, and Excel sometimes changes your data without asking: it is known to turn gene names such as `SEPT2` into dates.
+-   **The same step works on many files.** Together with a `for` loop, one command can clean the names in 50 FASTA files, or take one column from 200 sample tables.
+-   **Nothing to install.** AWK and sed are already on your computer and on most computer clusters, so you do not need packages or extra software.
 
 ## Why learn this when an LLM can write it?
 
-LLMs (large language models, such as ChatGPT or Claude) are good at writing AWK and sed commands. So it is not the goal of this tutorial to make you write long AWK programs from memory. Instead, after this tutorial you should be able to:
+LLMs (large language models, such as ChatGPT or Claude) are normally good at writing AWK and sed commands. So it is not the goal of this tutorial to make you write long AWK programs from memory. Instead, after this tutorial you should be able to:
 
-- **read** a short AWK or sed command, and say what it does
-- **check** whether it does what you asked for, on your own data
-- **adapt** it, for example to use another column or another file
-- **recognize the common traps**, where a command runs without an error but gives the wrong result
+-   **read** a short AWK or sed command, and say what it does
+-   **check** whether it does what you asked for, on your own data
+-   **adapt** it, for example to use another column or another file
+-   **recognize the common traps**, where a command runs without an error but gives the wrong result
 
 The last point matters most. A command that fails with an error message is easy to notice. A command that quietly skips a few rows, or treats a missing value as a zero, is not.
 
 ## What you will do
 
-1. **Use AWK on a table**: print and select columns and rows, add a column, and calculate counts and means per group
-2. **Learn sed basics**: search and replace text, delete lines, and change a file safely
-3. **Use AWK and sed on FASTA files**: count sequences, measure their lengths, clean up sequence names, and add information from a second file (in planning)
-4. **Checking code from an LLM**: a short routine to test any AWK or sed command before you trust its output (in planning)
+1.  **Use AWK on a table**: print and select columns and rows, add a column, and calculate counts and means per group
+2.  **Learn sed basics**: search and replace text, delete lines, change a file safely, and remove Windows line endings
+3.  **Combine two files**: add information from the strain table to the growth data, make names match, and check the result
+4.  **Read AWK forms you see online**: `BEGIN`, `gsub`, `~`, `-v` and `split`, which are common in code from an LLM
+5.  **Use AWK and sed on FASTA files** (optional): count sequences and clean up sequence names (in planning)
+6.  **Check code from an LLM**: a short routine to test any AWK or sed command before you trust its output (in planning)
 
 ## Before you start
 
 To follow this tutorial you need:
 
-- **A terminal and the command line basics.** This tutorial assumes you have worked through the [basics of the CLI workshop](https://ndombrowski.github.io/cli_workshop/source/bash_intro.html): moving around with `cd` and `ls`, looking at files with `head` and `wc`, and combining commands with a pipe (`|`). It also helps if you have used `grep` and `cut`. If you have never opened a terminal, start with [Before you start](https://ndombrowski.github.io/cli_workshop/source/installation.html) of the CLI workshop.
-- **Your own computer.** All commands are meant to run on your laptop. If you already know how to use Crunchomics, the UvA computer cluster, you can also work there (see the [HPC pages of the CLI workshop](https://ndombrowski.github.io/cli_workshop/source/hpc_intro.html)).
-- **The example data.** You download it at the start of the first page, with two commands. It is small (about 10 kB), so it fits on any laptop.
+-   **A terminal and the command line basics.** This tutorial assumes you have worked through the [basics of the CLI workshop](https://ndombrowski.github.io/cli_workshop/source/bash_intro.html): moving around with `cd` and `ls`, looking at files with `head` and `wc`, and combining commands with a pipe (`|`). It also helps if you have used `grep` and `cut`. If you have never opened a terminal, start with [Before you start](https://ndombrowski.github.io/cli_workshop/source/installation.html) of the CLI workshop.
+-   **Your own computer.** All commands are meant to run on your laptop. If you already know how to use Crunchomics, the UvA computer cluster, you can also work there (see the [HPC pages of the CLI workshop](https://ndombrowski.github.io/cli_workshop/source/hpc_intro.html)).
+-   **The example data.** You download it at the start of the first page, with two commands. It is small (about 14 kB), so it fits on any laptop. The data comes from an experiment where *Arabidopsis* plants grew with low or high phosphorus, either without bacteria or inoculated with one of two rhizobia strains. For each plant, root length and shoot weight were measured. The question was whether these bacteria promote plant growth, and might help plants grow when nutrients are limited. A second table describes these and other strains, from a [published study](https://www.cell.com/cell-host-microbe/fulltext/S1931-3128(18)30318-4).
 
 ::: {.callout-important title="AWK and sed are not the same on every computer"}
-There are several versions of AWK and sed. Linux systems and Crunchomics usually have the GNU versions, Macs have different (BSD) versions, and the terminal in MobaXterm may have yet another one. Most commands in this tutorial work everywhere, and where a command behaves differently, the page says so.
-<!-- DRAFT: not tested yet. Check in step 7 (PLAN.md) which platforms were tested, and adapt this box. -->
+There are several versions of AWK and sed. Linux systems and Crunchomics usually have the GNU versions, Macs have different (BSD) versions, and the terminal in MobaXterm may have yet another one. Most commands in this tutorial work everywhere, and where a command behaves differently, the page says so. <!-- DRAFT: not tested yet. Check in step 7 (PLAN.md) which platforms were tested, and adapt this box. -->
 :::
 
 Start with [AWK on a table](source/awk_table.qmd).

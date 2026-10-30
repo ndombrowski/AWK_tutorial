@@ -22,10 +22,10 @@ awk -F'\t' '{ print NF }' mmc5_metadata_fixed.txt | sort | uniq -c
 
 This prints:
 
-```
-strain	Order	Family	Genus	compartment	host
-Root123D2	Rhizobiales	Bradyrhizobiaceae	Afipia	Root	Arabidopsis
-Root381	Rhizobiales	Bradyrhizobiaceae	Bosea	Root	Arabidopsis
+```         
+strain  Order   Family  Genus   compartment host
+Root123D2   Rhizobiales Bradyrhizobiaceae   Afipia  Root    Arabidopsis
+Root381 Rhizobiales Bradyrhizobiaceae   Bosea   Root    Arabidopsis
 
      28 12
 ```
@@ -34,7 +34,7 @@ Each line describes one strain, and all 28 lines (the header and 27 strains) hav
 
 ### Why `-F'\t'` matters here too
 
-Some values in this table contain a space, for example the medium `50% TSB` or the column name `Taxonomy group`. We can check what happens if we don't use the `-F'\t'`, and explore how AWK splits the lines at these spaces:
+Some values in this table contain a space, for example the medium `50% TSB` or the column name `Taxonomy group`. Check what happens if you don't use `-F'\t'`, and see how AWK splits the lines at these spaces:
 
 ```{bash}
 awk '{ print NF }' mmc5_metadata_fixed.txt | sort | uniq -c
@@ -42,13 +42,13 @@ awk '{ print NF }' mmc5_metadata_fixed.txt | sort | uniq -c
 
 This prints:
 
-```
+```         
      15 12
      12 13
       1 14
 ```
 
-You see that 13 lines now have more than 12 fields, so the `NF` check shows that something is off. 
+You see that 13 lines now have more than 12 fields, so the `NF` check shows that something is off.
 
 But the 15 lines with 12 fields are not all right either. If you open the table in a spreadsheet program such as Excel, you see three strains with an empty cell in the Genus column: Root154, Root700 and Root77. All three grew on `50% TSB`, a value with a space. You can also find the empty cells with a command, as on the [AWK page](awk_table.qmd#missing-values-empty-fields):
 
@@ -58,13 +58,13 @@ awk -F'\t' '$4 == ""' mmc5_metadata_fixed.txt | cut -f1,4,10
 
 This prints:
 
-```
-Root154		50% TSB
-Root700		50% TSB
-Root77		50% TSB
+```         
+Root154     50% TSB
+Root700     50% TSB
+Root77      50% TSB
 ```
 
-Without `-F'\t'`, that line loses one field (the empty genus) and gains one (the space in `50% TSB`), so the count looks fine:
+Without `-F'\t'`, that line loses one field (the empty genus) and gains one (the space in `50% TSB`), so the count looks fine while the table itself is actually not what you want:
 
 ```{bash}
 awk -F'\t' '$1 == "Root154" { print $4 }' mmc5_metadata_fixed.txt
@@ -73,7 +73,7 @@ awk '$1 == "Root154" { print $4 }' mmc5_metadata_fixed.txt
 
 This prints:
 
-```
+```         
 
 Root
 ```
@@ -82,20 +82,20 @@ With `-F'\t'`, column 4 of Root154 is empty, which is correct. Without it, colum
 
 ### The names in both files
 
-The two tables share the names of the bacteria in column 2 of the growth data, and column 1 of the metadata. Let's compare them. In `grep '^R1'`, the `^` means "the start of the line", so this keeps the names that start with `R1`:
+The two tables share the names of the bacteria: column 2 of the growth data, and column 1 of the metadata. First look at the names in the growth data. Then search the metadata for the numbers of these two bacteria, `129` and `13`:
 
 ```{bash}
-# Look at the bacteria names recorded in the Growth_Data
+# The bacteria names in the growth data
 cut -f2 awk_data/Growth_Data.txt | sort | uniq -c
 
-# Look at the bacterial names recorded in the metadata
-# And search specifically for bacterial names starting with an R
-cut -f1 mmc5_metadata_fixed.txt | grep '^R1'
+# Names in the metadata that contain 129 or 13
+cut -f1 mmc5_metadata_fixed.txt | grep '129'
+cut -f1 mmc5_metadata_fixed.txt | grep '13'
 ```
 
 This prints:
 
-```
+```         
     210 129E
     175 13C
       1 Condition
@@ -103,6 +103,7 @@ This prints:
 
 R129_E
 R129_N
+
 R13_A
 R13_C
 ```
@@ -113,7 +114,7 @@ You can see that bacteria `129E` and `13C` are the names used in the growth data
 
 This happens all the time: one person writes `Sample-01`, another `Sample_01`, and the sequencing center sends back `S01`. A good habit is to choose one way of naming your samples at the start of a project, for example short names without spaces or special characters, and to use it everywhere: in your lab notes, in file names and in every table. Fixing names afterwards is extra work, and it is easy to get wrong.
 
-Here you change the names in the metadata, the smaller of the two tables. You need to change two names, so write the two changes out. The `^` makes sure that sed changes a name only at the start of a line, in column 1:
+Here you change the names in the metadata, the smaller of the two tables. You need to change two names, so it is best to write the two changes out. The `^` means "the start of the line". It makes sure that sed changes a name only at the start of a line, in column 1:
 
 ```{bash}
 sed 's/^R129_E/129E/; s/^R13_C/13C/' mmc5_metadata_fixed.txt > mmc5_metadata_named.txt
@@ -125,20 +126,20 @@ diff mmc5_metadata_fixed.txt mmc5_metadata_named.txt | cut -f1,4
 
 This prints:
 
-```
+```         
 28 mmc5_metadata_named.txt
 
 11c11
-< R129_E	Rhizobium
+< R129_E    Rhizobium
 ---
 > 129E	Rhizobium
 14c14
 < R13_C	Rhizobium
 ---
-> 13C	Rhizobium
+> 13C   Rhizobium
 ```
 
-We see that exactly two lines changed. This also shows a good habit: whenever you use a command to change names, check it as above: look at all names after the change, not only at the ones you wanted to change.
+You see that exactly two lines changed. This also shows a good habit: whenever you use a command to change names, check it as above: look at all names after the change, not only at the ones you wanted to change.
 
 ::: {.callout-tip title="Tip: why not one general rule? (optional)" collapse="true"}
 Another idea to change names is to change all names at once, for example: remove the `R` at the start, and the underscore. `^R` means "an `R` at the start of the line":
@@ -150,7 +151,7 @@ cut -f1 mmc5_metadata_fixed.txt | sed 's/^R//; s/_//' | head -4
 
 This prints:
 
-```
+```         
 129E
 129N
 13A
@@ -168,7 +169,7 @@ USDA61
 ## Add the genus: `NR == FNR`
 
 ::: {.callout-note title="The most advanced part of this tutorial"}
-Combining two files with AWK is harder than anything before it. If it does not make sense on the first read, that is normal: take your time, and run each step yourself. What matters most is that you recognise the `NR == FNR` pattern when you see it, for example in code from an LLM, and that you know the checks in "Check the result" below. These checks work no matter which command did the combining.
+Combining two files with AWK is harder than anything before it. If it does not make sense on the first read, that is normal: take your time, and run each step yourself. What matters most is that you recognize the `NR == FNR` pattern when you see it, for example in code from an LLM, and that you know the checks in "Check the result" below. These checks work no matter which command did the combining.
 :::
 
 AWK can read two files, one after the other. The command below first reads the metadata and remembers the genus of each strain. Then it reads the growth data and adds the remembered genus to each line:
@@ -188,21 +189,23 @@ awk -F'\t' '$2 == "13C"' growth_genus.txt | head -2
 
 This prints:
 
-```
+```         
 595 growth_genus.txt
 
-Nutrient	Condition	Experiment	Rootlength	FW_shoot_mg
-low_P	mock	ex61	40.4	6.6
-low_P	mock	ex61	38	6.8
+Nutrient    Condition   Experiment  Rootlength  FW_shoot_mg
+low_P   mock    ex61    40.4    6.6
+low_P   mock    ex61    38  6.8
 
-low_P	129E	ex61	86.1	5.5	Rhizobium
-low_P	129E	ex61	58.4	7.5	Rhizobium
+low_P   129E    ex61    86.1    5.5 Rhizobium
+low_P   129E    ex61    58.4    7.5 Rhizobium
 
-low_P	13C	ex61	54.3	1.56	Rhizobium
-low_P	13C	ex61	81	4	Rhizobium
+low_P   13C ex61    54.3    1.56    Rhizobium
+low_P   13C ex61    81  4   Rhizobium
 ```
 
 595 lines, as many as in the growth data. The plants with `129E` and `13C` now have `Rhizobium` in a new column 6. The `mock` plants have an empty column 6, because no strain is called `mock`. You will see `NR == FNR` in many AWK commands that combine two files, so it is worth taking it apart.
+
+The command has two parts, each with its own pattern and action: `NR == FNR { genus[$1] = $4; next }` and `{ print $0, genus[$2] }`. For each line, AWK checks the parts from top to bottom, and runs the action of every part whose pattern matches. A part without a pattern runs on every line. `next` stops this: AWK skips the remaining parts and goes on to the next line. Below, you look at each piece in turn.
 
 **`NR` and `FNR`.** You know `NR` from the AWK page: the line number. When AWK reads several files, `NR` keeps counting across all of them. `FNR` is the line number within the current file, and starts at 1 again in each new file. `FILENAME` holds the name of the current file. You can see the difference where AWK moves from the first file to the second (`sed -n '27,30p'` prints lines 27 to 30):
 
@@ -212,7 +215,7 @@ awk '{ print FILENAME, NR, FNR }' mmc5_metadata_named.txt awk_data/Growth_Data.t
 
 This prints:
 
-```
+```         
 mmc5_metadata_named.txt 27 27
 mmc5_metadata_named.txt 28 28
 awk_data/Growth_Data.txt 29 1
@@ -221,52 +224,56 @@ awk_data/Growth_Data.txt 30 2
 
 In the first file, `NR` and `FNR` are the same. From the second file on, they differ. So the pattern `NR == FNR` is true only while AWK reads the first file.
 
-**The first part**, `NR == FNR { genus[$1] = $4; next }`, runs only on the metadata. Here, `genus` is an array, a set of named boxes, as on the [AWK page](awk_table.qmd#count-and-mean-per-group-arrays). Take line 11 of the metadata, now that you renamed the strain:
+**The first part**, `NR == FNR { genus[$1] = $4; next }`, therefore runs only on the metadata. Here, `genus` is an array, a variable that holds one value per name, as on the [AWK page](awk_table.qmd#count-and-mean-per-group-arrays). Take line 11 of the metadata, now that you renamed the strain:
 
+```         
+129E    Rhizobiales Rhizobiaceae    Rhizobium   Root    Arabidopsis FALSE   Rhizobium spp.  2   TY  TRUE    TRUE
 ```
-129E	Rhizobiales	Rhizobiaceae	Rhizobium	Root	Arabidopsis	FALSE	Rhizobium spp.	2	TY	TRUE	TRUE
-```
 
-Here `$1` is `129E` and `$4` is `Rhizobium`. So `genus[$1] = $4` means `genus["129E"] = "Rhizobium"`: make a box named after the strain in column 1, and put the genus from column 4 into it. The strain is the name of the box, because the strain is what you look up later. The genus goes inside, because that is what you want back. Then `next` tells AWK: stop working on this line, and go to the next one. So the second part does not run on the metadata.
+Here `$1` is `129E` and `$4` is `Rhizobium`. So `genus[$1] = $4` means `genus["129E"] = "Rhizobium"`: store the genus from column 4 under the name of the strain in column 1. You use the strain as the name, because the strain is what you want to look up later in the growth data. The genus is the value, because that is what you want back. Then `next` makes AWK go on to the next line, so the second part does not run on the metadata.
 
-You can look inside the boxes after AWK has read the whole metadata table:
+You can look at the values in the array after AWK has read the whole metadata table:
 
 ```{bash}
 awk -F'\t' '
   { genus[$1] = $4 }
-  END { print "129E:", genus["129E"]; print "Root154:", genus["Root154"]; print "mock:", genus["mock"] }
+  END {
+    print "129E:", genus["129E"]
+    print "Root154:", genus["Root154"]
+    print "mock:", genus["mock"]
+  }
 ' mmc5_metadata_named.txt
 ```
 
 This prints:
 
-```
+```         
 129E: Rhizobium
 Root154:
 mock:
 ```
 
-The box of `Root154` is empty, because this strain has no genus in the table. There is no box for `mock` at all, and AWK gives you empty text for it, without an error. In the result, both look the same: an empty field.
+`Root154` has an empty value, because this strain has no genus in the table. `mock` is not in the array at all, and AWK gives you empty text for it, without an error. In the result, both look the same: an empty field.
 
 **The second part**, `{ print $0, genus[$2] }`, has no pattern, so it runs on every line that gets this far: only the lines of the growth data. Take this line:
 
-```
-low_P	129E	ex61	86.1	5.5
+```         
+low_P   129E    ex61    86.1    5.5
 ```
 
-Now `$2` is the strain, `129E`, because in the growth data the strain is in column 2. So `genus[$2]` is `genus["129E"]`, the box filled in the first part, and AWK prints:
+Now `$2` is the strain, `129E`, because in the growth data the strain is in column 2. So `genus[$2]` is `genus["129E"]`, the value stored in the first part, and AWK prints:
 
-```
-low_P	129E	ex61	86.1	5.5	Rhizobium
+```         
+low_P   129E    ex61    86.1    5.5 Rhizobium
 ```
 
 Note that `$1`, `$2` and so on always mean the columns of the line AWK is reading at that moment. In the metadata, the strain is `$1` and the genus `$4`. In the growth data, the strain is `$2`. So you choose the column numbers for each file separately.
 
-**The order of the files matters.** The table you look things up in comes first, the table you add to comes second.
+**The order of the files matters.** The table you look things up in comes first, the table you add to comes second. If you swap them, AWK remembers the growth data and adds a column to the metadata instead. The result has 28 lines, and the new column is empty on every line. AWK gives no error, but a quick `wc -l` shows that something is wrong: you expected 595 lines.
 
-### The header line
+### Give the new column a name
 
-Look at the end of the first two lines of the result with `cat -A`:
+The result has the right number of lines, but it is not finished yet. Look at the end of the first two lines with `cat -A`:
 
 ```{bash}
 head -2 growth_genus.txt | cat -A
@@ -274,14 +281,14 @@ head -2 growth_genus.txt | cat -A
 
 This prints:
 
-```
+```         
 Nutrient^ICondition^IExperiment^IRootlength^IFW_shoot_mg^I$
 low_P^Imock^Iex61^I40.4^I6.6^I$
 ```
 
-Both lines end with a tab and nothing after it: an empty column 6. For the `mock` plant, that is expected. For the header it is not: the new column has no name. The header went through the second part like any other line, and there is no box called `Condition`.
+Both lines end with a tab and nothing after it: an empty column 6. For the `mock` plant, that is expected. For the header it is not: the new column has no name. The header went through the second part like any other line. Column 2 of the header is `Condition`, and `Condition` is not a name in the array.
 
-To give the new column a name, add a part for line 1 of the second file, `FNR == 1`:
+To give the new column a name, add a new part between the two others. Its pattern, `FNR == 1`, matches line 1 of a file. The metadata never gets this far, because the first part skips every metadata line to the next line with `next`. So the new part only runs on the header of the growth data:
 
 ```{bash}
 awk -F'\t' -v OFS='\t' '
@@ -297,15 +304,15 @@ head -3 growth_genus.txt
 
 This prints:
 
-```
+```         
 595 growth_genus.txt
 
-Nutrient	Condition	Experiment	Rootlength	FW_shoot_mg	Genus
-low_P	mock	ex61	40.4	6.6
-low_P	mock	ex61	38	6.8
+Nutrient    Condition   Experiment  Rootlength  FW_shoot_mg Genus
+low_P   mock    ex61    40.4    6.6
+low_P   mock    ex61    38  6.8
 ```
 
-AWK checks the parts from top to bottom. Line 1 of the metadata also has `FNR == 1`, but the first part already sent it on with `next`. So `FNR == 1` only catches the header of the growth data. Its `next` makes sure that the header is not printed a second time by the last part.
+The new part also ends with `next`. It makes sure that the header is not printed a second time by the last part, `{ print $0, genus[$2] }`.
 
 ::: {.callout-important title="Forget next, and the first file ends up in the result"}
 Without `next` in the first part, the other parts also run on the lines of the metadata. You get no error:
@@ -323,46 +330,15 @@ head -3 growth_genus_nonext.txt | cut -f1,13
 
 This prints:
 
-```
+```         
 623 growth_genus_nonext.txt
 
-strain	Genus
+strain  Genus
 Root123D2
 Root381
 ```
 
-You get 623 lines instead of 595: first the 28 lines of the metadata, each with an extra column, and then the 595 lines you wanted. The line count shows the problem right away.
-:::
-
-::: {.callout-tip title="Tip: the same command without NR == FNR (optional)" collapse="true"}
-If you find `NR == FNR` and `next` hard to read, you can write the same steps out with `if` and `else`, using the file name. It gives exactly the same file:
-
-```{bash}
-# If AWK reads the metadata: remember the genus of each strain.
-# Else, on line 1 of the other file: print the header and a name for the new column.
-# Else: print the line and the genus of its strain.
-awk -F'\t' -v OFS='\t' '
-  {
-    if (FILENAME == "mmc5_metadata_named.txt") {
-      genus[$1] = $4
-    } else if (FNR == 1) {
-      print $0, "Genus"
-    } else {
-      print $0, genus[$2]
-    }
-  }
-' mmc5_metadata_named.txt awk_data/Growth_Data.txt > growth_genus_ifelse.txt
-
-cmp growth_genus.txt growth_genus_ifelse.txt && echo 'identical'
-```
-
-This prints:
-
-```
-identical
-```
-
-The file name in the command must be written exactly as in the list of files at the end. You will see the short `NR == FNR` form more often, so it helps to recognise both.
+You get 623 lines instead of 595: first the 28 lines of the metadata, each with an extra column, and then the 595 lines you wanted. (`cut -f1,13` shows the strain and column 13, the new column after the 12 columns of the metadata.) The line count shows the problem right away.
 :::
 
 ## Check the result
@@ -378,14 +354,14 @@ awk -F'\t' '$6 == "" { print $2 }' growth_genus.txt | sort | uniq -c
 
 This prints:
 
-```
+```         
 209
     209 mock
 ```
 
 209 lines without a genus, all of them `mock` plants. That is expected: these plants got no bacteria. If other names show up here, a name did not match.
 
-**Check 2: strains that were not used.** Turn the command around: read the growth data first and remember which strains it has, then print the strains of the metadata that were not seen. `($1 in seen)` is true if a box with that name exists, and `!` means "not". `FNR > 1` skips the header of the metadata:
+**Check 2: strains that were not used.** This time, read the growth data first and remember which strains it has. Then go through the metadata, and print the strains that were not seen in the growth data:
 
 ```{bash}
 awk -F'\t' '
@@ -401,13 +377,20 @@ awk -F'\t' '
 
 This prints:
 
-```
+```         
 25
 
 Root123D2
 Root381
 USDA61
 ```
+
+Taken apart:
+
+-   `seen[$2] = 1`: store the value 1 under the name of the strain in column 2 of the growth data. The value itself does not matter, any value would do. What matters is that after the first file, every strain of the growth data is a name in the array `seen`.
+-   `($1 in seen)`: true if the strain in column 1 of the metadata is a name in `seen`. `in` only looks at the names, not at the values.
+-   `!` means "not", so `!($1 in seen)` is true for the strains that were *not* seen. The brackets keep the test together, so that `!` turns the whole test around.
+-   `FNR > 1` skips the header of the metadata.
 
 25 of the 27 strains do not appear in the growth data. That is fine here, because the experiment used only two of them. In your own data, an entry you expected to be used may point to a name that is written differently in the two files. Without the `!`, the same command prints the strains that were used:
 
@@ -420,7 +403,7 @@ awk -F'\t' '
 
 This prints:
 
-```
+```         
 129E
 13C
 ```
@@ -449,7 +432,7 @@ awk -F'\t' '
 
 This prints:
 
-```
+```         
     209 mock
 identical to the correct join
 oot123D2
@@ -467,26 +450,16 @@ AWK is not the only way to combine two tables. In bash, there is also the `join`
 So the checks on this page still apply. Make the names match first, then count the lines, look at the lines without a match and see which names they belong to, and look for entries that were not used. Tools differ in what they do with a name that has no match: some leave an empty field, as AWK does, and others leave out the line. Then the line count is the check that catches it.
 :::
 
-::: {.callout-question .callout-warning collapse="false" title="Exercise"}
-The `mock` plants got an empty field in the new column. But their genus is not unknown: they got no bacteria at all. Change the join so that the `mock` plants get the text `none` in the new column, and all other plants get their genus as before. Save the result as `growth_genus_none.txt`, and check it.
+:::: {.callout-question .callout-warning collapse="false" title="Exercise"}
+The `mock` plants got an empty field in the new column. But their genus is not unknown: they got no bacteria at all. Write a second command that puts the text `none` into column 6 of the `mock` plants, and leaves all other lines as they are. Use `growth_genus.txt` as input, save the result as `growth_genus_none.txt`, and check it.
 
-Hint: in the last part of the command, use `if` and `else`, as in the tip "the same command without NR == FNR" above.
+Hint: on the sed page, you changed column 2 on some lines only, with a pattern, an action and `{ print }`.
 
 ::: {.callout-answer .callout-warning collapse="true" title="Click me to see an answer"}
-Replace the last part with an `if`/`else`: if the strain in column 2 is `mock`, print `none`, else print the genus from the box:
+The pattern `$2 == "mock"` picks the `mock` plants, and the action puts `none` into column 6. The second part, `{ print }`, prints every line, changed or not. `-v OFS='\t'` keeps the tabs in the lines that changed:
 
 ```{bash}
-awk -F'\t' -v OFS='\t' '
-  NR == FNR  { genus[$1] = $4; next }
-  FNR == 1   { print $0, "Genus"; next }
-             {
-               if ($2 == "mock") {
-                 print $0, "none"
-               } else {
-                 print $0, genus[$2]
-               }
-             }
-' mmc5_metadata_named.txt awk_data/Growth_Data.txt > growth_genus_none.txt
+awk -F'\t' -v OFS='\t' '$2 == "mock" { $6 = "none" } { print }' growth_genus.txt > growth_genus_none.txt
 
 # Check
 wc -l growth_genus_none.txt
@@ -497,24 +470,24 @@ cut -f2,6 growth_genus_none.txt | sort | uniq -c
 
 This prints:
 
-```
+```         
 595 growth_genus_none.txt
 
-Nutrient	Condition	Experiment	Rootlength	FW_shoot_mg	Genus
-low_P	mock	ex61	40.4	6.6	none
-low_P	mock	ex61	38	6.8	none
+Nutrient    Condition   Experiment  Rootlength  FW_shoot_mg Genus
+low_P   mock    ex61    40.4    6.6 none
+low_P   mock    ex61    38  6.8 none
 
 0
 
-    210 129E	Rhizobium
-    175 13C	Rhizobium
-      1 Condition	Genus
-    209 mock	none
+    210 129E    Rhizobium
+    175 13C Rhizobium
+      1 Condition   Genus
+    209 mock    none
 ```
 
-No empty fields are left, and each condition got the value you expected. Note that the `if` only touches the `mock` plants. A strain whose name does not match still gets an empty field, so check 1 still finds it. If you filled in every empty field instead, a name that did not match would look the same as a `mock` plant.
+No empty fields are left, and each condition got the value you expected. Note that the command only changes the `mock` plants. A strain whose name does not match still gets an empty field, so check 1 still finds it. If you filled in every empty field instead, a name that did not match would look the same as a `mock` plant.
 :::
-:::
+::::
 
 ## Windows line endings in a join
 
@@ -545,7 +518,7 @@ awk -F'\t' '$2 == "129E"' growth_colon_windows.txt | head -1 | cat -A
 
 This prints:
 
-```
+```         
 210
 0
 low_P^I129E^Iex61^I86.1^I5.5^ITRUE^M$
@@ -557,15 +530,15 @@ The `\r` (`^M`) came along with the value, so the next command that looks for `T
 In Git Bash on Windows, AWK drops the `\r` when it reads the file. There, the join with the Windows file gives exactly the same result as with the clean one, and you find 210 plants with `TRUE`. On Linux, for example on a computer cluster, you find 0. Check new files with `file` or `cat -A` before you combine them, whatever system you work on.
 :::
 
-::: {.callout-question .callout-warning collapse="false" title="Exercise"}
-1. Add two columns from the metadata to the growth data in one command: the genus (column 4) and `Colonization` (column 12). Give both new columns a name in the header. Save the result as `growth_meta.txt`.
-2. Check the result: the number of lines, the number of fields per line, and which values of `Colonization` each condition got.
+:::: {.callout-question .callout-warning collapse="false" title="Exercise"}
+1.  Add two columns from the metadata to the growth data in one command: the genus (column 4) and `Colonization` (column 12). Give both new columns a name in the header. Save the result as `growth_meta.txt`.
+2.  Check the result: the number of lines, the number of fields per line, and which values of `Colonization` each condition got.
 
 ::: {.callout-answer .callout-warning collapse="true" title="Click me to see an answer"}
 Use one array per column you want to add:
 
 ```{bash}
-# 1. Two boxes per strain, and two new columns
+# 1. Two arrays, and two new columns
 awk -F'\t' -v OFS='\t' '
   NR == FNR  { genus[$1] = $4; colon[$1] = $12; next }
   FNR == 1   { print $0, "Genus", "Colonization"; next }
@@ -581,33 +554,33 @@ cut -f2,7 growth_meta.txt | sort | uniq -c
 
 This prints:
 
-```
+```         
 595 growth_meta.txt
 
-Nutrient	Condition	Experiment	Rootlength	FW_shoot_mg	Genus	Colonization
-low_P	mock	ex61	40.4	6.6
-low_P	mock	ex61	38	6.8
+Nutrient    Condition   Experiment  Rootlength  FW_shoot_mg Genus   Colonization
+low_P   mock    ex61    40.4    6.6
+low_P   mock    ex61    38  6.8
 
     595 7
 
-    210 129E	TRUE
-    175 13C	NA
-      1 Condition	Colonization
+    210 129E    TRUE
+    175 13C NA
+      1 Condition   Colonization
     209 mock
 ```
 
 All 595 lines have 7 fields. `129E` got `TRUE`, `13C` got the text `NA`, and the `mock` plants got nothing. Note that the table now holds two kinds of missing values: the text `NA` from the metadata, and empty fields for the `mock` plants. When you calculate with such a column, you need the rule from the AWK page for both.
 :::
-:::
+::::
 
 ## What you learned
 
-- A join adds information from one table to another, using a name that both tables share.
-- Before a join, look at the names in both files. They must match letter by letter.
-- Make names match with explicit changes (`s/^R129_E/129E/`), and check all names afterwards, not only the ones you changed. Choose one naming scheme early in a project, so you need this less often.
-- `NR == FNR { box[$1] = $4; next } { print $0, box[$2] }` combines two files: the table you look things up in first, the table you add to second. `FNR == 1` gives the new column a name.
-- `NR` counts lines across all files, `FNR` within the current file. `next` skips the rest of the command for the current line.
-- A missing name gives an empty field, not an error. After a join, count the lines, count the empty fields and see which names they belong to, and look for entries that were not used. Read the names these checks print, not only the counts.
-- A Windows line ending travels into your result when you add the last column. Remove it before the join.
+-   A join adds information from one table to another, using a name that both tables share.
+-   Before a join, look at the names in both files. They must match letter by letter.
+-   Make names match with explicit changes (`s/^R129_E/129E/`), and check all names afterwards, not only the ones you changed. Choose one naming scheme early in a project, so you need this less often.
+-   `NR == FNR { genus[$1] = $4; next } { print $0, genus[$2] }` combines two files: the table you look things up in first, the table you add to second. `FNR == 1` gives the new column a name.
+-   `NR` counts lines across all files, `FNR` within the current file. `next` skips the rest of the command for the current line.
+-   A missing name gives an empty field, not an error. After a join, count the lines, count the empty fields and see which names they belong to, and look for entries that were not used. Read the names these checks print, not only the counts.
+-   A Windows line ending travels into your result when you add the last column. Remove it before the join.
 
 On the next page, [AWK forms you will meet](awk_more.qmd), you learn to read some AWK forms that are common in code from an LLM, but that this tutorial has not used so far.

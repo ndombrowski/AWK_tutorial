@@ -7,11 +7,9 @@ On this page, you use AWK on a real table with plant growth measurements. You ch
 
 The same commands work on any table in plain text, and many bioinformatics tools write their results that way, for example BLAST, featureCounts or a GFF annotation file. With AWK you can filter or reshape such output right away, or pass it on to the next tool with a pipe, without saving it first or opening it in R. AWK never changes the file it reads: it prints the result on the screen, or into a new file if you ask for that.
 
-The outputs on these pages come from a Linux computer (Ubuntu in WSL). On most computers you get the same result. Where this is not the case, the page says so.
-
 ## Get the data: `curl` and `tar`
 
-All example files for this tutorial come in one file, `awk_data.tar.gz`. A `.tar.gz` file packs many files into one and compresses them, similar to a `.zip` file. 
+All example files for this tutorial come in one file, `awk_data.tar.gz`. A `.tar.gz` file packs many files into one and compresses them, similar to a `.zip` file.
 
 ```{bash}
 # Go to your home folder, and make a folder for this tutorial
@@ -38,13 +36,9 @@ ls awk_data | wc -l
 
 On this page you only need `Growth_Data.txt`. The other files are 16S sequences, a table with information on bacterial strains, and a second version of the growth table, which you use on later pages.
 
-::: {.callout-warning title="Draft note"}
-The download link is not tested yet: the data is not on GitHub yet. The other commands were tested on a copy of the same file.
-:::
-
 ## Look at the table first
 
-Before you run any command on a table, you want to look at it first. You at leat want to know: how many lines it has, and what separates the columns?
+Before you run any command on a table, you want to look at it first. You at least want to know: how many lines it has, and what separates the columns?
 
 ```{bash}
 # The first 5 lines
@@ -56,23 +50,23 @@ wc -l awk_data/Growth_Data.txt
 
 This prints:
 
-```
-Nutrient	Condition	Experiment	Rootlength	FW_shoot_mg
-low_P	mock	ex61	40.4	6.6
-low_P	mock	ex61	38	6.8
-low_P	mock	ex61	74.7	8.1
-low_P	mock	ex61	34.4	8.3
+```         
+Nutrient    Condition   Experiment  Rootlength  FW_shoot_mg
+low_P   mock    ex61    40.4    6.6
+low_P   mock    ex61    38  6.8
+low_P   mock    ex61    74.7    8.1
+low_P   mock    ex61    34.4    8.3
 
 595 awk_data/Growth_Data.txt
 ```
 
-We see that the table has a **header**, a first line with the column names, and 594 rows of measurements. Each row is one plant and we have the following columns:
+You see that the table has a **header**, a first line with the column names followed by 594 rows of measurements. Each row is one plant that was measured, and the table has the following columns:
 
-- `Nutrient`: the plant grew with low or high phosphorus (`low_P`, `high_P`)
-- `Condition`: the plant was inoculated with nothing (`mock`) or with one of two bacteria (`129E`, `13C`)
-- `Experiment`: the experiment the plant was part of (`ex61`, `ex64`, `ex65`)
-- `Rootlength`: root length in mm
-- `FW_shoot_mg`: shoot fresh weight in mg
+-   `Nutrient`: the plant grew with low or high phosphorus (`low_P`, `high_P`)
+-   `Condition`: the plant was inoculated with nothing (`mock`) or with one of two bacteria (`129E`, `13C`)
+-   `Experiment`: the experiment the plant was part of (`ex61`, `ex64`, `ex65`)
+-   `Rootlength`: root length in mm
+-   `FW_shoot_mg`: shoot fresh weight in mg
 
 The columns look like they are separated by spaces. However, you cannot see what is really there, because spaces and tabs look the same on screen. `cat -A` shows the invisible characters:
 
@@ -82,30 +76,31 @@ head -3 awk_data/Growth_Data.txt | cat -A
 
 This prints:
 
-```
+```         
 Nutrient^ICondition^IExperiment^IRootlength^IFW_shoot_mg$
 low_P^Imock^Iex61^I40.4^I6.6$
 low_P^Imock^Iex61^I38^I6.8$
 ```
 
-Here, `^I` is a **tab**, and `$` marks the end of each line. So this tells us that we work with a **tab-separated** table. You need to know this for the next steps.
+Here, `^I` is a **tab**, and `$` marks the end of each line. So this tells you that you work with a **tab-separated** table. You need to know this for the next steps.
 
 ::: {.callout-tip title="Tip: cat -A on a Mac (optional)" collapse="true"}
-<!-- DRAFT: not tested on a Mac yet (step 7 in PLAN.md). -->
-On a Mac, `cat -A` may not work. `cat -et` shows the same: tabs as `^I` and line ends as `$`.
+<!-- DRAFT: not tested on a Mac yet. -->
+
+On a Mac, `cat -A` may not work and you can try `cat -et` instead.
 :::
 
 ## The shape of an AWK command
 
 Every AWK command on this page has the same shape:
 
-```
+```         
 awk -F'\t' 'pattern { action }' file
 ```
 
-- `-F'\t'` tells AWK that the columns are separated by tabs. `-F` stands for **field separator**. A **field** is one value in a line, like one cell in a spreadsheet row.
-- `'pattern { action }'` is the AWK program, it always needs to be between single quotes. The **pattern** says which lines to work on. The **action**, between curly brackets, says what to do with them.
-- `file` is the file AWK reads.
+-   `-F'\t'` tells AWK that the columns are separated by tabs. `-F` stands for **field separator**. A **field** is one value in a line, like one cell in a spreadsheet row.
+-   `'pattern { action }'` is the AWK program, it always needs to be between single quotes. The **pattern** says which lines to work on. The **action**, between curly brackets, says what to do with them.
+-   `file` is the file AWK reads.
 
 AWK reads the file one line at a time. For each line, it checks the pattern. If the line matches, AWK runs the action. You can leave out either part: without a pattern, the action runs on every line. Without an action, AWK prints the lines that match.
 
@@ -120,7 +115,7 @@ awk -F'\t' '{ print $1 }' awk_data/Growth_Data.txt | head -3
 
 This prints:
 
-```
+```         
 Nutrient
 low_P
 low_P
@@ -135,13 +130,13 @@ awk -F'\t' '{ print $1, $4 }' awk_data/Growth_Data.txt | head -3
 
 This prints:
 
-```
+```         
 Nutrient Rootlength
 low_P 40.4
 low_P 38
 ```
 
-AWK puts a space between the printed columns. To keep the result a tab-separated table, tell AWK to use a tab in the output too. `-v OFS='\t'` sets the **output field separator**:
+AWK by default puts a space between the printed columns. To keep the result a tab-separated table, tell AWK to use a tab in the output too. `-v OFS='\t'` sets the **output field separator**:
 
 ```{bash}
 awk -F'\t' -v OFS='\t' '{ print $1, $4 }' awk_data/Growth_Data.txt | head -3
@@ -149,15 +144,17 @@ awk -F'\t' -v OFS='\t' '{ print $1, $4 }' awk_data/Growth_Data.txt | head -3
 
 This prints:
 
-```
-Nutrient	Rootlength
-low_P	40.4
-low_P	38
+```         
+Nutrient    Rootlength
+low_P   40.4
+low_P   38
 ```
 
-You can do the same thing with `cut -f1,4` (something you might have seen in our CLI workshop). AWK becomes more useful in the next sections, where you choose rows too.
+You can do the same thing with `cut -f1,4` (something you might have seen in the CLI workshop). However, you will see why AWK becomes more useful in the next sections, where you choose rows too.
 
-A quick check for any table is to count the fields in each line. `NF` is the **number of fields** in the current line:
+## `NF`: work with the number of fields
+
+Before that, you learn a quick check that is useful for any table you work with: count the fields in each line. Here, `NF` is the **number of fields** in the current line:
 
 ```{bash}
 # Count the fields per line, then count how often each number occurs
@@ -166,14 +163,14 @@ awk -F'\t' '{ print NF }' awk_data/Growth_Data.txt | sort | uniq -c
 
 This prints:
 
-```
+```         
     595 5
 ```
 
-This tells us that all 595 lines have 5 fields. If some lines had 4 or 6, something in the table would be off and together this gives us a quick command to check that our data has the right structure.
+This tells you that all 595 lines have 5 fields. If some lines had 4 or 6, this would immediately tell you that something in the table would be off. So this is a quick command to check that your data has the right structure.
 
-::: {.callout-question .callout-warning collapse="false" title="Exercise"}
-1. Print the columns `Experiment` and `FW_shoot_mg`, separated by a tab. Look at the first 4 lines of the result.
+:::: {.callout-question .callout-warning collapse="false" title="Exercise"}
+1.  Print the columns `Experiment` and `FW_shoot_mg`, separated by a tab. Look at the first 4 lines of the result.
 
 ::: {.callout-answer .callout-warning collapse="true" title="Click me to see an answer"}
 `Experiment` is column 3 and `FW_shoot_mg` is column 5:
@@ -184,18 +181,18 @@ awk -F'\t' -v OFS='\t' '{ print $3, $5 }' awk_data/Growth_Data.txt | head -4
 
 This prints:
 
-```
-Experiment	FW_shoot_mg
-ex61	6.6
-ex61	6.8
-ex61	8.1
+```         
+Experiment  FW_shoot_mg
+ex61    6.6
+ex61    6.8
+ex61    8.1
 ```
 :::
-:::
+::::
 
-## `NR`: the header line
+## `NR`: work with the header line
 
-`NR` is the **number of the record**, the line AWK is reading now. You use it in a pattern to choose lines by their position:
+`NR` is the **number of the record**, the line AWK is reading now. You can use it in a pattern to choose lines by their position:
 
 ```{bash}
 # Only line 1, the header
@@ -208,18 +205,19 @@ awk -F'\t' 'NR > 1' awk_data/Growth_Data.txt | wc -l
 
 This prints:
 
-```
-Nutrient	Condition	Experiment	Rootlength	FW_shoot_mg
-low_P	mock	ex61	40.4	6.6
-low_P	mock	ex61	38	6.8
+```         
+Nutrient    Condition   Experiment  Rootlength  FW_shoot_mg
+low_P   mock    ex61    40.4    6.6
+low_P   mock    ex61    38  6.8
+
 594
 ```
 
-These commands have only a pattern and no action, so AWK prints the lines that match. `NR > 1` skips the header and keeps all 594 rows of data. You need it often, as the next sections show.
+These commands have only a pattern and no action, so AWK prints the lines that match. `NR > 1` skips the header and keeps all 594 rows of data. You need it often, as you will see in the next sections.
 
 ## Subset rows by text
 
-To keep only the rows of the plants grown with low phosphorus, compare column 1 with the text `low_P`:
+Sometimes you only care about part of the data. For example, you might want to keep only the plants grown with low phosphorus. For this, you use the pattern `$1 == "low_P"`, which checks every line and keeps it only if column 1 is exactly low_P. The first command shows the first few matching lines. The second counts how many rows you now work with:
 
 ```{bash}
 awk -F'\t' '$1 == "low_P"' awk_data/Growth_Data.txt | head -3
@@ -228,18 +226,18 @@ awk -F'\t' '$1 == "low_P"' awk_data/Growth_Data.txt | wc -l
 
 This prints:
 
-```
-low_P	mock	ex61	40.4	6.6
-low_P	mock	ex61	38	6.8
-low_P	mock	ex61	74.7	8.1
+```         
+low_P   mock    ex61    40.4    6.6
+low_P   mock    ex61    38  6.8
+low_P   mock    ex61    74.7    8.1
 
 300
 ```
 
 Two details matter here:
 
-- Text goes between double quotes: `"low_P"`. Without quotes, AWK reads `low_P` as the name of a **variable**, a named box that holds a value. That box is empty, so no row matches.
-- To compare, use two equal signs: `==`. If you would use only one equal sign this command would do something else and instead put a value into a field. Note here, how AWK gives you no error message and only by inspecting the output we will see that the command is doing something different to what we wanted:
+-   Text goes between double quotes: `"low_P"`. Without quotes, AWK reads `low_P` as the name of a **variable**, a name that holds a value, like a label on a box. You never gave `low_P` a value, so it is empty, and no row matches.
+-   To compare, use two equal signs: `==`. If you use only one equal sign, this command does something else and instead puts a value into a field. Note here how AWK gives you no error message. Only by looking at the output, and counting the number of lines of the output, do you see that the command does something different from what you wanted:
 
 ```{bash}
 # Wrong: one = instead of two
@@ -249,7 +247,7 @@ awk -F'\t' '$1 = "low_P"' awk_data/Growth_Data.txt | wc -l
 
 This prints:
 
-```
+```         
 low_P Condition Experiment Rootlength FW_shoot_mg
 low_P mock ex61 40.4 6.6
 low_P mock ex61 38 6.8
@@ -257,11 +255,11 @@ low_P mock ex61 38 6.8
 595
 ```
 
-Here, every line is kept, but column 1 of every line now says `low_P`, even in the header, and the tabs became spaces. A quick `wc -l` shows the problem: 595 lines, the same as the whole file.
+You see that with this command every line is kept, but column 1 of every line now says `low_P`, even in the header, and the tabs became spaces. A quick `wc -l` shows the problem: 595 lines, the same as the whole file.
 
 ### Why not use `grep`?
 
-If you have followed the CLI workshop you might remember `grep`, which keeps lines that contain a word. For the plants with bacterium `13C`, both tools give the same count:
+If you have followed the CLI workshop you might remember `grep`, which keeps lines that contain a word. If you wanted to only work with the plants with bacterium `13C`, both tools give the same count:
 
 ```{bash}
 grep '13C' awk_data/Growth_Data.txt | wc -l
@@ -270,12 +268,12 @@ awk -F'\t' '$2 == "13C"' awk_data/Growth_Data.txt | wc -l
 
 This prints:
 
-```
+```         
 175
 175
 ```
 
-But there is an important difference: `grep` searches the whole line, not one column. If you search for `13` and you get more lines:
+But there is an important difference: `grep` searches the whole line, not one column. This can easily result in problems, for example if you would have searched for `13` instead of `13C`:
 
 ```{bash}
 grep '13' awk_data/Growth_Data.txt | wc -l
@@ -284,19 +282,19 @@ grep '13' awk_data/Growth_Data.txt | head -3
 
 This prints:
 
-```
+```         
 211
 
-low_P	mock	ex61	55.3	13.3
-low_P	mock	ex61	48.7	13.9
-low_P	mock	ex64	46.93	13.52
+low_P   mock    ex61    55.3    13.3
+low_P   mock    ex61    48.7    13.9
+low_P   mock    ex64    46.93   13.52
 ```
 
-In total this command gives us 36 extra lines, because `13` also appears in shoot weights such as 13.3. The first lines grep finds are not even `13C` plants, but `mock` plants with such a shoot weight. In contrast, AWK compares only column 2, so this cannot happen making this a much safer command.
+In total this command gives you 36 extra lines. That is because `13` also appears in shoot weights such as 13.3. You see this in the first lines grep finds that are not even `13C` plants, but `mock` plants with such a shoot weight. In contrast, AWK compares only column 2, so this cannot happen. This makes the AWK command much safer.
 
-## Keep rows by number
+## Subset rows by a number
 
-Comparisons also work with numbers: `>` (greater than), `<` (less than), `>=` and `<=` (greater or less than, or equal). To keep plants with roots longer than 50 mm:
+Comparisons also work with numbers: `>` (greater than), `<` (less than), `>=` and `<=` (greater or less than, or equal). For example, you could only keep plants with roots longer than 50 mm:
 
 ```{bash}
 awk -F'\t' '$4 > 50' awk_data/Growth_Data.txt | head -3
@@ -305,15 +303,15 @@ awk -F'\t' '$4 > 50' awk_data/Growth_Data.txt | wc -l
 
 This prints:
 
-```
-Nutrient	Condition	Experiment	Rootlength	FW_shoot_mg
-low_P	mock	ex61	74.7	8.1
-low_P	mock	ex61	66.5	8.9
+```         
+Nutrient    Condition   Experiment  Rootlength  FW_shoot_mg
+low_P   mock    ex61    74.7    8.1
+low_P   mock    ex61    66.5    8.9
 
 476
 ```
 
-**Important:** Note how the header is in the result? Column 4 of the header is the word `Rootlength`, not a number. When a value is not a number, AWK compares it as text, and in that comparison `Rootlength` counts as larger than `50`. To avoid this we need to add `NR > 1` to skip the header. To combine patterns we can use `&&`, which means "and": both conditions must be true.
+**Important:** Note how the header is in the result? This might seem weird, since column 4 of the header is the word `Rootlength`, not a number. However, when a value is not a number, AWK compares it as text, and in that comparison `Rootlength` counts as larger than `50`. To avoid this, add `NR > 1` to skip the header. To combine patterns, use `&&`, which means "and": both conditions must be true.
 
 ```{bash}
 awk -F'\t' 'NR > 1 && $4 > 50' awk_data/Growth_Data.txt | wc -l
@@ -321,11 +319,11 @@ awk -F'\t' 'NR > 1 && $4 > 50' awk_data/Growth_Data.txt | wc -l
 
 This prints:
 
-```
+```         
 475
 ```
 
-`||` means "or": We can use this if we want at least one of the conditions to be true.
+You sometimes might also need `||`, which means means "or": use this if you want at least one of the conditions to be true.
 
 ```{bash}
 # Low phosphorus and no bacteria
@@ -335,10 +333,9 @@ awk -F'\t' '$1 == "low_P" && $2 == "mock"' awk_data/Growth_Data.txt
 awk -F'\t' '$2 == "129E" || $2 == "13C"' awk_data/Growth_Data.txt
 ```
 
-
-::: {.callout-question .callout-warning collapse="false" title="Exercise"}
-1. How many plants grew with high phosphorus and bacterium `13C`?
-2. How many plants have a shoot weight above 20 mg?
+:::: {.callout-question .callout-warning collapse="false" title="Exercise"}
+1.  How many plants grew with high phosphorus and bacterium `13C`?
+2.  How many plants have a shoot weight above 20 mg?
 
 ::: {.callout-answer .callout-warning collapse="true" title="Click me to see an answer"}
 ```{bash}
@@ -351,7 +348,7 @@ awk -F'\t' 'NR > 1 && $5 > 20' awk_data/Growth_Data.txt | wc -l
 
 This prints:
 
-```
+```         
 87
 
 140
@@ -359,11 +356,11 @@ This prints:
 
 So 87 plants grew with high phosphorus and `13C`, and 140 plants have a shoot weight above 20 mg.
 :::
-:::
+::::
 
-## Missing values: empty fields
+## Working with missing values: empty fields
 
-Now look for plants with very short roots, below 10 mm:
+Next let's look at one example to showcase why it is important to carefully check your data. For this, look for plants with very short roots, below 10 mm:
 
 ```{bash}
 awk -F'\t' 'NR > 1 && $4 < 10' awk_data/Growth_Data.txt | wc -l
@@ -372,15 +369,15 @@ awk -F'\t' 'NR > 1 && $4 < 10' awk_data/Growth_Data.txt | head -3
 
 This prints:
 
-```
+```         
 15
 
-high_P	mock	ex61		18.2
-high_P	mock	ex64		22.4
-high_P	mock	ex64		26
+high_P  mock    ex61        18.2
+high_P  mock    ex64        22.4
+high_P  mock    ex64        26
 ```
 
-15 plants, but if we look at the table we notice that none of them has a root length below 10. Instead you will notice that these rows have no root length at all. If we use `cat -A` this will show us exactly what is in the file for these fields:
+This tells you that there seem to be 15 plants with short shoots. However, if you look at the table, you notice that none of them actually has a root length below 10. Instead, these rows have no root length at all. `cat -A` shows you exactly what is in the file for these fields:
 
 ```{bash}
 awk -F'\t' 'NR > 1 && $4 < 10' awk_data/Growth_Data.txt | head -3 | cat -A
@@ -388,13 +385,13 @@ awk -F'\t' 'NR > 1 && $4 < 10' awk_data/Growth_Data.txt | head -3 | cat -A
 
 This prints:
 
-```
+```         
 high_P^Imock^Iex61^I^I18.2$
 high_P^Imock^Iex64^I^I22.4$
 high_P^Imock^Iex64^I^I26$
 ```
 
-We see two tabs side by side, `^I^I`, with nothing between them: this is an **empty field** and also how a missing value often looks, for example in a table saved from Excel with empty cells. Count them per column:
+You see two tabs side by side, `^I^I`, with nothing between them: this is an **empty field** and also how a missing value often looks, for example in a table saved from Excel with empty cells. Now count how many empty fields each column has:
 
 ```{bash}
 # Empty root length (column 4) and empty shoot weight (column 5)
@@ -404,12 +401,12 @@ awk -F'\t' '$5 == ""' awk_data/Growth_Data.txt | wc -l
 
 This prints:
 
-```
+```         
 15
 8
 ```
 
-Altogether, this tells us that AWK did not give an error but it did something we didn't really want. It compared the empty field with 10 as text, and empty text counts as smaller than anything. So all 15 plants without a root length passed the filter `$4 < 10`. In calculations, AWK will treat an empty field as 0, as you see further down.
+Altogether, this tells you that AWK did not give an error, but it did something you didn't really want. It compared the empty field with 10 as text, and empty text counts as smaller than anything. So all 15 plants without a root length passed the filter `$4 < 10`. In calculations, AWK will treat an empty field as 0, as you see further down.
 
 ::: {.callout-important title="Important: skip empty fields before you compare or calculate"}
 Before you compare or calculate with a column, keep only the rows that have a value in it, with `$4 != ""`. `!=` means "is not equal to", and `""` is empty text, so `$4 != ""` means "column 4 is not empty":
@@ -420,7 +417,7 @@ awk -F'\t' 'NR > 1 && $4 != "" && $4 < 10' awk_data/Growth_Data.txt | wc -l
 
 This prints:
 
-```
+```         
 0
 ```
 
@@ -445,8 +442,8 @@ awk '{ print NF }' awk_data/Growth_Data.txt | sort | uniq -c
 
 This prints:
 
-```
-high_P	mock	ex61		18.2
+```         
+high_P  mock    ex61        18.2
 
 18.2
 
@@ -456,8 +453,25 @@ high_P	mock	ex61		18.2
 
 With `-F'\t'`, column 4 of line 123 is empty (the empty line in the output). Without it, column 4 is 18.2, the shoot weight. The 23 lines with an empty field now have only 4 fields. Again there is no error. The `NF` check from above shows the problem right away, so it is worth running on every new table.
 
-::: {.callout-question .callout-warning collapse="false" title="Exercise"}
-1. How many plants have a shoot weight below 5 mg? First write the command without the rule from above. Then add the rule. What is the difference, and why?
+The count tells you that 23 lines are different, but not which ones. To find them, use `NF` as a pattern: `NF != 5` keeps only the lines that do not have 5 fields. `print NR, $0` prints the line number in front of each line:
+
+```{bash}
+# Which lines do not have 5 fields without -F'\t'?
+awk 'NF != 5 { print NR, $0 }' awk_data/Growth_Data.txt | head -3
+```
+
+This prints:
+
+```         
+33 low_P    mock    ex61    49.6
+34 low_P    mock    ex61    53.6
+123 high_P  mock    ex61        18.2
+```
+
+Lines 33 and 34 have no shoot weight, and line 123 has no root length. Together, the 15 empty root lengths and 8 empty shoot weights make the 23 lines. On a new table, the line numbers tell you where to look, for example with `awk 'NR == 33'`.
+
+:::: {.callout-question .callout-warning collapse="false" title="Exercise"}
+1.  How many plants have a shoot weight below 5 mg? First write the command without the rule from above. Then add the rule. What is the difference, and why?
 
 ::: {.callout-answer .callout-warning collapse="true" title="Click me to see an answer"}
 ```{bash}
@@ -470,14 +484,14 @@ awk -F'\t' 'NR > 1 && $5 != "" && $5 < 5' awk_data/Growth_Data.txt | wc -l
 
 This prints:
 
-```
+```         
 10
 2
 ```
 
 Only 2 plants have a shoot weight below 5 mg. The first command also keeps the 8 plants without a shoot weight.
 :::
-:::
+::::
 
 ::: {.callout-tip title="Tip: fill empty fields with NA (optional)" collapse="true"}
 Empty fields are easy to miss. One way to make them visible is to fill each empty field with `NA` (not available) and save the result as a new file. In this table, only column 4 and column 5 have empty fields, so you fill those two:
@@ -501,14 +515,14 @@ awk -F'\t' 'NR == 123' Growth_Data_NA.txt
 
 This prints:
 
-```
+```         
 595 Growth_Data_NA.txt
-high_P	mock	ex61	NA	18.2
+high_P  mock    ex61    NA  18.2
 ```
 
 Also here `-v OFS='\t'` matters. When you change a field, AWK rebuilds the whole line and puts the output separator between the fields. Without `-v OFS='\t'`, that is a space. Only the changed lines get spaces, the others keep their tabs, so the file now mixes both. `cat -A` shows this for line 123 (changed) and line 2 (not changed) of such a file:
 
-```
+```         
 high_P mock ex61 NA 18.2$
 low_P^Imock^Iex61^I40.4^I6.6$
 ```
@@ -539,7 +553,7 @@ awk -F'\t' 'NR > 1 && $4 != "NA" && $4 > 50' Growth_Data_NA.txt | wc -l
 
 This prints:
 
-```
+```         
 490
 475
 ```
@@ -559,12 +573,12 @@ wc -l shoot_per_root.txt
 
 This prints:
 
-```
+```         
 awk: cmd. line:1: (FILENAME=awk_data/Growth_Data.txt FNR=123) fatal: division by zero attempted
 121 shoot_per_root.txt
 ```
 
-The error message tells us that AWK stopped at line 123: the first row with an empty root length. That is because it treated the empty field as 0, and a division by 0 is not possible. The file `shoot_per_root.txt` still exists, but it has only 121 lines instead of 594. If you missed the error message and only looked at `head`, the file would look fine. This is why you want to make it a habit to count lines after each step.
+The error message tells you that AWK stopped at line 123: the first row with an empty root length. That is because it treated the empty field as 0, and a division by 0 is not possible. The file `shoot_per_root.txt` still exists, but it has only 121 lines instead of 594. If you missed the error message and only looked at `head`, the file would look fine. This is why you want to make it a habit to count lines after each step.
 
 To fix this, you need to skip rows with an empty root length or shoot weight, and print a header for the new column. The command now has two parts, each with its own pattern and action.
 
@@ -585,10 +599,10 @@ wc -l shoot_per_root.txt
 
 This prints:
 
-```
-Nutrient	Condition	Experiment	Rootlength	FW_shoot_mg	shoot_per_root
-low_P	mock	ex61	40.4	6.6	0.163366
-low_P	mock	ex61	38	6.8	0.178947
+```         
+Nutrient    Condition   Experiment  Rootlength  FW_shoot_mg shoot_per_root
+low_P   mock    ex61    40.4    6.6 0.163366
+low_P   mock    ex61    38  6.8 0.178947
 
 572 shoot_per_root.txt
 ```
@@ -601,9 +615,9 @@ When you spread a command over several lines, the opening `{` of an action must 
 
 ## Sum and mean of a column: variables and `END`
 
-You will notice that the commands from here on are longer than the ones before. You could do the same thing in R or Python, and you might wonder why even learn them in AWK? The reason is that in bioinformatics you often only need a quick look at your data: how many plants are in each group, and do the means look sensible? AWK gives you that answer in the terminal, without starting another program or loading the table first. On a computer cluster, where R or Python may not be set up for you, AWK is always there. And because AWK reads a file one line at a time, it also works on files that are too large to open comfortably in R or Excel. For statistics and plots, R or Python remain the better tools. AWK is for the quick check before, or for cleaning up a table before you load it there.
+You will notice that the commands from here on are longer than the ones before. You could do the same thing in R or Python, and you might wonder why even learn them in AWK? The reason is that in bioinformatics you often only need a quick look at your data: what is the total number of reads I work with, how many plants are in each group, and do the means look sensible? AWK gives you that answer in the terminal, without starting another program or loading the table first. On a computer cluster, where R or Python may not be set up for you, AWK is always there. And because AWK reads a file one line at a time, it also works on files that are too large to open comfortably in R or Excel. For statistics and plots, R or Python remain the better tools. AWK is for the quick check before, or for cleaning up a table before you load it there.
 
-Start with one number: the total shoot weight of all plants. For this, AWK needs a **variable**, a named box that holds a value. You do not need to create it first: AWK makes the box the first time you use it, and it starts at 0.
+Start with one number: the total shoot weight of all plants. For this, AWK needs a variable, a name that holds a value. You do not need to create it first: AWK makes the variable the first time you use it, and it starts at 0.
 
 ```{bash}
 awk -F'\t' 'NR > 1 && $5 != "" { sum += $5 } END { print sum }' awk_data/Growth_Data.txt
@@ -611,18 +625,18 @@ awk -F'\t' 'NR > 1 && $5 != "" { sum += $5 } END { print sum }' awk_data/Growth_
 
 This prints:
 
-```
+```         
 9715.23
 ```
 
 Taken apart:
 
-- `sum += $5`: add the shoot weight of this line to the box `sum`. `+=` means "add to what is already in the box".
-- `END { print sum }`: `END` is a special pattern. Its action runs once, after AWK has read the last line. By then, `sum` holds the total.
+-   `sum += $5`: add the shoot weight of this line to the variable `sum`. `+=` means "add to the value that is already in `sum`".
+-   `END { print sum }`: `END` is a special pattern. Its action runs once, after AWK has read the last line. By then, `sum` holds the total.
 
 The name `sum` is your own choice. You could call it `total` or `weight` instead, and get the same result. Names such as `NR`, `NF` and `END` are different: they belong to AWK and have a fixed meaning.
 
-For the mean, you need a second box that counts the plants. Here it is called `n` (short for "number of plants"), and `n++` adds 1 to it. The `;` separates two steps inside one action:
+For the mean, you need a second variable that counts the number of plants measured. Here it is called `n` (short for "number of plants"), and `n++` adds 1 to it for each line AWK passed. The `;` separates two steps inside one action:
 
 ```{bash}
 awk -F'\t' '
@@ -633,13 +647,13 @@ awk -F'\t' '
 
 This prints the number of plants, the total and the mean:
 
-```
+```         
 586 9715.23 16.5789
 ```
 
-Does 586 add up? 594 plants, minus the 8 without a shoot weight, is 586.
+When you run such calculations, you want to check if 586 adds up: 594 plants, minus the 8 without a shoot weight, is 586.
 
-Now leave out the rule for empty fields, and then also `NR > 1`:
+Now leave out the rule for empty fields, and then also `NR > 1` to see how slight differences in the code can make a difference:
 
 ```{bash}
 # Without $5 != ""
@@ -657,17 +671,34 @@ awk -F'\t' '
 
 This prints:
 
-```
+```         
 594 9715.23 16.3556
 
 595 9715.23 16.3281
 ```
 
-The total is the same all three times. AWK adds an empty field as 0, and the header text `FW_shoot_mg` as 0 too, so the sum does not change. But `n` still counts these lines, so the mean drops. A total that looks right does not mean that the mean is right. Look at the count as well: you expect 586.
+The total is the same all three times. AWK adds an empty field as 0, and the header text `FW_shoot_mg` as 0 too, so the sum does not change. But `n` still counts these lines, so the mean drops. A mean that looks right does not mean that it is actually right. This is a good example to carefully think about what your code is doing since the code runs without any error but the output is still incorrect. In this case the difference is small, but depending on your data, such silent errors can have a large effect.
+
+The means above have more decimals than the measurements. To round them, use `printf` instead of `print`. `printf` prints with a format that you choose: a piece of text with placeholders that the values fill in order. `%d` stands for a whole number and `%.1f` for a number with one decimal. `\t` is a tab and `\n` a new line. Everything else in the format, such as `n: ` and `mean: `, is printed as it is:
+
+```{bash}
+awk -F'\t' '
+  NR > 1 && $5 != "" { sum += $5; n++ }
+  END                { printf "n: %d\tmean: %.1f\n", n, sum / n }
+' awk_data/Growth_Data.txt
+```
+
+This prints:
+
+```         
+n: 586  mean: 16.6
+```
+
+Unlike `print`, `printf` does not start a new line by itself, and it ignores `OFS`. Leave out the `\n`, and the prompt of your terminal ends up on the same line as the result. The tab between the values is there only because `\t` is in the format.
 
 ## Count and mean per group: arrays
 
-`sum` and `n` are single boxes: each holds one value for the whole file. To count the plants per nutrient level, you need one box per group. A set of named boxes like this is called an **array**. `n["low_P"]` is the box for `low_P`, `n["high_P"]` the box for `high_P`. Just like a variable, AWK makes each box the first time you use it, and it starts at 0.
+`sum` and `n` are single variables: each holds one value for the whole file. You can do more than that, for example count the plants per nutrient level. For this, you need one count per group. An **array** is a variable that holds one value per name. `n["low_P"]` is the count for `low_P`, and `n["high_P"]` the count for `high_P`. Just like a single variable, AWK makes the value for a new name the first time you use it, and it starts at 0.
 
 ```{bash}
 awk -F'\t' '
@@ -678,7 +709,7 @@ awk -F'\t' '
 
 This prints:
 
-```
+```         
 low_P 300
 
 high_P 294
@@ -686,14 +717,17 @@ high_P 294
 
 Taken apart:
 
-- `NR > 1 { n[$1]++ }`: for each row of data, add 1 to the box of its nutrient level. Piece by piece:
-  - `n` is the name of the array, the set of boxes.
-  - `[$1]` picks one box: the box named after the value in column 1. On a `low_P` row that is `n["low_P"]`.
-  - `++` adds 1 to that box.
+-   `NR > 1 { n[$1]++ }`: for each row of data, add 1 to the count of its nutrient level. Piece by piece:
 
-  So after the first `low_P` row, `n["low_P"]` is 1, after the second it is 2, and so on.
-- `END { ... }`: as before, this runs once, after the last line.
-- `for (group in n) { print group, n[group] }`: go through all boxes in `n`. For each box, put its name into `group`, and print the name and the count.
+    -   `n` is the name of the array.
+    -   `[$1]` picks one name in the array: the text in column 1. On a `low_P` row that is `n["low_P"]`.
+    -   `++` adds 1 to the value under that name.
+
+    So after the first `low_P` row, `n["low_P"]` is 1, after the second it is 2, and so on.
+
+-   `END { ... }`: as before, this runs once, after the last line.
+
+-   `for (group in n) { print group, n[group] }`: go through all names in `n`. For each name, put it into the variable `group`, and print the name and its count.
 
 You can check the result with tools from the CLI workshop:
 
@@ -703,13 +737,13 @@ cut -f1 awk_data/Growth_Data.txt | sort | uniq -c
 
 This prints:
 
-```
+```         
       1 Nutrient
     294 high_P
     300 low_P
 ```
 
-For a mean per group, you do the same as for the whole file, but with one `sum` box and one `n` box per group. `sum[$1] += $4` adds the root length to the sum of its group.
+To calculate the mean per group, you do the same as for the whole file, but with two arrays: `sum` for the sum per group and `n` for the count per group. `sum[$1] += $4` adds the root length to the sum of its group.
 
 ```{bash}
 # Without the rule for empty fields
@@ -727,7 +761,7 @@ awk -F'\t' '
 
 This prints:
 
-```
+```         
 low_P 300 57.9494
 high_P 294 88.9501
 
@@ -735,11 +769,11 @@ low_P 290 59.9477
 high_P 289 90.489
 ```
 
-Without the rule, AWK adds 0 for each empty root length and still counts the plant. Both means come out too low, and nothing warns you.
+Without the rule, AWK adds 0 for each empty root length and still counts the plant. This is another silent error: both means come out too low, and nothing warns you.
 
 ### Mean per nutrient and condition
 
-To group by two columns, glue them together into one box name: `$1"-"$2` is column 1, a dash and column 2, for example `low_P-mock`. The dash goes in double quotes, because it is text here. A dash appears in none of the values, so you can split the name again later if you need to.
+To group data by more than one column, you can glue the columns together into one name: `$1"-"$2` is column 1, a dash and column 2, for example `low_P-mock`. The dash goes in double quotes, because it is text here. A dash appears in none of the values, so you can split the name again later if you need to.
 
 ```{bash}
 awk -F'\t' '
@@ -750,27 +784,27 @@ awk -F'\t' '
 
 This prints:
 
-```
-high_P-129E	103	98.4
-high_P-13C	85	97.7
-high_P-mock	101	76.4
-low_P-129E	99	69.9
-low_P-13C	86	64.2
-low_P-mock	105	47.1
+```         
+high_P-129E 103 98.4
+high_P-13C  85  97.7
+high_P-mock 101 76.4
+low_P-129E  99  69.9
+low_P-13C   86  64.2
+low_P-mock  105 47.1
 ```
 
-Two new parts:
+Taken apart:
 
-- `printf` prints with a format that you choose. `%s` stands for text, `%d` for a whole number, `%.1f` for a number with one decimal, `\t` for a tab and `\n` for a new line. The values after the format fill these places in order.
-- `| sort`: AWK goes through the boxes in no fixed order. Sort the result, so that it is easy to read and to compare between runs.
+-   `printf` with the format `"%s\t%d\t%.1f\n"`: the group name, a tab, the count as a whole number, a tab, and the mean with one decimal. `%s` is new: it stands for text, here the group name.
+-   `| sort`: AWK goes through the names in an array in no fixed order. Sort the result, so that it is easy to read and to compare between runs.
 
 ::: {.callout-important title="Forget the quotes, and the dash becomes a minus"}
 If you write `group = $1-$2` without the quotes, AWK reads the dash as a minus and subtracts column 2 from column 1. Text that does not start with a number counts as 0, so `low_P` and `high_P` both become 0, and `129E` becomes 129. The command runs without an error, but prints this:
 
-```
--129	202	84.4
--13	171	80.8
-0	206	61.5
+```         
+-129    202 84.4
+-13 171 80.8
+0   206 61.5
 ```
 
 Three groups instead of six, and low_P and high_P plants mixed together. A quick check catches it: you expect 2 nutrient levels × 3 conditions = 6 groups, so count the lines of the output, and look at the group names.
@@ -778,8 +812,8 @@ Three groups instead of six, and low_P and high_P plants mixed together. A quick
 
 Without the rule `$4 != ""`, four of the six means are lower. For example, low_P with `129E` gives 64.7 instead of 69.9, because the 8 plants without a root length count as 0 mm.
 
-::: {.callout-question .callout-warning collapse="false" title="Exercise"}
-1. Calculate the mean shoot weight per `Condition`, with one decimal. How many plants are in each group?
+:::: {.callout-question .callout-warning collapse="false" title="Exercise"}
+1.  Calculate the mean shoot weight per `Condition`, with one decimal. How many plants are in each group?
 
 ::: {.callout-answer .callout-warning collapse="true" title="Click me to see an answer"}
 `Condition` is column 2, and the shoot weight is column 5. Skip the empty shoot weights:
@@ -793,23 +827,23 @@ awk -F'\t' '
 
 This prints:
 
-```
-129E	208	17.6
-13C	173	15.3
-mock	205	16.6
+```         
+129E    208 17.6
+13C 173 15.3
+mock    205 16.6
 ```
 :::
-:::
+::::
 
 ## What you learned
 
-- An AWK command has the shape `awk -F'\t' 'pattern { action }' file`.
-- `$1`, `$2`, ... are the fields of a line, `$0` the whole line, `NF` the number of fields, `NR` the line number.
-- Compare with `==`, `!=`, `>`, `<`, and combine with `&&` (and) and `||` (or). Text goes in double quotes.
-- A variable (`sum += $5`) and `END` give a total or a mean for the whole file; an array (`sum[$1] += $5`) gives one per group.
-- Look at the table first: `cat -A` for tabs and empty fields, `NF` for the number of fields per line.
-- Empty fields cause errors without a warning: skip them with `$4 != ""` before you compare or calculate.
-- After each step, check the result: count the lines, and look at it with `head`.
+-   An AWK command has the shape `awk -F'\t' 'pattern { action }' file`.
+-   `$1`, `$2`, ... are the fields of a line, `$0` the whole line, `NF` the number of fields, `NR` the line number.
+-   Compare with `==`, `!=`, `>`, `<`, and combine with `&&` (and) and `||` (or). Text goes in double quotes.
+-   A variable (`sum += $5`) and `END` give a total or a mean for the whole file; an array (`sum[$1] += $5`) gives one per group.
+-   Look at the table first: `cat -A` for tabs and empty fields, `NF` for the number of fields per line.
+-   Empty fields cause errors without a warning: skip them with `$4 != ""` before you compare or calculate.
+-   After each step, check the result: count the lines, and look at it with `head`.
 
 You do not need to learn these commands by heart. Instead, keep your own notes: a text file or notebook with the commands you have checked, each with one line on what it does and which trap it avoids (for example "skips empty fields in column 4"). A checked command in your notes is worth more than one you half remember, and more than a new one from an LLM that you still have to check.
 

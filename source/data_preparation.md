@@ -144,6 +144,30 @@ Rebuilt in Git Bash with the same `tar -czf` command: 14 files, 13,643 bytes, al
 Check (`_tests/check_tarball_4.sh`): unpacked, all 14 md5 checksums identical to `data/awk_data/`,
 only `mmc5_metadata.txt` has CRLF line endings.
 
+The commands of that check, to run again after each rebuild. Run them in Git Bash, as a script in
+`_tests/`, so the unpacked copy never lands in `data/`. Use a new folder name each time
+(`tarcheck4` was the one used on 2026-10-29):
+
+```bash
+cd '/c/Users/ndmic/WorkingDir/UvA/Tutorials/AWK_tutorial/_tests' || exit 1
+
+# Unpack into a new folder
+mkdir tarcheck4
+tar -xzf ../data/awk_data.tar.gz -C tarcheck4
+ls -l tarcheck4/awk_data
+ls tarcheck4/awk_data | wc -l               # 14
+
+# Line endings: only mmc5_metadata.txt should have CRLF
+file tarcheck4/awk_data/*
+
+# Same content as the files in data/awk_data/? Both lists should be identical
+md5sum tarcheck4/awk_data/* | sed 's#tarcheck4/##' > md5_unpacked_4.txt
+md5sum ../data/awk_data/* | sed 's#\.\./data/##' > md5_original_4.txt
+diff md5_unpacked_4.txt md5_original_4.txt
+echo "diff exit code (0 = identical): $?"
+wc -l md5_unpacked_4.txt md5_original_4.txt
+```
+
 ## Line endings and git
 
 `.gitattributes` (repo root) holds `data/** -text`, so git never changes line endings in `data/`.

@@ -300,6 +300,12 @@ ul.task-list li input[type="checkbox"] {
  <span class="menu-text">Combining two files</span></a>
   </div>
 </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./source/awk_more.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">AWK forms you will meet</span></a>
+  </div>
+</li>
     </ul>
     </div>
 </nav>
@@ -311,7 +317,7 @@ ul.task-list li input[type="checkbox"] {
    
   <ul>
   <li><a href="#what-are-awk-and-sed" id="toc-what-are-awk-and-sed" class="nav-link active" data-scroll-target="#what-are-awk-and-sed">What are AWK and sed?</a></li>
-  <li><a href="#why-not-just-use-excel-or-r" id="toc-why-not-just-use-excel-or-r" class="nav-link" data-scroll-target="#why-not-just-use-excel-or-r">Why not just use Excel or R?</a></li>
+  <li><a href="#why-not-just-use-excel-r-or-python" id="toc-why-not-just-use-excel-r-or-python" class="nav-link" data-scroll-target="#why-not-just-use-excel-r-or-python">Why not just use Excel, R or Python?</a></li>
   <li><a href="#why-learn-this-when-an-llm-can-write-it" id="toc-why-learn-this-when-an-llm-can-write-it" class="nav-link" data-scroll-target="#why-learn-this-when-an-llm-can-write-it">Why learn this when an LLM can write it?</a></li>
   <li><a href="#what-you-will-do" id="toc-what-you-will-do" class="nav-link" data-scroll-target="#what-you-will-do">What you will do</a></li>
   <li><a href="#before-you-start" id="toc-before-you-start" class="nav-link" data-scroll-target="#before-you-start">Before you start</a></li>
@@ -341,7 +347,7 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<p>This tutorial shows you how to work with tables and other text files on the command line with two small tools: AWK and sed. You use them to select rows and columns, to calculate sums and means, to clean up names, and to combine information from two files. You will try every command on real biological data, a table with plant growth measurements and a set of 16S sequences.</p>
+<p>This tutorial shows you how to work with tables and other text files on the command line with two small tools: AWK and sed. You can use these tools to select rows and columns, to calculate sums and means, to clean up names, and to combine information from two files. You will try every command on real biological data: a table with plant growth measurements, and a table with information on the bacterial strains used in that experiment.</p>
 <p><strong>Important: This tutorial is still work in progress, missing chapters will be added over time</strong></p>
 <section id="what-are-awk-and-sed" class="level2">
 <h2 class="anchored" data-anchor-id="what-are-awk-and-sed">What are AWK and sed?</h2>
@@ -349,8 +355,8 @@ ul.task-list li input[type="checkbox"] {
 <p><strong>sed</strong> (short for “stream editor”) reads a file one line at a time and changes the text on the fly. You use it mostly to search and replace, for example to shorten a long sequence name, or to delete lines you do not need.</p>
 <p>Both tools come with almost every Linux and Mac system, they work on files of any size, and they need only one line of code for many everyday tasks. That is why you meet them in many bioinformatics scripts and tutorials.</p>
 </section>
-<section id="why-not-just-use-excel-or-r" class="level2">
-<h2 class="anchored" data-anchor-id="why-not-just-use-excel-or-r">Why not just use Excel or R?</h2>
+<section id="why-not-just-use-excel-r-or-python" class="level2">
+<h2 class="anchored" data-anchor-id="why-not-just-use-excel-r-or-python">Why not just use Excel, R or Python?</h2>
 <p>For statistics and plots, R or Python are the better tools. But for many smaller jobs, AWK and sed have some real advantages:</p>
 <ul>
 <li><strong>You keep a record of what you did.</strong> A command can be saved in a script or a notebook, and run again on new data. A table that you change by hand in Excel leaves no record, and Excel sometimes changes your data without asking: it is known to turn gene names such as <code>SEPT2</code> into dates.</li>
@@ -360,7 +366,7 @@ ul.task-list li input[type="checkbox"] {
 </section>
 <section id="why-learn-this-when-an-llm-can-write-it" class="level2">
 <h2 class="anchored" data-anchor-id="why-learn-this-when-an-llm-can-write-it">Why learn this when an LLM can write it?</h2>
-<p>LLMs (large language models, such as ChatGPT or Claude) are good at writing AWK and sed commands. So it is not the goal of this tutorial to make you write long AWK programs from memory. Instead, after this tutorial you should be able to:</p>
+<p>LLMs (large language models, such as ChatGPT or Claude) are normally good at writing AWK and sed commands. So it is not the goal of this tutorial to make you write long AWK programs from memory. Instead, after this tutorial you should be able to:</p>
 <ul>
 <li><strong>read</strong> a short AWK or sed command, and say what it does</li>
 <li><strong>check</strong> whether it does what you asked for, on your own data</li>
@@ -373,9 +379,11 @@ ul.task-list li input[type="checkbox"] {
 <h2 class="anchored" data-anchor-id="what-you-will-do">What you will do</h2>
 <ol type="1">
 <li><strong>Use AWK on a table</strong>: print and select columns and rows, add a column, and calculate counts and means per group</li>
-<li><strong>Learn sed basics</strong>: search and replace text, delete lines, and change a file safely</li>
-<li><strong>Use AWK and sed on FASTA files</strong>: count sequences, measure their lengths, clean up sequence names, and add information from a second file (in planning)</li>
-<li><strong>Checking code from an LLM</strong>: a short routine to test any AWK or sed command before you trust its output (in planning)</li>
+<li><strong>Learn sed basics</strong>: search and replace text, delete lines, change a file safely, and remove Windows line endings</li>
+<li><strong>Combine two files</strong>: add information from the strain table to the growth data, make names match, and check the result</li>
+<li><strong>Read AWK forms you see online</strong>: <code>BEGIN</code>, <code>gsub</code>, <code>~</code>, <code>-v</code> and <code>split</code>, which are common in code from an LLM</li>
+<li><strong>Use AWK and sed on FASTA files</strong> (optional): count sequences and clean up sequence names (in planning)</li>
+<li><strong>Check code from an LLM</strong>: a short routine to test any AWK or sed command before you trust its output (in planning)</li>
 </ol>
 </section>
 <section id="before-you-start" class="level2">
@@ -384,7 +392,7 @@ ul.task-list li input[type="checkbox"] {
 <ul>
 <li><strong>A terminal and the command line basics.</strong> This tutorial assumes you have worked through the <a href="https://ndombrowski.github.io/cli_workshop/source/bash_intro.html">basics of the CLI workshop</a>: moving around with <code>cd</code> and <code>ls</code>, looking at files with <code>head</code> and <code>wc</code>, and combining commands with a pipe (<code>|</code>). It also helps if you have used <code>grep</code> and <code>cut</code>. If you have never opened a terminal, start with <a href="https://ndombrowski.github.io/cli_workshop/source/installation.html">Before you start</a> of the CLI workshop.</li>
 <li><strong>Your own computer.</strong> All commands are meant to run on your laptop. If you already know how to use Crunchomics, the UvA computer cluster, you can also work there (see the <a href="https://ndombrowski.github.io/cli_workshop/source/hpc_intro.html">HPC pages of the CLI workshop</a>).</li>
-<li><strong>The example data.</strong> You download it at the start of the first page, with two commands. It is small (about 10 kB), so it fits on any laptop.</li>
+<li><strong>The example data.</strong> You download it at the start of the first page, with two commands. It is small (about 14 kB), so it fits on any laptop. The data comes from an experiment where <em>Arabidopsis</em> plants grew with low or high phosphorus, either without bacteria or inoculated with one of two rhizobia strains. For each plant, root length and shoot weight were measured. The question was whether these bacteria promote plant growth, and might help plants grow when nutrients are limited. A second table describes these and other strains, from a <a href="https://www.cell.com/cell-host-microbe/fulltext/S1931-3128(18)30318-4">published study</a>.</li>
 </ul>
 <div class="callout callout-style-default callout-important callout-titled" title="AWK and sed are not the same on every computer">
 <div class="callout-header d-flex align-content-center">

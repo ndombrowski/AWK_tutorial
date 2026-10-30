@@ -26,6 +26,7 @@ website:
       - source/awk_table.qmd
       - source/sed_basics.qmd
       - source/awk_join.qmd
+      - source/awk_more.qmd
 
 format:
   html:

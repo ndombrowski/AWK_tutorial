@@ -336,6 +336,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text">Combining two files</span></a>
   </div>
 </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../source/awk_more.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">AWK forms you will meet</span></a>
+  </div>
+</li>
     </ul>
     </div>
 </nav>
@@ -350,13 +356,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#look-at-the-table-first" id="toc-look-at-the-table-first" class="nav-link" data-scroll-target="#look-at-the-table-first">Look at the table first</a></li>
   <li><a href="#the-shape-of-an-awk-command" id="toc-the-shape-of-an-awk-command" class="nav-link" data-scroll-target="#the-shape-of-an-awk-command">The shape of an AWK command</a></li>
   <li><a href="#print-choose-columns" id="toc-print-choose-columns" class="nav-link" data-scroll-target="#print-choose-columns"><code>print</code>: choose columns</a></li>
-  <li><a href="#nr-the-header-line" id="toc-nr-the-header-line" class="nav-link" data-scroll-target="#nr-the-header-line"><code>NR</code>: the header line</a></li>
+  <li><a href="#nf-work-with-the-number-of-fields" id="toc-nf-work-with-the-number-of-fields" class="nav-link" data-scroll-target="#nf-work-with-the-number-of-fields"><code>NF</code>: work with the number of fields</a></li>
+  <li><a href="#nr-work-with-the-header-line" id="toc-nr-work-with-the-header-line" class="nav-link" data-scroll-target="#nr-work-with-the-header-line"><code>NR</code>: work with the header line</a></li>
   <li><a href="#subset-rows-by-text" id="toc-subset-rows-by-text" class="nav-link" data-scroll-target="#subset-rows-by-text">Subset rows by text</a>
   <ul class="collapse">
   <li><a href="#why-not-use-grep" id="toc-why-not-use-grep" class="nav-link" data-scroll-target="#why-not-use-grep">Why not use <code>grep</code>?</a></li>
   </ul></li>
-  <li><a href="#keep-rows-by-number" id="toc-keep-rows-by-number" class="nav-link" data-scroll-target="#keep-rows-by-number">Keep rows by number</a></li>
-  <li><a href="#missing-values-empty-fields" id="toc-missing-values-empty-fields" class="nav-link" data-scroll-target="#missing-values-empty-fields">Missing values: empty fields</a>
+  <li><a href="#subset-rows-by-a-number" id="toc-subset-rows-by-a-number" class="nav-link" data-scroll-target="#subset-rows-by-a-number">Subset rows by a number</a></li>
+  <li><a href="#working-with-missing-values-empty-fields" id="toc-working-with-missing-values-empty-fields" class="nav-link" data-scroll-target="#working-with-missing-values-empty-fields">Working with missing values: empty fields</a>
   <ul class="collapse">
   <li><a href="#why--ft-matters" id="toc-why--ft-matters" class="nav-link" data-scroll-target="#why--ft-matters">Why <code>-F'\t'</code> matters</a></li>
   </ul></li>
@@ -395,7 +402,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <p>On this page, you use AWK on a real table with plant growth measurements. You choose columns, keep the rows you need, add a new column, and calculate means per group. Along the way, you meet the most common trap when you work with tables: missing values that quietly change your results.</p>
 <p>The same commands work on any table in plain text, and many bioinformatics tools write their results that way, for example BLAST, featureCounts or a GFF annotation file. With AWK you can filter or reshape such output right away, or pass it on to the next tool with a pipe, without saving it first or opening it in R. AWK never changes the file it reads: it prints the result on the screen, or into a new file if you ask for that.</p>
-<p>The outputs on these pages come from a Linux computer (Ubuntu in WSL). On most computers you get the same result. Where this is not the case, the page says so.</p>
 <section id="get-the-data-curl-and-tar" class="level2">
 <h2 class="anchored" data-anchor-id="get-the-data-curl-and-tar">Get the data: <code>curl</code> and <code>tar</code></h2>
 <p>All example files for this tutorial come in one file, <code>awk_data.tar.gz</code>. A <code>.tar.gz</code> file packs many files into one and compresses them, similar to a <code>.zip</code> file.</p>
@@ -422,23 +428,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> awk_data <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>On this page you only need <code>Growth_Data.txt</code>. The other files are 16S sequences, a table with information on bacterial strains, and a second version of the growth table, which you use on later pages.</p>
-<div class="callout callout-style-default callout-warning callout-titled" title="Draft note">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Warning</span>Draft note
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>The download link is not tested yet: the data is not on GitHub yet. The other commands were tested on a copy of the same file.</p>
-</div>
-</div>
 </section>
 <section id="look-at-the-table-first" class="level2">
 <h2 class="anchored" data-anchor-id="look-at-the-table-first">Look at the table first</h2>
-<p>Before you run any command on a table, you want to look at it first. You at leat want to know: how many lines it has, and what separates the columns?</p>
+<p>Before you run any command on a table, you want to look at it first. You at least want to know: how many lines it has, and what separates the columns?</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># The first 5 lines</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span> <span class="at">-5</span> awk_data/Growth_Data.txt</span>
@@ -454,7 +447,7 @@ low_P   mock    ex61    74.7    8.1
 low_P   mock    ex61    34.4    8.3
 
 595 awk_data/Growth_Data.txt</code></pre>
-<p>We see that the table has a <strong>header</strong>, a first line with the column names, and 594 rows of measurements. Each row is one plant and we have the following columns:</p>
+<p>You see that the table has a <strong>header</strong>, a first line with the column names followed by 594 rows of measurements. Each row is one plant that was measured, and the table has the following columns:</p>
 <ul>
 <li><code>Nutrient</code>: the plant grew with low or high phosphorus (<code>low_P</code>, <code>high_P</code>)</li>
 <li><code>Condition</code>: the plant was inoculated with nothing (<code>mock</code>) or with one of two bacteria (<code>129E</code>, <code>13C</code>)</li>
@@ -470,9 +463,9 @@ low_P   mock    ex61    34.4    8.3
 <pre><code>Nutrient^ICondition^IExperiment^IRootlength^IFW_shoot_mg$
 low_P^Imock^Iex61^I40.4^I6.6$
 low_P^Imock^Iex61^I38^I6.8$</code></pre>
-<p>Here, <code>^I</code> is a <strong>tab</strong>, and <code>$</code> marks the end of each line. So this tells us that we work with a <strong>tab-separated</strong> table. You need to know this for the next steps.</p>
+<p>Here, <code>^I</code> is a <strong>tab</strong>, and <code>$</code> marks the end of each line. So this tells you that you work with a <strong>tab-separated</strong> table. You need to know this for the next steps.</p>
 <div class="callout callout-style-default callout-tip callout-titled" title="Tip: cat -A on a Mac (optional)">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -481,10 +474,10 @@ low_P^Imock^Iex61^I38^I6.8$</code></pre>
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div id="callout-1" class="callout-1-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
-<!-- DRAFT: not tested on a Mac yet (step 7 in PLAN.md). -->
-<p>On a Mac, <code>cat -A</code> may not work. <code>cat -et</code> shows the same: tabs as <code>^I</code> and line ends as <code>$</code>.</p>
+<!-- DRAFT: not tested on a Mac yet. -->
+<p>On a Mac, <code>cat -A</code> may not work and you can try <code>cat -et</code> instead.</p>
 </div>
 </div>
 </div>
@@ -520,7 +513,7 @@ low_P</code></pre>
 <pre><code>Nutrient Rootlength
 low_P 40.4
 low_P 38</code></pre>
-<p>AWK puts a space between the printed columns. To keep the result a tab-separated table, tell AWK to use a tab in the output too. <code>-v OFS='\t'</code> sets the <strong>output field separator</strong>:</p>
+<p>AWK by default puts a space between the printed columns. To keep the result a tab-separated table, tell AWK to use a tab in the output too. <code>-v OFS='\t'</code> sets the <strong>output field separator</strong>:</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="at">-v</span> OFS=<span class="st">'\t'</span> <span class="st">'{ print $1, $4 }'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">head</span> <span class="at">-3</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
@@ -528,17 +521,20 @@ low_P 38</code></pre>
 <pre><code>Nutrient    Rootlength
 low_P   40.4
 low_P   38</code></pre>
-<p>You can do the same thing with <code>cut -f1,4</code> (something you might have seen in our CLI workshop). AWK becomes more useful in the next sections, where you choose rows too.</p>
-<p>A quick check for any table is to count the fields in each line. <code>NF</code> is the <strong>number of fields</strong> in the current line:</p>
+<p>You can do the same thing with <code>cut -f1,4</code> (something you might have seen in the CLI workshop). However, you will see why AWK becomes more useful in the next sections, where you choose rows too.</p>
+</section>
+<section id="nf-work-with-the-number-of-fields" class="level2">
+<h2 class="anchored" data-anchor-id="nf-work-with-the-number-of-fields"><code>NF</code>: work with the number of fields</h2>
+<p>Before that, you learn a quick check that is useful for any table you work with: count the fields in each line. Here, <code>NF</code> is the <strong>number of fields</strong> in the current line:</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Count the fields per line, then count how often each number occurs</span></span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'{ print NF }'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="at">-c</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>    595 5</code></pre>
-<p>This tells us that all 595 lines have 5 fields. If some lines had 4 or 6, something in the table would be off and together this gives us a quick command to check that our data has the right structure.</p>
+<p>This tells you that all 595 lines have 5 fields. If some lines had 4 or 6, this would immediately tell you that something in the table would be off. So this is a quick command to check that your data has the right structure.</p>
 <div class="callout callout-style-default callout-question callout-titled" title="Exercise">
-<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="true" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="true" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -547,13 +543,13 @@ low_P   38</code></pre>
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-4" class="callout-4-contents callout-collapse collapse show">
+<div id="callout-3" class="callout-3-contents callout-collapse collapse show">
 <div class="callout-body-container callout-body">
 <ol type="1">
 <li>Print the columns <code>Experiment</code> and <code>FW_shoot_mg</code>, separated by a tab. Look at the first 4 lines of the result.</li>
 </ol>
 <div class="callout callout-style-default callout-answer callout-titled" title="Click me to see an answer">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -562,7 +558,7 @@ low_P   38</code></pre>
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-3" class="callout-3-contents callout-collapse collapse">
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
 <p><code>Experiment</code> is column 3 and <code>FW_shoot_mg</code> is column 5:</p>
 <div class="cell">
@@ -580,9 +576,9 @@ ex61    8.1</code></pre>
 </div>
 </div>
 </section>
-<section id="nr-the-header-line" class="level2">
-<h2 class="anchored" data-anchor-id="nr-the-header-line"><code>NR</code>: the header line</h2>
-<p><code>NR</code> is the <strong>number of the record</strong>, the line AWK is reading now. You use it in a pattern to choose lines by their position:</p>
+<section id="nr-work-with-the-header-line" class="level2">
+<h2 class="anchored" data-anchor-id="nr-work-with-the-header-line"><code>NR</code>: work with the header line</h2>
+<p><code>NR</code> is the <strong>number of the record</strong>, the line AWK is reading now. You can use it in a pattern to choose lines by their position:</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Only line 1, the header</span></span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR == 1'</span> awk_data/Growth_Data.txt</span>
@@ -595,12 +591,13 @@ ex61    8.1</code></pre>
 <pre><code>Nutrient    Condition   Experiment  Rootlength  FW_shoot_mg
 low_P   mock    ex61    40.4    6.6
 low_P   mock    ex61    38  6.8
+
 594</code></pre>
-<p>These commands have only a pattern and no action, so AWK prints the lines that match. <code>NR &gt; 1</code> skips the header and keeps all 594 rows of data. You need it often, as the next sections show.</p>
+<p>These commands have only a pattern and no action, so AWK prints the lines that match. <code>NR &gt; 1</code> skips the header and keeps all 594 rows of data. You need it often, as you will see in the next sections.</p>
 </section>
 <section id="subset-rows-by-text" class="level2">
 <h2 class="anchored" data-anchor-id="subset-rows-by-text">Subset rows by text</h2>
-<p>To keep only the rows of the plants grown with low phosphorus, compare column 1 with the text <code>low_P</code>:</p>
+<p>Sometimes you only care about part of the data. For example, you might want to keep only the plants grown with low phosphorus. For this, you use the pattern <code>$1 == "low_P"</code>, which checks every line and keeps it only if column 1 is exactly low_P. The first command shows the first few matching lines. The second counts how many rows you now work with:</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$1 == "low_P"'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">head</span> <span class="at">-3</span></span>
 <span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$1 == "low_P"'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -613,8 +610,8 @@ low_P   mock    ex61    74.7    8.1
 300</code></pre>
 <p>Two details matter here:</p>
 <ul>
-<li>Text goes between double quotes: <code>"low_P"</code>. Without quotes, AWK reads <code>low_P</code> as the name of a <strong>variable</strong>, a named box that holds a value. That box is empty, so no row matches.</li>
-<li>To compare, use two equal signs: <code>==</code>. If you would use only one equal sign this command would do something else and instead put a value into a field. Note here, how AWK gives you no error message and only by inspecting the output we will see that the command is doing something different to what we wanted:</li>
+<li>Text goes between double quotes: <code>"low_P"</code>. Without quotes, AWK reads <code>low_P</code> as the name of a <strong>variable</strong>, a name that holds a value, like a label on a box. You never gave <code>low_P</code> a value, so it is empty, and no row matches.</li>
+<li>To compare, use two equal signs: <code>==</code>. If you use only one equal sign, this command does something else and instead puts a value into a field. Note here how AWK gives you no error message. Only by looking at the output, and counting the number of lines of the output, do you see that the command does something different from what you wanted:</li>
 </ul>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Wrong: one = instead of two</span></span>
@@ -627,10 +624,10 @@ low_P mock ex61 40.4 6.6
 low_P mock ex61 38 6.8
 
 595</code></pre>
-<p>Here, every line is kept, but column 1 of every line now says <code>low_P</code>, even in the header, and the tabs became spaces. A quick <code>wc -l</code> shows the problem: 595 lines, the same as the whole file.</p>
+<p>You see that with this command every line is kept, but column 1 of every line now says <code>low_P</code>, even in the header, and the tabs became spaces. A quick <code>wc -l</code> shows the problem: 595 lines, the same as the whole file.</p>
 <section id="why-not-use-grep" class="level3">
 <h3 class="anchored" data-anchor-id="why-not-use-grep">Why not use <code>grep</code>?</h3>
-<p>If you have followed the CLI workshop you might remember <code>grep</code>, which keeps lines that contain a word. For the plants with bacterium <code>13C</code>, both tools give the same count:</p>
+<p>If you have followed the CLI workshop you might remember <code>grep</code>, which keeps lines that contain a word. If you wanted to only work with the plants with bacterium <code>13C</code>, both tools give the same count:</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="st">'13C'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
 <span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$2 == "13C"'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -638,7 +635,7 @@ low_P mock ex61 38 6.8
 <p>This prints:</p>
 <pre><code>175
 175</code></pre>
-<p>But there is an important difference: <code>grep</code> searches the whole line, not one column. If you search for <code>13</code> and you get more lines:</p>
+<p>But there is an important difference: <code>grep</code> searches the whole line, not one column. This can easily result in problems, for example if you would have searched for <code>13</code> instead of <code>13C</code>:</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="st">'13'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
 <span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="st">'13'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">head</span> <span class="at">-3</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -649,12 +646,12 @@ low_P mock ex61 38 6.8
 low_P   mock    ex61    55.3    13.3
 low_P   mock    ex61    48.7    13.9
 low_P   mock    ex64    46.93   13.52</code></pre>
-<p>In total this command gives us 36 extra lines, because <code>13</code> also appears in shoot weights such as 13.3. The first lines grep finds are not even <code>13C</code> plants, but <code>mock</code> plants with such a shoot weight. In contrast, AWK compares only column 2, so this cannot happen making this a much safer command.</p>
+<p>In total this command gives you 36 extra lines. That is because <code>13</code> also appears in shoot weights such as 13.3. You see this in the first lines grep finds that are not even <code>13C</code> plants, but <code>mock</code> plants with such a shoot weight. In contrast, AWK compares only column 2, so this cannot happen. This makes the AWK command much safer.</p>
 </section>
 </section>
-<section id="keep-rows-by-number" class="level2">
-<h2 class="anchored" data-anchor-id="keep-rows-by-number">Keep rows by number</h2>
-<p>Comparisons also work with numbers: <code>&gt;</code> (greater than), <code>&lt;</code> (less than), <code>&gt;=</code> and <code>&lt;=</code> (greater or less than, or equal). To keep plants with roots longer than 50 mm:</p>
+<section id="subset-rows-by-a-number" class="level2">
+<h2 class="anchored" data-anchor-id="subset-rows-by-a-number">Subset rows by a number</h2>
+<p>Comparisons also work with numbers: <code>&gt;</code> (greater than), <code>&lt;</code> (less than), <code>&gt;=</code> and <code>&lt;=</code> (greater or less than, or equal). For example, you could only keep plants with roots longer than 50 mm:</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$4 &gt; 50'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">head</span> <span class="at">-3</span></span>
 <span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$4 &gt; 50'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -665,13 +662,13 @@ low_P   mock    ex61    74.7    8.1
 low_P   mock    ex61    66.5    8.9
 
 476</code></pre>
-<p><strong>Important:</strong> Note how the header is in the result? Column 4 of the header is the word <code>Rootlength</code>, not a number. When a value is not a number, AWK compares it as text, and in that comparison <code>Rootlength</code> counts as larger than <code>50</code>. To avoid this we need to add <code>NR &gt; 1</code> to skip the header. To combine patterns we can use <code>&amp;&amp;</code>, which means “and”: both conditions must be true.</p>
+<p><strong>Important:</strong> Note how the header is in the result? This might seem weird, since column 4 of the header is the word <code>Rootlength</code>, not a number. However, when a value is not a number, AWK compares it as text, and in that comparison <code>Rootlength</code> counts as larger than <code>50</code>. To avoid this, add <code>NR &gt; 1</code> to skip the header. To combine patterns, use <code>&amp;&amp;</code>, which means “and”: both conditions must be true.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR &gt; 1 &amp;&amp; $4 &gt; 50'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>475</code></pre>
-<p><code>||</code> means “or”: We can use this if we want at least one of the conditions to be true.</p>
+<p>You sometimes might also need <code>||</code>, which means means “or”: use this if you want at least one of the conditions to be true.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Low phosphorus and no bacteria</span></span>
 <span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$1 == "low_P" &amp;&amp; $2 == "mock"'</span> awk_data/Growth_Data.txt</span>
@@ -680,7 +677,7 @@ low_P   mock    ex61    66.5    8.9
 <span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$2 == "129E" || $2 == "13C"'</span> awk_data/Growth_Data.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="callout callout-style-default callout-question callout-titled" title="Exercise">
-<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-6-contents" aria-controls="callout-6" aria-expanded="true" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-5-contents" aria-controls="callout-5" aria-expanded="true" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -689,14 +686,14 @@ low_P   mock    ex61    66.5    8.9
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-6" class="callout-6-contents callout-collapse collapse show">
+<div id="callout-5" class="callout-5-contents callout-collapse collapse show">
 <div class="callout-body-container callout-body">
 <ol type="1">
 <li>How many plants grew with high phosphorus and bacterium <code>13C</code>?</li>
 <li>How many plants have a shoot weight above 20 mg?</li>
 </ol>
 <div class="callout callout-style-default callout-answer callout-titled" title="Click me to see an answer">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-5-contents" aria-controls="callout-5" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -705,7 +702,7 @@ low_P   mock    ex61    66.5    8.9
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-5" class="callout-5-contents callout-collapse collapse">
+<div id="callout-4" class="callout-4-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Two text conditions with &amp;&amp;</span></span>
@@ -726,9 +723,9 @@ low_P   mock    ex61    66.5    8.9
 </div>
 </div>
 </section>
-<section id="missing-values-empty-fields" class="level2">
-<h2 class="anchored" data-anchor-id="missing-values-empty-fields">Missing values: empty fields</h2>
-<p>Now look for plants with very short roots, below 10 mm:</p>
+<section id="working-with-missing-values-empty-fields" class="level2">
+<h2 class="anchored" data-anchor-id="working-with-missing-values-empty-fields">Working with missing values: empty fields</h2>
+<p>Next let’s look at one example to showcase why it is important to carefully check your data. For this, look for plants with very short roots, below 10 mm:</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR &gt; 1 &amp;&amp; $4 &lt; 10'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
 <span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR &gt; 1 &amp;&amp; $4 &lt; 10'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">head</span> <span class="at">-3</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -739,7 +736,7 @@ low_P   mock    ex61    66.5    8.9
 high_P  mock    ex61        18.2
 high_P  mock    ex64        22.4
 high_P  mock    ex64        26</code></pre>
-<p>15 plants, but if we look at the table we notice that none of them has a root length below 10. Instead you will notice that these rows have no root length at all. If we use <code>cat -A</code> this will show us exactly what is in the file for these fields:</p>
+<p>This tells you that there seem to be 15 plants with short shoots. However, if you look at the table, you notice that none of them actually has a root length below 10. Instead, these rows have no root length at all. <code>cat -A</code> shows you exactly what is in the file for these fields:</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR &gt; 1 &amp;&amp; $4 &lt; 10'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">head</span> <span class="at">-3</span> <span class="kw">|</span> <span class="fu">cat</span> <span class="at">-A</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
@@ -747,7 +744,7 @@ high_P  mock    ex64        26</code></pre>
 <pre><code>high_P^Imock^Iex61^I^I18.2$
 high_P^Imock^Iex64^I^I22.4$
 high_P^Imock^Iex64^I^I26$</code></pre>
-<p>We see two tabs side by side, <code>^I^I</code>, with nothing between them: this is an <strong>empty field</strong> and also how a missing value often looks, for example in a table saved from Excel with empty cells. Count them per column:</p>
+<p>You see two tabs side by side, <code>^I^I</code>, with nothing between them: this is an <strong>empty field</strong> and also how a missing value often looks, for example in a table saved from Excel with empty cells. Now count how many empty fields each column has:</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Empty root length (column 4) and empty shoot weight (column 5)</span></span>
 <span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$4 == ""'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
@@ -756,7 +753,7 @@ high_P^Imock^Iex64^I^I26$</code></pre>
 <p>This prints:</p>
 <pre><code>15
 8</code></pre>
-<p>Altogether, this tells us that AWK did not give an error but it did something we didn’t really want. It compared the empty field with 10 as text, and empty text counts as smaller than anything. So all 15 plants without a root length passed the filter <code>$4 &lt; 10</code>. In calculations, AWK will treat an empty field as 0, as you see further down.</p>
+<p>Altogether, this tells you that AWK did not give an error, but it did something you didn’t really want. It compared the empty field with 10 as text, and empty text counts as smaller than anything. So all 15 plants without a root length passed the filter <code>$4 &lt; 10</code>. In calculations, AWK will treat an empty field as 0, as you see further down.</p>
 <div class="callout callout-style-default callout-important callout-titled" title="Important: skip empty fields before you compare or calculate">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -798,8 +795,18 @@ high_P^Imock^Iex64^I^I26$</code></pre>
      23 4
     572 5</code></pre>
 <p>With <code>-F'\t'</code>, column 4 of line 123 is empty (the empty line in the output). Without it, column 4 is 18.2, the shoot weight. The 23 lines with an empty field now have only 4 fields. Again there is no error. The <code>NF</code> check from above shows the problem right away, so it is worth running on every new table.</p>
+<p>The count tells you that 23 lines are different, but not which ones. To find them, use <code>NF</code> as a pattern: <code>NF != 5</code> keeps only the lines that do not have 5 fields. <code>print NR, $0</code> prints the line number in front of each line:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb44"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Which lines do not have 5 fields without -F'\t'?</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'NF != 5 { print NR, $0 }'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">head</span> <span class="at">-3</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>This prints:</p>
+<pre><code>33 low_P    mock    ex61    49.6
+34 low_P    mock    ex61    53.6
+123 high_P  mock    ex61        18.2</code></pre>
+<p>Lines 33 and 34 have no shoot weight, and line 123 has no root length. Together, the 15 empty root lengths and 8 empty shoot weights make the 23 lines. On a new table, the line numbers tell you where to look, for example with <code>awk 'NR == 33'</code>.</p>
 <div class="callout callout-style-default callout-question callout-titled" title="Exercise">
-<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-9-contents" aria-controls="callout-9" aria-expanded="true" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-8-contents" aria-controls="callout-8" aria-expanded="true" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -808,13 +815,13 @@ high_P^Imock^Iex64^I^I26$</code></pre>
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-9" class="callout-9-contents callout-collapse collapse show">
+<div id="callout-8" class="callout-8-contents callout-collapse collapse show">
 <div class="callout-body-container callout-body">
 <ol type="1">
 <li>How many plants have a shoot weight below 5 mg? First write the command without the rule from above. Then add the rule. What is the difference, and why?</li>
 </ol>
 <div class="callout callout-style-default callout-answer callout-titled" title="Click me to see an answer">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-8-contents" aria-controls="callout-8" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-7-contents" aria-controls="callout-7" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -823,14 +830,14 @@ high_P^Imock^Iex64^I^I26$</code></pre>
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-8" class="callout-8-contents callout-collapse collapse">
+<div id="callout-7" class="callout-7-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb44"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Without the rule</span></span>
-<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR &gt; 1 &amp;&amp; $5 &lt; 5'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
-<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a><span class="co"># With the rule: skip empty shoot weights</span></span>
-<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR &gt; 1 &amp;&amp; $5 != "" &amp;&amp; $5 &lt; 5'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb46"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Without the rule</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR &gt; 1 &amp;&amp; $5 &lt; 5'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a><span class="co"># With the rule: skip empty shoot weights</span></span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR &gt; 1 &amp;&amp; $5 != "" &amp;&amp; $5 &lt; 5'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>10
@@ -843,7 +850,7 @@ high_P^Imock^Iex64^I^I26$</code></pre>
 </div>
 </div>
 <div class="callout callout-style-default callout-tip callout-titled" title="Tip: fill empty fields with NA (optional)">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-10-contents" aria-controls="callout-10" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-9-contents" aria-controls="callout-9" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -852,24 +859,24 @@ high_P^Imock^Iex64^I^I26$</code></pre>
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-10" class="callout-10-contents callout-collapse collapse">
+<div id="callout-9" class="callout-9-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
 <p>Empty fields are easy to miss. One way to make them visible is to fill each empty field with <code>NA</code> (not available) and save the result as a new file. In this table, only column 4 and column 5 have empty fields, so you fill those two:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb46"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="co"># If column 4 is empty, put NA into it.</span></span>
-<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a><span class="co"># If column 5 is empty, put NA into it.</span></span>
-<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Then print every line.</span></span>
-<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a><span class="co"># The command is spread over several lines to make it easier to read</span></span>
-<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a><span class="co"># (more on this in "Add a column" below).</span></span>
-<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="at">-v</span> OFS=<span class="st">'\t'</span> <span class="st">'</span></span>
-<span id="cb46-7"><a href="#cb46-7" aria-hidden="true" tabindex="-1"></a><span class="st">  $4 == "" { $4 = "NA" }</span></span>
-<span id="cb46-8"><a href="#cb46-8" aria-hidden="true" tabindex="-1"></a><span class="st">  $5 == "" { $5 = "NA" }</span></span>
-<span id="cb46-9"><a href="#cb46-9" aria-hidden="true" tabindex="-1"></a><span class="st">  { print }</span></span>
-<span id="cb46-10"><a href="#cb46-10" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt <span class="op">&gt;</span> Growth_Data_NA.txt</span>
-<span id="cb46-11"><a href="#cb46-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb46-12"><a href="#cb46-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Check: same number of lines, and line 123 now has NA</span></span>
-<span id="cb46-13"><a href="#cb46-13" aria-hidden="true" tabindex="-1"></a><span class="fu">wc</span> <span class="at">-l</span> Growth_Data_NA.txt</span>
-<span id="cb46-14"><a href="#cb46-14" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR == 123'</span> Growth_Data_NA.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb48"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="co"># If column 4 is empty, put NA into it.</span></span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a><span class="co"># If column 5 is empty, put NA into it.</span></span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Then print every line.</span></span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a><span class="co"># The command is spread over several lines to make it easier to read</span></span>
+<span id="cb48-5"><a href="#cb48-5" aria-hidden="true" tabindex="-1"></a><span class="co"># (more on this in "Add a column" below).</span></span>
+<span id="cb48-6"><a href="#cb48-6" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="at">-v</span> OFS=<span class="st">'\t'</span> <span class="st">'</span></span>
+<span id="cb48-7"><a href="#cb48-7" aria-hidden="true" tabindex="-1"></a><span class="st">  $4 == "" { $4 = "NA" }</span></span>
+<span id="cb48-8"><a href="#cb48-8" aria-hidden="true" tabindex="-1"></a><span class="st">  $5 == "" { $5 = "NA" }</span></span>
+<span id="cb48-9"><a href="#cb48-9" aria-hidden="true" tabindex="-1"></a><span class="st">  { print }</span></span>
+<span id="cb48-10"><a href="#cb48-10" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt <span class="op">&gt;</span> Growth_Data_NA.txt</span>
+<span id="cb48-11"><a href="#cb48-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-12"><a href="#cb48-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Check: same number of lines, and line 123 now has NA</span></span>
+<span id="cb48-13"><a href="#cb48-13" aria-hidden="true" tabindex="-1"></a><span class="fu">wc</span> <span class="at">-l</span> Growth_Data_NA.txt</span>
+<span id="cb48-14"><a href="#cb48-14" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR == 123'</span> Growth_Data_NA.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>595 Growth_Data_NA.txt
@@ -879,22 +886,22 @@ high_P  mock    ex61    NA  18.2</code></pre>
 low_P^Imock^Iex61^I40.4^I6.6$</code></pre>
 <p>If you do not know which columns have empty fields, or there are many columns, you can let AWK go through all fields with a loop. You do not need to remember this form. Keep it in your notes, or ask an LLM for it and check the result as shown here. In this table it gives exactly the same file:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb49"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="co"># For each field in the line (i = 1 up to the number of fields NF):</span></span>
-<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a><span class="co"># if the field is empty, put NA into it. Then print the line.</span></span>
-<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="at">-v</span> OFS=<span class="st">'\t'</span> <span class="st">'</span></span>
-<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a><span class="st">  {</span></span>
-<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a><span class="st">    for (i = 1; i &lt;= NF; i++) {</span></span>
-<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a><span class="st">      if ($i == "") { $i = "NA" }</span></span>
-<span id="cb49-7"><a href="#cb49-7" aria-hidden="true" tabindex="-1"></a><span class="st">    }</span></span>
-<span id="cb49-8"><a href="#cb49-8" aria-hidden="true" tabindex="-1"></a><span class="st">    print</span></span>
-<span id="cb49-9"><a href="#cb49-9" aria-hidden="true" tabindex="-1"></a><span class="st">  }</span></span>
-<span id="cb49-10"><a href="#cb49-10" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb51"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="co"># For each field in the line (i = 1 up to the number of fields NF):</span></span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a><span class="co"># if the field is empty, put NA into it. Then print the line.</span></span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="at">-v</span> OFS=<span class="st">'\t'</span> <span class="st">'</span></span>
+<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a><span class="st">  {</span></span>
+<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a><span class="st">    for (i = 1; i &lt;= NF; i++) {</span></span>
+<span id="cb51-6"><a href="#cb51-6" aria-hidden="true" tabindex="-1"></a><span class="st">      if ($i == "") { $i = "NA" }</span></span>
+<span id="cb51-7"><a href="#cb51-7" aria-hidden="true" tabindex="-1"></a><span class="st">    }</span></span>
+<span id="cb51-8"><a href="#cb51-8" aria-hidden="true" tabindex="-1"></a><span class="st">    print</span></span>
+<span id="cb51-9"><a href="#cb51-9" aria-hidden="true" tabindex="-1"></a><span class="st">  }</span></span>
+<span id="cb51-10"><a href="#cb51-10" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Now the missing values are visible when you look at the file. Also, the columns no longer shift in tools that split at spaces and tabs, such as AWK without <code>-F'\t'</code>, or <code>join</code> and <code>column -t</code> with their default settings.</p>
 <p>But when you do this, it’s important to know that <code>NA</code> does not make comparisons safe. <code>NA</code> is text too, and in a text comparison it counts as larger than 50:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb50"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR &gt; 1 &amp;&amp; $4 &gt; 50'</span> Growth_Data_NA.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
-<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR &gt; 1 &amp;&amp; $4 != "NA" &amp;&amp; $4 &gt; 50'</span> Growth_Data_NA.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb52"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR &gt; 1 &amp;&amp; $4 &gt; 50'</span> Growth_Data_NA.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR &gt; 1 &amp;&amp; $4 != "NA" &amp;&amp; $4 &gt; 50'</span> Growth_Data_NA.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>490
@@ -909,27 +916,27 @@ low_P^Imock^Iex61^I40.4^I6.6$</code></pre>
 <h2 class="anchored" data-anchor-id="add-a-column">Add a column</h2>
 <p>AWK can calculate with fields. For example, the shoot weight per mm of root is <code>$5 / $4</code>. To add it as a new column at the end of each line, print the whole line <code>$0</code> and then the result:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb52"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="at">-v</span> OFS=<span class="st">'\t'</span> <span class="st">'NR &gt; 1 { print $0, $5 / $4 }'</span> awk_data/Growth_Data.txt <span class="op">&gt;</span> shoot_per_root.txt</span>
-<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a><span class="fu">wc</span> <span class="at">-l</span> shoot_per_root.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb54"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="at">-v</span> OFS=<span class="st">'\t'</span> <span class="st">'NR &gt; 1 { print $0, $5 / $4 }'</span> awk_data/Growth_Data.txt <span class="op">&gt;</span> shoot_per_root.txt</span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a><span class="fu">wc</span> <span class="at">-l</span> shoot_per_root.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>awk: cmd. line:1: (FILENAME=awk_data/Growth_Data.txt FNR=123) fatal: division by zero attempted
 121 shoot_per_root.txt</code></pre>
-<p>The error message tells us that AWK stopped at line 123: the first row with an empty root length. That is because it treated the empty field as 0, and a division by 0 is not possible. The file <code>shoot_per_root.txt</code> still exists, but it has only 121 lines instead of 594. If you missed the error message and only looked at <code>head</code>, the file would look fine. This is why you want to make it a habit to count lines after each step.</p>
+<p>The error message tells you that AWK stopped at line 123: the first row with an empty root length. That is because it treated the empty field as 0, and a division by 0 is not possible. The file <code>shoot_per_root.txt</code> still exists, but it has only 121 lines instead of 594. If you missed the error message and only looked at <code>head</code>, the file would look fine. This is why you want to make it a habit to count lines after each step.</p>
 <p>To fix this, you need to skip rows with an empty root length or shoot weight, and print a header for the new column. The command now has two parts, each with its own pattern and action.</p>
 <p>A command with several parts gets long on one line. AWK lets you spread the part between the single quotes over several lines, so you can put each pattern and its action on a line of its own. The command does exactly the same, it is only easier to read. You can copy it into your terminal as it is: the terminal waits for the closing quote before it runs the command.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb54"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Part 1: on line 1, print the current header and add a name for the new column</span></span>
-<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Part 2: on the other lines with both values, print the line plus the result</span></span>
-<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="at">-v</span> OFS=<span class="st">'\t'</span> <span class="st">'</span></span>
-<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a><span class="st">  NR == 1                          { print $0, "shoot_per_root" }</span></span>
-<span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a><span class="st">  NR &gt; 1 &amp;&amp; $4 != "" &amp;&amp; $5 != ""   { print $0, $5 / $4 }</span></span>
-<span id="cb54-6"><a href="#cb54-6" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt <span class="op">&gt;</span> shoot_per_root.txt</span>
-<span id="cb54-7"><a href="#cb54-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb54-8"><a href="#cb54-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Check the result</span></span>
-<span id="cb54-9"><a href="#cb54-9" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span> <span class="at">-3</span> shoot_per_root.txt</span>
-<span id="cb54-10"><a href="#cb54-10" aria-hidden="true" tabindex="-1"></a><span class="fu">wc</span> <span class="at">-l</span> shoot_per_root.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb56"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Part 1: on line 1, print the current header and add a name for the new column</span></span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Part 2: on the other lines with both values, print the line plus the result</span></span>
+<span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="at">-v</span> OFS=<span class="st">'\t'</span> <span class="st">'</span></span>
+<span id="cb56-4"><a href="#cb56-4" aria-hidden="true" tabindex="-1"></a><span class="st">  NR == 1                          { print $0, "shoot_per_root" }</span></span>
+<span id="cb56-5"><a href="#cb56-5" aria-hidden="true" tabindex="-1"></a><span class="st">  NR &gt; 1 &amp;&amp; $4 != "" &amp;&amp; $5 != ""   { print $0, $5 / $4 }</span></span>
+<span id="cb56-6"><a href="#cb56-6" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt <span class="op">&gt;</span> shoot_per_root.txt</span>
+<span id="cb56-7"><a href="#cb56-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb56-8"><a href="#cb56-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Check the result</span></span>
+<span id="cb56-9"><a href="#cb56-9" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span> <span class="at">-3</span> shoot_per_root.txt</span>
+<span id="cb56-10"><a href="#cb56-10" aria-hidden="true" tabindex="-1"></a><span class="fu">wc</span> <span class="at">-l</span> shoot_per_root.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>Nutrient    Condition   Experiment  Rootlength  FW_shoot_mg shoot_per_root
@@ -954,57 +961,67 @@ low_P   mock    ex61    38  6.8 0.178947
 </section>
 <section id="sum-and-mean-of-a-column-variables-and-end" class="level2">
 <h2 class="anchored" data-anchor-id="sum-and-mean-of-a-column-variables-and-end">Sum and mean of a column: variables and <code>END</code></h2>
-<p>You will notice that the commands from here on are longer than the ones before. You could do the same thing in R or Python, and you might wonder why even learn them in AWK? The reason is that in bioinformatics you often only need a quick look at your data: how many plants are in each group, and do the means look sensible? AWK gives you that answer in the terminal, without starting another program or loading the table first. On a computer cluster, where R or Python may not be set up for you, AWK is always there. And because AWK reads a file one line at a time, it also works on files that are too large to open comfortably in R or Excel. For statistics and plots, R or Python remain the better tools. AWK is for the quick check before, or for cleaning up a table before you load it there.</p>
-<p>Start with one number: the total shoot weight of all plants. For this, AWK needs a <strong>variable</strong>, a named box that holds a value. You do not need to create it first: AWK makes the box the first time you use it, and it starts at 0.</p>
+<p>You will notice that the commands from here on are longer than the ones before. You could do the same thing in R or Python, and you might wonder why even learn them in AWK? The reason is that in bioinformatics you often only need a quick look at your data: what is the total number of reads I work with, how many plants are in each group, and do the means look sensible? AWK gives you that answer in the terminal, without starting another program or loading the table first. On a computer cluster, where R or Python may not be set up for you, AWK is always there. And because AWK reads a file one line at a time, it also works on files that are too large to open comfortably in R or Excel. For statistics and plots, R or Python remain the better tools. AWK is for the quick check before, or for cleaning up a table before you load it there.</p>
+<p>Start with one number: the total shoot weight of all plants. For this, AWK needs a variable, a name that holds a value. You do not need to create it first: AWK makes the variable the first time you use it, and it starts at 0.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb56"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR &gt; 1 &amp;&amp; $5 != "" { sum += $5 } END { print sum }'</span> awk_data/Growth_Data.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb58"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR &gt; 1 &amp;&amp; $5 != "" { sum += $5 } END { print sum }'</span> awk_data/Growth_Data.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>9715.23</code></pre>
 <p>Taken apart:</p>
 <ul>
-<li><code>sum += $5</code>: add the shoot weight of this line to the box <code>sum</code>. <code>+=</code> means “add to what is already in the box”.</li>
+<li><code>sum += $5</code>: add the shoot weight of this line to the variable <code>sum</code>. <code>+=</code> means “add to the value that is already in <code>sum</code>”.</li>
 <li><code>END { print sum }</code>: <code>END</code> is a special pattern. Its action runs once, after AWK has read the last line. By then, <code>sum</code> holds the total.</li>
 </ul>
 <p>The name <code>sum</code> is your own choice. You could call it <code>total</code> or <code>weight</code> instead, and get the same result. Names such as <code>NR</code>, <code>NF</code> and <code>END</code> are different: they belong to AWK and have a fixed meaning.</p>
-<p>For the mean, you need a second box that counts the plants. Here it is called <code>n</code> (short for “number of plants”), and <code>n++</code> adds 1 to it. The <code>;</code> separates two steps inside one action:</p>
+<p>For the mean, you need a second variable that counts the number of plants measured. Here it is called <code>n</code> (short for “number of plants”), and <code>n++</code> adds 1 to it for each line AWK passed. The <code>;</code> separates two steps inside one action:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb58"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'</span></span>
-<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a><span class="st">  NR &gt; 1 &amp;&amp; $5 != "" { sum += $5; n++ }</span></span>
-<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a><span class="st">  END                { print n, sum, sum / n }</span></span>
-<span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb60"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'</span></span>
+<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a><span class="st">  NR &gt; 1 &amp;&amp; $5 != "" { sum += $5; n++ }</span></span>
+<span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a><span class="st">  END                { print n, sum, sum / n }</span></span>
+<span id="cb60-4"><a href="#cb60-4" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints the number of plants, the total and the mean:</p>
 <pre><code>586 9715.23 16.5789</code></pre>
-<p>Does 586 add up? 594 plants, minus the 8 without a shoot weight, is 586.</p>
-<p>Now leave out the rule for empty fields, and then also <code>NR &gt; 1</code>:</p>
+<p>When you run such calculations, you want to check if 586 adds up: 594 plants, minus the 8 without a shoot weight, is 586.</p>
+<p>Now leave out the rule for empty fields, and then also <code>NR &gt; 1</code> to see how slight differences in the code can make a difference:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb60"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Without $5 != ""</span></span>
-<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'</span></span>
-<span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a><span class="st">  NR &gt; 1 { sum += $5; n++ }</span></span>
-<span id="cb60-4"><a href="#cb60-4" aria-hidden="true" tabindex="-1"></a><span class="st">  END    { print n, sum, sum / n }</span></span>
-<span id="cb60-5"><a href="#cb60-5" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt</span>
-<span id="cb60-6"><a href="#cb60-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb60-7"><a href="#cb60-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Also without NR &gt; 1</span></span>
-<span id="cb60-8"><a href="#cb60-8" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'</span></span>
-<span id="cb60-9"><a href="#cb60-9" aria-hidden="true" tabindex="-1"></a><span class="st">  { sum += $5; n++ }</span></span>
-<span id="cb60-10"><a href="#cb60-10" aria-hidden="true" tabindex="-1"></a><span class="st">  END { print n, sum, sum / n }</span></span>
-<span id="cb60-11"><a href="#cb60-11" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb62"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Without $5 != ""</span></span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'</span></span>
+<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a><span class="st">  NR &gt; 1 { sum += $5; n++ }</span></span>
+<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a><span class="st">  END    { print n, sum, sum / n }</span></span>
+<span id="cb62-5"><a href="#cb62-5" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt</span>
+<span id="cb62-6"><a href="#cb62-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb62-7"><a href="#cb62-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Also without NR &gt; 1</span></span>
+<span id="cb62-8"><a href="#cb62-8" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'</span></span>
+<span id="cb62-9"><a href="#cb62-9" aria-hidden="true" tabindex="-1"></a><span class="st">  { sum += $5; n++ }</span></span>
+<span id="cb62-10"><a href="#cb62-10" aria-hidden="true" tabindex="-1"></a><span class="st">  END { print n, sum, sum / n }</span></span>
+<span id="cb62-11"><a href="#cb62-11" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>594 9715.23 16.3556
 
 595 9715.23 16.3281</code></pre>
-<p>The total is the same all three times. AWK adds an empty field as 0, and the header text <code>FW_shoot_mg</code> as 0 too, so the sum does not change. But <code>n</code> still counts these lines, so the mean drops. A total that looks right does not mean that the mean is right. Look at the count as well: you expect 586.</p>
+<p>The total is the same all three times. AWK adds an empty field as 0, and the header text <code>FW_shoot_mg</code> as 0 too, so the sum does not change. But <code>n</code> still counts these lines, so the mean drops. A mean that looks right does not mean that it is actually right. This is a good example to carefully think about what your code is doing since the code runs without any error but the output is still incorrect. In this case the difference is small, but depending on your data, such silent errors can have a large effect.</p>
+<p>The means above have more decimals than the measurements. To round them, use <code>printf</code> instead of <code>print</code>. <code>printf</code> prints with a format that you choose: a piece of text with placeholders that the values fill in order. <code>%d</code> stands for a whole number and <code>%.1f</code> for a number with one decimal. <code>\t</code> is a tab and <code>\n</code> a new line. Everything else in the format, such as <code>n:</code> and <code>mean:</code>, is printed as it is:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb64"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'</span></span>
+<span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a><span class="st">  NR &gt; 1 &amp;&amp; $5 != "" { sum += $5; n++ }</span></span>
+<span id="cb64-3"><a href="#cb64-3" aria-hidden="true" tabindex="-1"></a><span class="st">  END                { printf "n: %d\tmean: %.1f\n", n, sum / n }</span></span>
+<span id="cb64-4"><a href="#cb64-4" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>This prints:</p>
+<pre><code>n: 586  mean: 16.6</code></pre>
+<p>Unlike <code>print</code>, <code>printf</code> does not start a new line by itself, and it ignores <code>OFS</code>. Leave out the <code>\n</code>, and the prompt of your terminal ends up on the same line as the result. The tab between the values is there only because <code>\t</code> is in the format.</p>
 </section>
 <section id="count-and-mean-per-group-arrays" class="level2">
 <h2 class="anchored" data-anchor-id="count-and-mean-per-group-arrays">Count and mean per group: arrays</h2>
-<p><code>sum</code> and <code>n</code> are single boxes: each holds one value for the whole file. To count the plants per nutrient level, you need one box per group. A set of named boxes like this is called an <strong>array</strong>. <code>n["low_P"]</code> is the box for <code>low_P</code>, <code>n["high_P"]</code> the box for <code>high_P</code>. Just like a variable, AWK makes each box the first time you use it, and it starts at 0.</p>
+<p><code>sum</code> and <code>n</code> are single variables: each holds one value for the whole file. You can do more than that, for example count the plants per nutrient level. For this, you need one count per group. An <strong>array</strong> is a variable that holds one value per name. <code>n["low_P"]</code> is the count for <code>low_P</code>, and <code>n["high_P"]</code> the count for <code>high_P</code>. Just like a single variable, AWK makes the value for a new name the first time you use it, and it starts at 0.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb62"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'</span></span>
-<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a><span class="st">  NR &gt; 1 { n[$1]++ }</span></span>
-<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a><span class="st">  END    { for (group in n) { print group, n[group] } }</span></span>
-<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb66"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'</span></span>
+<span id="cb66-2"><a href="#cb66-2" aria-hidden="true" tabindex="-1"></a><span class="st">  NR &gt; 1 { n[$1]++ }</span></span>
+<span id="cb66-3"><a href="#cb66-3" aria-hidden="true" tabindex="-1"></a><span class="st">  END    { for (group in n) { print group, n[group] } }</span></span>
+<span id="cb66-4"><a href="#cb66-4" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>low_P 300
@@ -1012,37 +1029,37 @@ low_P   mock    ex61    38  6.8 0.178947
 high_P 294</code></pre>
 <p>Taken apart:</p>
 <ul>
-<li><code>NR &gt; 1 { n[$1]++ }</code>: for each row of data, add 1 to the box of its nutrient level. Piece by piece:
+<li><p><code>NR &gt; 1 { n[$1]++ }</code>: for each row of data, add 1 to the count of its nutrient level. Piece by piece:</p>
 <ul>
-<li><code>n</code> is the name of the array, the set of boxes.</li>
-<li><code>[$1]</code> picks one box: the box named after the value in column 1. On a <code>low_P</code> row that is <code>n["low_P"]</code>.</li>
-<li><code>++</code> adds 1 to that box.</li>
+<li><code>n</code> is the name of the array.</li>
+<li><code>[$1]</code> picks one name in the array: the text in column 1. On a <code>low_P</code> row that is <code>n["low_P"]</code>.</li>
+<li><code>++</code> adds 1 to the value under that name.</li>
 </ul>
-So after the first <code>low_P</code> row, <code>n["low_P"]</code> is 1, after the second it is 2, and so on.</li>
-<li><code>END { ... }</code>: as before, this runs once, after the last line.</li>
-<li><code>for (group in n) { print group, n[group] }</code>: go through all boxes in <code>n</code>. For each box, put its name into <code>group</code>, and print the name and the count.</li>
+<p>So after the first <code>low_P</code> row, <code>n["low_P"]</code> is 1, after the second it is 2, and so on.</p></li>
+<li><p><code>END { ... }</code>: as before, this runs once, after the last line.</p></li>
+<li><p><code>for (group in n) { print group, n[group] }</code>: go through all names in <code>n</code>. For each name, put it into the variable <code>group</code>, and print the name and its count.</p></li>
 </ul>
 <p>You can check the result with tools from the CLI workshop:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb64"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cut</span> <span class="at">-f1</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="at">-c</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb68"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cut</span> <span class="at">-f1</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="at">-c</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>      1 Nutrient
     294 high_P
     300 low_P</code></pre>
-<p>For a mean per group, you do the same as for the whole file, but with one <code>sum</code> box and one <code>n</code> box per group. <code>sum[$1] += $4</code> adds the root length to the sum of its group.</p>
+<p>To calculate the mean per group, you do the same as for the whole file, but with two arrays: <code>sum</code> for the sum per group and <code>n</code> for the count per group. <code>sum[$1] += $4</code> adds the root length to the sum of its group.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb66"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Without the rule for empty fields</span></span>
-<span id="cb66-2"><a href="#cb66-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'</span></span>
-<span id="cb66-3"><a href="#cb66-3" aria-hidden="true" tabindex="-1"></a><span class="st">  NR &gt; 1 { sum[$1] += $4; n[$1]++ }</span></span>
-<span id="cb66-4"><a href="#cb66-4" aria-hidden="true" tabindex="-1"></a><span class="st">  END    { for (group in sum) { print group, n[group], sum[group] / n[group] } }</span></span>
-<span id="cb66-5"><a href="#cb66-5" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt</span>
-<span id="cb66-6"><a href="#cb66-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb66-7"><a href="#cb66-7" aria-hidden="true" tabindex="-1"></a><span class="co"># With the rule: skip empty root lengths</span></span>
-<span id="cb66-8"><a href="#cb66-8" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'</span></span>
-<span id="cb66-9"><a href="#cb66-9" aria-hidden="true" tabindex="-1"></a><span class="st">  NR &gt; 1 &amp;&amp; $4 != "" { sum[$1] += $4; n[$1]++ }</span></span>
-<span id="cb66-10"><a href="#cb66-10" aria-hidden="true" tabindex="-1"></a><span class="st">  END                { for (group in sum) { print group, n[group], sum[group] / n[group] } }</span></span>
-<span id="cb66-11"><a href="#cb66-11" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb70"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Without the rule for empty fields</span></span>
+<span id="cb70-2"><a href="#cb70-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'</span></span>
+<span id="cb70-3"><a href="#cb70-3" aria-hidden="true" tabindex="-1"></a><span class="st">  NR &gt; 1 { sum[$1] += $4; n[$1]++ }</span></span>
+<span id="cb70-4"><a href="#cb70-4" aria-hidden="true" tabindex="-1"></a><span class="st">  END    { for (group in sum) { print group, n[group], sum[group] / n[group] } }</span></span>
+<span id="cb70-5"><a href="#cb70-5" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt</span>
+<span id="cb70-6"><a href="#cb70-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb70-7"><a href="#cb70-7" aria-hidden="true" tabindex="-1"></a><span class="co"># With the rule: skip empty root lengths</span></span>
+<span id="cb70-8"><a href="#cb70-8" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'</span></span>
+<span id="cb70-9"><a href="#cb70-9" aria-hidden="true" tabindex="-1"></a><span class="st">  NR &gt; 1 &amp;&amp; $4 != "" { sum[$1] += $4; n[$1]++ }</span></span>
+<span id="cb70-10"><a href="#cb70-10" aria-hidden="true" tabindex="-1"></a><span class="st">  END                { for (group in sum) { print group, n[group], sum[group] / n[group] } }</span></span>
+<span id="cb70-11"><a href="#cb70-11" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>low_P 300 57.9494
@@ -1050,15 +1067,15 @@ high_P 294 88.9501
 
 low_P 290 59.9477
 high_P 289 90.489</code></pre>
-<p>Without the rule, AWK adds 0 for each empty root length and still counts the plant. Both means come out too low, and nothing warns you.</p>
+<p>Without the rule, AWK adds 0 for each empty root length and still counts the plant. This is another silent error: both means come out too low, and nothing warns you.</p>
 <section id="mean-per-nutrient-and-condition" class="level3">
 <h3 class="anchored" data-anchor-id="mean-per-nutrient-and-condition">Mean per nutrient and condition</h3>
-<p>To group by two columns, glue them together into one box name: <code>$1"-"$2</code> is column 1, a dash and column 2, for example <code>low_P-mock</code>. The dash goes in double quotes, because it is text here. A dash appears in none of the values, so you can split the name again later if you need to.</p>
+<p>To group data by more than one column, you can glue the columns together into one name: <code>$1"-"$2</code> is column 1, a dash and column 2, for example <code>low_P-mock</code>. The dash goes in double quotes, because it is text here. A dash appears in none of the values, so you can split the name again later if you need to.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb68"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'</span></span>
-<span id="cb68-2"><a href="#cb68-2" aria-hidden="true" tabindex="-1"></a><span class="st">  NR &gt; 1 &amp;&amp; $4 != "" { group = $1"-"$2; sum[group] += $4; n[group]++ }</span></span>
-<span id="cb68-3"><a href="#cb68-3" aria-hidden="true" tabindex="-1"></a><span class="st">  END                { for (group in sum) { printf "%s\t%d\t%.1f\n", group, n[group], sum[group] / n[group] } }</span></span>
-<span id="cb68-4"><a href="#cb68-4" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">sort</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb72"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'</span></span>
+<span id="cb72-2"><a href="#cb72-2" aria-hidden="true" tabindex="-1"></a><span class="st">  NR &gt; 1 &amp;&amp; $4 != "" { group = $1"-"$2; sum[group] += $4; n[group]++ }</span></span>
+<span id="cb72-3"><a href="#cb72-3" aria-hidden="true" tabindex="-1"></a><span class="st">  END                { for (group in sum) { printf "%s\t%d\t%.1f\n", group, n[group], sum[group] / n[group] } }</span></span>
+<span id="cb72-4"><a href="#cb72-4" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">sort</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>high_P-129E 103 98.4
@@ -1067,10 +1084,10 @@ high_P-mock 101 76.4
 low_P-129E  99  69.9
 low_P-13C   86  64.2
 low_P-mock  105 47.1</code></pre>
-<p>Two new parts:</p>
+<p>Taken apart:</p>
 <ul>
-<li><code>printf</code> prints with a format that you choose. <code>%s</code> stands for text, <code>%d</code> for a whole number, <code>%.1f</code> for a number with one decimal, <code>\t</code> for a tab and <code>\n</code> for a new line. The values after the format fill these places in order.</li>
-<li><code>| sort</code>: AWK goes through the boxes in no fixed order. Sort the result, so that it is easy to read and to compare between runs.</li>
+<li><code>printf</code> with the format <code>"%s\t%d\t%.1f\n"</code>: the group name, a tab, the count as a whole number, a tab, and the mean with one decimal. <code>%s</code> is new: it stands for text, here the group name.</li>
+<li><code>| sort</code>: AWK goes through the names in an array in no fixed order. Sort the result, so that it is easy to read and to compare between runs.</li>
 </ul>
 <div class="callout callout-style-default callout-important callout-titled" title="Forget the quotes, and the dash becomes a minus">
 <div class="callout-header d-flex align-content-center">
@@ -1091,7 +1108,7 @@ low_P-mock  105 47.1</code></pre>
 </div>
 <p>Without the rule <code>$4 != ""</code>, four of the six means are lower. For example, low_P with <code>129E</code> gives 64.7 instead of 69.9, because the 8 plants without a root length count as 0 mm.</p>
 <div class="callout callout-style-default callout-question callout-titled" title="Exercise">
-<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-14-contents" aria-controls="callout-14" aria-expanded="true" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-13-contents" aria-controls="callout-13" aria-expanded="true" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -1100,13 +1117,13 @@ low_P-mock  105 47.1</code></pre>
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-14" class="callout-14-contents callout-collapse collapse show">
+<div id="callout-13" class="callout-13-contents callout-collapse collapse show">
 <div class="callout-body-container callout-body">
 <ol type="1">
 <li>Calculate the mean shoot weight per <code>Condition</code>, with one decimal. How many plants are in each group?</li>
 </ol>
 <div class="callout callout-style-default callout-answer callout-titled" title="Click me to see an answer">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-13-contents" aria-controls="callout-13" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-12-contents" aria-controls="callout-12" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -1115,14 +1132,14 @@ low_P-mock  105 47.1</code></pre>
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-13" class="callout-13-contents callout-collapse collapse">
+<div id="callout-12" class="callout-12-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
 <p><code>Condition</code> is column 2, and the shoot weight is column 5. Skip the empty shoot weights:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb71"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'</span></span>
-<span id="cb71-2"><a href="#cb71-2" aria-hidden="true" tabindex="-1"></a><span class="st">  NR &gt; 1 &amp;&amp; $5 != "" { sum[$2] += $5; n[$2]++ }</span></span>
-<span id="cb71-3"><a href="#cb71-3" aria-hidden="true" tabindex="-1"></a><span class="st">  END                { for (group in sum) { printf "%s\t%d\t%.1f\n", group, n[group], sum[group] / n[group] } }</span></span>
-<span id="cb71-4"><a href="#cb71-4" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">sort</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb75"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'</span></span>
+<span id="cb75-2"><a href="#cb75-2" aria-hidden="true" tabindex="-1"></a><span class="st">  NR &gt; 1 &amp;&amp; $5 != "" { sum[$2] += $5; n[$2]++ }</span></span>
+<span id="cb75-3"><a href="#cb75-3" aria-hidden="true" tabindex="-1"></a><span class="st">  END                { for (group in sum) { printf "%s\t%d\t%.1f\n", group, n[group], sum[group] / n[group] } }</span></span>
+<span id="cb75-4"><a href="#cb75-4" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">sort</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>129E    208 17.6

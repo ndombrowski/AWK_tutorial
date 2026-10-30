@@ -1,0 +1,394 @@
+---
+title: "AWK forms you will meet"
+engine: knitr
+---
+
+When you ask an LLM for an AWK command, or copy one from a forum, you will see some forms that this tutorial has not used so far: `BEGIN`, `gsub`, `~`, `-v` and `split`. On this page you learn to read them. You do not need to write them from memory. The goal is that you can tell what a command does, and how to check it.
+
+You use the same folder as on the previous pages, with `awk_data/Growth_Data.txt`, `mmc5_metadata_fixed.txt` (from the [sed page](sed_basics.qmd#windows-line-endings)) and `mmc5_metadata_named.txt` (from the [join page](awk_join.qmd#make-the-names-match)). If you do not have the last two anymore, make them again:
+
+```{bash}
+sed 's/\r$//' awk_data/mmc5_metadata.txt > mmc5_metadata_fixed.txt
+sed 's/^R129_E/129E/; s/^R13_C/13C/' mmc5_metadata_fixed.txt > mmc5_metadata_named.txt
+```
+
+## A command from an LLM
+
+On the join page, you renamed two strains with sed. Asked for the same job, an LLM gave this command:
+
+```{bash}
+awk 'BEGIN{FS=OFS="\t"} {gsub(/R129_E/, "129E", $1); gsub(/R13_C/, "13C", $1); print}' mmc5_metadata_fixed.txt > mmc5_metadata_llm.txt
+
+# Check: the number of lines, which lines changed, and a comparison with your own result
+wc -l mmc5_metadata_llm.txt
+diff mmc5_metadata_fixed.txt mmc5_metadata_llm.txt | cut -f1,4
+cmp mmc5_metadata_llm.txt mmc5_metadata_named.txt && echo 'identical'
+```
+
+This prints:
+
+```
+28 mmc5_metadata_llm.txt
+
+11c11
+< R129_E	Rhizobium
+---
+> 129E	Rhizobium
+14c14
+< R13_C	Rhizobium
+---
+> 13C	Rhizobium
+
+identical
+```
+
+The command works, and it gives exactly the same file as your sed command. But it uses two forms you have not seen yet: `BEGIN{FS=OFS="\t"}` and `gsub(...)`. The next two sections take them apart.
+
+## `BEGIN`: before the first line
+
+`BEGIN` is a pattern, like `NR == 1`. Its action runs once, before AWK reads the first line. It is the opposite of `END`, which you know from the [AWK page](awk_table.qmd): that action runs once, after the last line. You can see both in a small test:
+
+```{bash}
+awk 'BEGIN { print "start" } END { print "end, lines read:", NR }' mmc5_metadata_fixed.txt
+```
+
+This prints:
+
+```
+start
+end, lines read: 28
+```
+
+`BEGIN` is a good place for settings that must be ready before the first line is read. `FS` is the field separator, the same setting that `-F` gives. `OFS` is the output field separator, the one you set with `-v OFS='\t'`. `FS=OFS="\t"` sets both to a tab in one go. So these two commands do the same:
+
+```{bash}
+awk 'BEGIN{FS=OFS="\t"} {gsub(/R129_E/, "129E", $1); gsub(/R13_C/, "13C", $1); print}' mmc5_metadata_fixed.txt > mmc5_metadata_llm.txt
+awk -F'\t' -v OFS='\t' '{gsub(/R129_E/, "129E", $1); gsub(/R13_C/, "13C", $1); print}' mmc5_metadata_fixed.txt > mmc5_metadata_llm2.txt
+
+cmp mmc5_metadata_llm2.txt mmc5_metadata_llm.txt && echo 'identical'
+```
+
+This prints:
+
+```
+identical
+```
+
+Which form you use is a matter of taste. LLMs often write the `BEGIN` form.
+
+::: {.callout-important title="Forget OFS, and only the changed lines break"}
+If you set only `FS` and leave out `OFS`, AWK uses a space between the columns of each line it changed. Lines without a change stay as they are:
+
+```{bash}
+awk 'BEGIN{FS="\t"} {gsub(/R129_E/, "129E", $1); gsub(/R13_C/, "13C", $1); print}' mmc5_metadata_fixed.txt > mmc5_metadata_noofs.txt
+
+# Look at line 10 (not changed) and line 11 (changed), and count the fields per line
+sed -n '10,11p' mmc5_metadata_noofs.txt | cat -A
+awk -F'\t' '{ print NF }' mmc5_metadata_noofs.txt | sort | uniq -c
+```
+
+This prints:
+
+```
+CIAT899^IRhizobiales^IRhizobiaceae^IRhizobium^INodule^ILegume^ITRUE^IRhizobium spp.^I2^ITY^ITRUE^INA$
+129E Rhizobiales Rhizobiaceae Rhizobium Root Arabidopsis FALSE Rhizobium spp. 2 TY TRUE TRUE$
+
+      2 1
+     26 12
+```
+
+Line 10 still has tabs (`^I`), line 11 has spaces. For a tab-separated file, line 11 is now one long field. Only the 2 renamed lines broke, so `head` would show you nothing wrong. Counting the fields per line shows it. When you read a command that changes a column, look for `OFS`.
+:::
+
+## `sub` and `gsub`: replace text in a field
+
+`gsub(/R129_E/, "129E", $1)` means: in column 1, replace every match of `R129_E` with `129E`. It is AWK's version of sed's `s/R129_E/129E/g`, but limited to one field. The three parts are:
+
+- `/R129_E/`: what to look for, a regular expression between slashes, as in sed.
+- `"129E"`: the replacement, in double quotes.
+- `$1`: where to look. Without it, AWK looks in the whole line.
+
+`sub` works the same, but replaces only the first match, like sed's `s` without `g`. You can see the difference on the header of the metadata, where two column names contain a space. Many tools, R among them, are easier to use with column names without spaces:
+
+```{bash}
+head -1 mmc5_metadata_fixed.txt
+awk 'NR == 1 { sub(/ /, "_") } { print }' mmc5_metadata_fixed.txt | head -1
+awk 'NR == 1 { gsub(/ /, "_") } { print }' mmc5_metadata_fixed.txt | head -1
+```
+
+This prints:
+
+```
+strain	Order	Family	Genus	compartment	host	nifH	Taxonomy group	optimal dpi	Media	RGP	Colonization
+strain	Order	Family	Genus	compartment	host	nifH	Taxonomy_group	optimal dpi	Media	RGP	Colonization
+strain	Order	Family	Genus	compartment	host	nifH	Taxonomy_group	optimal_dpi	Media	RGP	Colonization
+```
+
+`sub` changed only the first space, `gsub` both. Here neither has a field after the regular expression, so they work on the whole line. The pattern `NR == 1` limits the change to the header: the values `Rhizobium spp.` and `50% TSB` further down keep their spaces. Check that with `diff`:
+
+```{bash}
+awk 'NR == 1 { gsub(/ /, "_") } { print }' mmc5_metadata_fixed.txt > mmc5_metadata_header.txt
+
+wc -l mmc5_metadata_header.txt
+diff mmc5_metadata_fixed.txt mmc5_metadata_header.txt
+```
+
+This prints:
+
+```
+28 mmc5_metadata_header.txt
+
+1c1
+< strain	Order	Family	Genus	compartment	host	nifH	Taxonomy group	optimal dpi	Media	RGP	Colonization
+---
+> strain	Order	Family	Genus	compartment	host	nifH	Taxonomy_group	optimal_dpi	Media	RGP	Colonization
+```
+
+Only line 1 changed.
+
+## `~` and `!~`: match a pattern in one field
+
+So far, you kept lines with `==`, which means "exactly equal". `~` means "contains a match of this regular expression", and `!~` means "does not contain a match". Look at column 8, the taxonomy group:
+
+```{bash}
+awk -F'\t' '$8 == "Rhizobium"' mmc5_metadata_fixed.txt | wc -l
+awk -F'\t' '$8 ~ /Rhizobium/' mmc5_metadata_fixed.txt | cut -f1,8
+```
+
+This prints:
+
+```
+0
+
+CIAT899	Rhizobium spp.
+R129_E	Rhizobium spp.
+R129_N	Rhizobium spp.
+R13_A	Rhizobium spp.
+R13_C	Rhizobium spp.
+Rg	Rhizobium spp.
+Root149	Rhizobium spp.
+```
+
+No value in column 8 is exactly `Rhizobium`, so `==` finds nothing. `~` finds the 7 lines in which column 8 contains `Rhizobium`. The difference with `grep Rhizobium` is that `grep` looks in the whole line, and `~` only in the column you name. Here `Rhizobium` is also a genus in column 4, so with `grep` you could not tell which column matched.
+
+The special characters from sed work here too. `$1 ~ /^Root/` keeps the strains whose name starts with `Root`:
+
+```{bash}
+awk -F'\t' '$1 ~ /^Root/' mmc5_metadata_fixed.txt | wc -l
+```
+
+This prints:
+
+```
+17
+```
+
+With `!~`, you can look for values that do not have the form you expect. A root length should be a number: only digits and a decimal point. In a regular expression, `[0-9.]` means "one character that is a digit or a dot", and `+` means "the character before it, once or more". So `^[0-9.]+$` means "from start to end only digits and dots". Look for the lines where column 4 is not like that:
+
+```{bash}
+awk -F'\t' 'NR > 1 && $4 !~ /^[0-9.]+$/' awk_data/Growth_Data.txt | wc -l
+awk -F'\t' 'NR > 1 && $4 !~ /^[0-9.]+$/' awk_data/Growth_Data.txt | head -3 | cat -A
+```
+
+This prints:
+
+```
+15
+
+high_P^Imock^Iex61^I^I18.2$
+high_P^Imock^Iex64^I^I22.4$
+high_P^Imock^Iex64^I^I26$
+```
+
+These are the 15 plants without a root length from the [AWK page](awk_table.qmd#missing-values-empty-fields): an empty field is not a number either. In a new table, this check also finds values such as `NA`, `12,5` or `12 mm`.
+
+::: {.callout-question .callout-warning collapse="false" title="Exercise"}
+On the [sed page](sed_basics.qmd), you added `_host` to every host in column 6 with `NR > 1 { $6 = $6 "_host" }`. Run twice, that command gives `Arabidopsis_host_host`. Change it, so that it adds `_host` only to hosts that do not end in `_host` yet. Use `mmc5_metadata_fixed.txt`, save the result as `metadata_host.txt`, then run your command a second time on `metadata_host.txt` and check that nothing changes.
+
+::: {.callout-answer .callout-warning collapse="true" title="Click me to see an answer"}
+Add `$6 !~ /_host$/` to the pattern. `_host$` means "`_host` at the end", and `!~` means "does not match":
+
+```{bash}
+# Run once, and a second time on the result
+awk -F'\t' -v OFS='\t' 'NR > 1 && $6 !~ /_host$/ { $6 = $6 "_host" } { print }' mmc5_metadata_fixed.txt > metadata_host.txt
+awk -F'\t' -v OFS='\t' 'NR > 1 && $6 !~ /_host$/ { $6 = $6 "_host" } { print }' metadata_host.txt > metadata_host2.txt
+
+# Check
+cut -f6 metadata_host2.txt | sort | uniq -c
+cmp metadata_host.txt metadata_host2.txt && echo 'identical'
+```
+
+This prints:
+
+```
+     22 Arabidopsis_host
+      5 Legume_host
+      1 host
+
+identical
+```
+
+The second run changed nothing. A command that you can safely run twice is worth a lot in a script or a notebook that you run again later.
+:::
+:::
+
+## `-v`: give AWK a value from outside
+
+You know `-v` from `-v OFS='\t'`: it sets a variable before AWK starts. A **variable** is a name that holds a value. You can make your own, with any name you like. Here `strain` holds the text `129E`:
+
+```{bash}
+awk -F'\t' -v strain=129E '$2 == strain' awk_data/Growth_Data.txt | wc -l
+awk -F'\t' -v strain=13C '$2 == strain' awk_data/Growth_Data.txt | wc -l
+```
+
+This prints:
+
+```
+210
+175
+```
+
+Inside the AWK command, `strain` has no quotes: it is the name of the variable, not the text `strain`. The command stays the same, and only the value after `-v` changes.
+
+This is most useful in a `for` loop in bash, which repeats a command for each value in a list. In the loop below, the bash variable `s` holds `129E`, then `13C`, then `mock`. `-v strain="$s"` hands each value over to AWK, and AWK writes one file per condition, with the header (`NR == 1`):
+
+```{bash}
+for s in 129E 13C mock; do
+  awk -F'\t' -v strain="$s" 'NR == 1 || $2 == strain' awk_data/Growth_Data.txt > growth_"$s".txt
+done
+
+# Check
+wc -l growth_129E.txt growth_13C.txt growth_mock.txt
+head -2 growth_13C.txt
+cut -f2 growth_13C.txt | sort | uniq -c
+```
+
+This prints:
+
+```
+  211 growth_129E.txt
+  176 growth_13C.txt
+  210 growth_mock.txt
+  597 total
+
+Nutrient	Condition	Experiment	Rootlength	FW_shoot_mg
+low_P	13C	ex61	54.3	1.56
+
+    175 13C
+      1 Condition
+```
+
+Each file has its plants plus the header line: 210 + 175 + 209 plants, plus 3 headers, is 597.
+
+::: {.callout-important title="A bash variable inside single quotes stays text"}
+Why not write `$s` straight into the AWK command? Bash does not look inside single quotes, so AWK gets the text `$s` and not the value. Try it:
+
+```{bash}
+for s in 129E 13C mock; do
+  echo "$s"
+  awk -F'\t' '$2 == "$s"' awk_data/Growth_Data.txt | wc -l
+done
+```
+
+This prints:
+
+```
+129E
+0
+13C
+0
+mock
+0
+```
+
+The loop runs, `s` holds the right value, but AWK finds 0 lines each time, without an error. AWK looked for plants with the condition `$s`, and there are none. Use `-v` to pass a bash variable to AWK.
+:::
+
+## `split`: cut a value into parts
+
+`split` cuts a value into parts at a separator, and puts the parts in an array. Here the names in the array are numbers: `parts[1]` is the first part, `parts[2]` the second, and so on. It gives back the number of parts. Take the four strain names with an underscore:
+
+```{bash}
+awk -F'\t' '$1 ~ /_/ { n = split($1, parts, "_"); print $1, n, parts[1], parts[2] }' mmc5_metadata_fixed.txt
+```
+
+This prints:
+
+```
+R129_E 2 R129 E
+R129_N 2 R129 N
+R13_A 2 R13 A
+R13_C 2 R13 C
+```
+
+`split($1, parts, "_")` means: cut column 1 at each `_`, and put the pieces in `parts`. `R129_E` gives 2 parts, `R129` and `E`. The number of parts is a useful check. For example, split the taxonomy group in column 8 at the space, and count how many words each value has:
+
+```{bash}
+awk -F'\t' 'NR > 1 { n = split($8, words, " "); print n, $8 }' mmc5_metadata_fixed.txt | sort | uniq -c
+```
+
+This prints:
+
+```
+      2 1 Agrobacterium
+      3 1 Bradyrhizobium
+      3 1 Caulobacterales
+      2 1 Hyphomicrobiaceae
+      3 1 Mesorhizobium
+      3 1 Sinorhizobium
+      4 1 Sphingomonadales
+      7 2 Rhizobium spp.
+```
+
+All values are one word, except `Rhizobium spp.` with two. You see `split` often in commands that take apart names like `sample_rep1_R1`, or a column with values such as `Bacteria;Proteobacteria;Alphaproteobacteria`.
+
+::: {.callout-tip title="Tip: one general rule for all names, with capture groups (optional)" collapse="true"}
+On the join page, you renamed two strains with two explicit changes, because a quick general rule broke other names. A general rule can work, if it is precise and you check what it changes. sed can remember parts of a match with **capture groups**: the parts of a regular expression between brackets `( )`. In the replacement, `\1` puts back what the first pair of brackets matched, and `\2` the second:
+
+```{bash}
+sed -E 's/^R([0-9]+)_([A-Z])\t/\1\2\t/' mmc5_metadata_fixed.txt > mmc5_metadata_regex.txt
+
+# Check
+wc -l mmc5_metadata_regex.txt
+diff mmc5_metadata_fixed.txt mmc5_metadata_regex.txt | cut -f1
+cut -f1 mmc5_metadata_regex.txt | grep -c '^oot'
+```
+
+This prints:
+
+```
+28 mmc5_metadata_regex.txt
+
+11,14c11,14
+< R129_E
+< R129_N
+< R13_A
+< R13_C
+---
+> 129E
+> 129N
+> 13A
+> 13C
+
+0
+```
+
+Read the regular expression from left to right: `^R` an `R` at the start of the line, `([0-9]+)` one or more digits (group 1), `_` an underscore, `([A-Z])` one capital letter (group 2), and `\t` the tab at the end of column 1. `-E` tells sed that brackets mean capture groups. (Tested with GNU sed. On a Mac, see the tip about `\t` on the [sed page](sed_basics.qmd).) So `R129_E` becomes `129E`, and `Root123D2` does not match, because an `o` is not a digit: no strain is called `oot...` this time.
+
+The rule changed four names, not only the two in the growth data. That is fine here, because all four now follow the same naming scheme. The `diff` shows you exactly which names changed, so you can decide. A rename with `split` and `sub` gives an identical file.
+
+In code from an LLM, you may also see `match($1, /^R([0-9]+)_([A-Z])$/, m)`, which puts the groups in the array `m`. This only works in GNU awk: run with `gawk --posix`, AWK stops with "match: third argument is a gawk extension". (Tested 2026-10-29 in WSL and Git Bash. Not tested on a Mac.)
+:::
+
+## What you learned
+
+- `BEGIN { ... }` runs before the first line, `END { ... }` after the last. `BEGIN{FS=OFS="\t"}` does the same as `-F'\t' -v OFS='\t'`.
+- Without `OFS`, only the lines that AWK changed lose their tabs. Count the fields per line to find this.
+- `gsub(/old/, "new", $1)` replaces every match in column 1, `sub` only the first. Without a field, they work on the whole line.
+- `$8 ~ /text/` keeps lines where column 8 contains a match, `$8 !~ /text/` the other lines. `==` needs an exact match.
+- `!~` with a pattern such as `/^[0-9.]+$/` finds values that do not have the form you expect.
+- `-v name=value` gives AWK a value from outside. Use it to pass a bash variable into AWK: `$s` inside single quotes stays text.
+- `split(value, parts, "_")` cuts a value into parts, and gives back how many there are.
+- A general rename can work if it is precise. Check with `diff` which names it changed.
+
+The next page, [AWK and sed on FASTA files](awk_fasta.qmd), is optional. It uses these forms on sequence files. After it, [Checking code from an LLM](check_llm_code.qmd) puts the checks from all pages together.

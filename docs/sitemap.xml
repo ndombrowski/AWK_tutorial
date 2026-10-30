@@ -2,18 +2,22 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://ndombrowski.github.io/AWK_tutorial/source/sed_basics.html</loc>
-    <lastmod>2026-10-29T10:34:20.561Z</lastmod>
+    <lastmod>2026-10-30T07:45:05.321Z</lastmod>
   </url>
   <url>
-    <loc>https://ndombrowski.github.io/AWK_tutorial/source/awk_join.html</loc>
-    <lastmod>2026-10-29T12:48:04.795Z</lastmod>
+    <loc>https://ndombrowski.github.io/AWK_tutorial/source/awk_more.html</loc>
+    <lastmod>2026-10-30T07:18:26.949Z</lastmod>
   </url>
   <url>
     <loc>https://ndombrowski.github.io/AWK_tutorial/index.html</loc>
-    <lastmod>2026-10-28T16:04:55.602Z</lastmod>
+    <lastmod>2026-10-30T07:37:28.017Z</lastmod>
+  </url>
+  <url>
+    <loc>https://ndombrowski.github.io/AWK_tutorial/source/awk_join.html</loc>
+    <lastmod>2026-10-30T08:13:50.918Z</lastmod>
   </url>
   <url>
     <loc>https://ndombrowski.github.io/AWK_tutorial/source/awk_table.html</loc>
-    <lastmod>2026-10-29T10:26:36.563Z</lastmod>
+    <lastmod>2026-10-30T07:43:46.414Z</lastmod>
   </url>
 </urlset>
