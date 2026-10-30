@@ -1,0 +1,1337 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.25">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Checking code from an LLM – Working with tables using AWK and sed</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../source/awk_fasta.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-7b89279ff1a6dce999919e0e67d4d9ec.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-707d8167ce6003fca903bfe2be84ab7f.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-7b89279ff1a6dce999919e0e67d4d9ec.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-07ba6b261650929f6c0e3bf61f8c80ad.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-5290abd680639bf24a9d861acc7641a1.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-07ba6b261650929f6c0e3bf61f8c80ad.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-sidebar docked quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../source/check_llm_code.html">Checking code from an LLM</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+      <a href="../index.html" class="sidebar-logo-link">
+      </a>
+      <div class="sidebar-tools-main">
+    <a href="https://github.com/ndombrowski/AWK_tutorial" title="" class="quarto-navigation-tool px-1" aria-label=""><i class="bi bi-github"></i></a>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Welcome</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../source/awk_table.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">AWK on a table</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../source/sed_basics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">sed basics</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../source/awk_more.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">More useful AWK</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../source/awk_join.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Combining two files</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../source/awk_fasta.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">AWK and sed on FASTA files</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../source/check_llm_code.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Checking code from an LLM</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#a-routine-for-any-awk-or-sed-command" id="toc-a-routine-for-any-awk-or-sed-command" class="nav-link active" data-scroll-target="#a-routine-for-any-awk-or-sed-command">A routine for any AWK or sed command</a></li>
+  <li><a href="#example-a-command-that-finds-nothing" id="toc-example-a-command-that-finds-nothing" class="nav-link" data-scroll-target="#example-a-command-that-finds-nothing">Example: a command that finds nothing</a>
+  <ul class="collapse">
+  <li><a href="#the-same-question-with-other-lines-pasted" id="toc-the-same-question-with-other-lines-pasted" class="nav-link" data-scroll-target="#the-same-question-with-other-lines-pasted">The same question, with other lines pasted</a></li>
+  </ul></li>
+  <li><a href="#example-one-question-two-answers" id="toc-example-one-question-two-answers" class="nav-link" data-scroll-target="#example-one-question-two-answers">Example: one question, two answers</a></li>
+  <li><a href="#check-a-claim-in-an-answer" id="toc-check-a-claim-in-an-answer" class="nav-link" data-scroll-target="#check-a-claim-in-an-answer">Check a claim in an answer</a></li>
+  <li><a href="#what-you-learned" id="toc-what-you-learned" class="nav-link" data-scroll-target="#what-you-learned">What you learned</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Checking code from an LLM</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>LLMs are good at writing AWK and sed. That is exactly why this page exists: you will get a lot of AWK and sed code that you did not write yourself, and most of it will look fine. This page puts the checks from the earlier pages together into a short routine, and then shows what real LLM answers looked like when they were checked with it.</p>
+<p>The answers on this page come from October 2026, and each question was asked only once. If you ask the same questions today, your LLM may well get them right. That doesn’t make the checks less useful: they are how you find out whether an answer is right, whatever the LLM is and whenever you ask.</p>
+<p>General advice on using LLMs, such as which tools you are allowed to use at the UvA, why you should not paste your data, and why you should use an LLM more as a tutor than as a code machine, is on the <a href="https://ndombrowski.github.io/cli_workshop/source/llm_usage.html">Using LLMs page of the CLI workshop</a>. This page does not repeat it. Everything here works with a free chat tool: you paste a question, you read the answer, and you run the checks yourself in your terminal.</p>
+<p>You use the same folder as on the previous pages, with <code>awk_data/</code>, <code>mmc5_metadata_fixed.txt</code> (made on the <a href="../source/sed_basics.html#windows-line-endings">sed page</a>) and <code>mmc5_metadata_named.txt</code> (made on the page <a href="../source/awk_more.html#rename-two-strains">More useful AWK</a>). If you do not have them anymore, make them again:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'s/\r$//'</span> awk_data/mmc5_metadata.txt <span class="op">&gt;</span> mmc5_metadata_fixed.txt</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'s/^R129_E/129E/; s/^R13_C/13C/'</span> mmc5_metadata_fixed.txt <span class="op">&gt;</span> mmc5_metadata_named.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<section id="a-routine-for-any-awk-or-sed-command" class="level2">
+<h2 class="anchored" data-anchor-id="a-routine-for-any-awk-or-sed-command">A routine for any AWK or sed command</h2>
+<p>Before you run a command that you did not write yourself, go through these questions. You know every check from an earlier page.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Question</th>
+<th>How to check</th>
+<th>Where you learned it</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>What do I expect?</td>
+<td>Before you run anything: how many lines, which column, how many changes? Write the number down. Without a number, you can’t see that the output is wrong</td>
+<td>all pages</td>
+</tr>
+<tr class="even">
+<td>What does the input look like?</td>
+<td><code>head</code>, <code>cat -A</code> (tabs are <code>^I</code>, Windows line endings <code>^M</code>), <code>file</code>. With Windows line endings, a text match on the last column finds nothing</td>
+<td><a href="../source/awk_table.html#look-at-the-table-first">AWK on a table</a>, <a href="../source/sed_basics.html#windows-line-endings">sed</a></td>
+</tr>
+<tr class="odd">
+<td>Does every line have the same number of fields?</td>
+<td><code>awk -F'\t' '{ print NF }' file \| sort \| uniq -c</code>. One number: every line has the same columns. More than one: look at the lines that differ first</td>
+<td><a href="../source/awk_table.html#nf-work-with-the-number-of-fields">AWK on a table</a></td>
+</tr>
+<tr class="even">
+<td>Is the separator set?</td>
+<td>Look for <code>-F'\t'</code> or <code>FS</code>. Without it, a value with a space is split in two, and the columns after it shift. If a column is changed, also look for <code>OFS</code>. Without it, the changed lines lose their tabs</td>
+<td><a href="../source/awk_table.html#why--ft-matters">AWK on a table</a>, <a href="../source/awk_more.html#begin-before-the-first-line">More useful AWK</a></td>
+</tr>
+<tr class="odd">
+<td>What happens to the header?</td>
+<td>Look for <code>NR &gt; 1</code> (skips the header) or <code>NR == 1</code> (handles it on its own). If neither is there, the header goes through the same rule as the data</td>
+<td><a href="../source/awk_table.html#nr-work-with-the-header-line">AWK on a table</a></td>
+</tr>
+<tr class="even">
+<td>What happens to empty fields?</td>
+<td>Look for a rule such as <code>$4 != ""</code> for the number column, before a comparison or a calculation. Without it, an empty field counts as 0 in sums and means</td>
+<td><a href="../source/awk_table.html#working-with-missing-values-empty-fields">AWK on a table</a></td>
+</tr>
+<tr class="odd">
+<td>Does a sed command change more than I want?</td>
+<td>sed looks at the whole line, not at one column. Count the lines that contain the pattern before (<code>grep -c</code>), and look at what changed after (<code>diff</code>)</td>
+<td><a href="../source/sed_basics.html#sed-sees-the-whole-line-not-columns">sed</a></td>
+</tr>
+<tr class="even">
+<td>Does it change the original file?</td>
+<td>Look for <code>sed -i</code>, <code>dos2unix</code>, <code>mv</code>. If so, run it on a copy, or write to a new file first</td>
+<td><a href="../source/sed_basics.html#change-a-file-safely">sed</a></td>
+</tr>
+<tr class="odd">
+<td>Does the result match what I expected?</td>
+<td><code>wc -l</code>, <code>head</code>, <code>cut -f... \| sort \| uniq -c</code>, <code>diff</code>, <code>cmp</code></td>
+<td>all pages</td>
+</tr>
+</tbody>
+</table>
+<p>The first question matters most. If you don’t know which number you expect, you can’t see that the output is wrong.</p>
+</section>
+<section id="example-a-command-that-finds-nothing" class="level2">
+<h2 class="anchored" data-anchor-id="example-a-command-that-finds-nothing">Example: a command that finds nothing</h2>
+<p>Asking an LLM to write a command is one thing. Asking it why your own command does not work is harder, as this example shows.</p>
+<p>The strain metadata has a column <code>Colonization</code> (column 12) with <code>TRUE</code>, <code>FALSE</code> or <code>NA</code>. You want the strains with <code>TRUE</code>, but AWK finds none:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$12 == "TRUE"'</span> awk_data/mmc5_metadata.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>This prints:</p>
+<pre><code>0</code></pre>
+<p>But when you count the values in column 12 with <code>cut</code>, there are 11:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cut</span> <span class="at">-f12</span> awk_data/mmc5_metadata.txt <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="at">-c</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>This prints:</p>
+<pre><code>      1 Colonization
+      3 FALSE
+     13 NA
+     11 TRUE</code></pre>
+<p>You may already know the reason from the sed page: this is the file with Windows line endings. But imagine you don’t, and you ask an LLM. In October 2026, this question went to two LLMs, ChatGPT and UvA AI Chat (with Claude Sonnet 5.5), both without any memory of earlier chats:</p>
+<pre><code>I have a tab-separated table, metadata.txt. These are the first lines:
+
+strain  Order   Family  Genus   compartment host    nifH    Taxonomy group  optimal dpi Media   RGP Colonization
+Root123D2   Rhizobiales Bradyrhizobiaceae   Afipia  Root    Arabidopsis FALSE   Bradyrhizobium  8   50% TSB TRUE    NA
+Root381 Rhizobiales Bradyrhizobiaceae   Bosea   Root    Arabidopsis FALSE   Bradyrhizobium  3   TY  TRUE    NA
+
+This awk command prints nothing:
+
+awk -F'\t' '$12 == "TRUE"' metadata.txt
+
+But when I open the file, I can see TRUE in column 12 on several lines. Why?</code></pre>
+<p>Neither answer found the real cause:</p>
+<ul>
+<li>The first answer saw spaces between the columns of the pasted lines (copying from a terminal can turn tabs into spaces) and blamed the separator. Its fix: leave out <code>-F'\t'</code>.</li>
+<li>The second answer counted the columns of the pasted lines, and noticed correctly that in <em>these</em> lines <code>TRUE</code> is in column 11 (<code>RGP</code>), not in column 12. Its fix: use <code>$11</code>. Further down, it did list Windows line endings as a possible cause “if TRUE really is in column 12 on other lines”.</li>
+</ul>
+<p>Both answers sounded sure of themselves, and both fixes work, in the sense that they print something:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Fix from the first answer: no -F'\t'</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'$12 == "TRUE"'</span> awk_data/mmc5_metadata.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Fix from the second answer: column 11</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$11 == "TRUE"'</span> awk_data/mmc5_metadata.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>This prints:</p>
+<pre><code>8
+15</code></pre>
+<p>Neither number is 11. Look at the 8 lines of the first fix, with their real columns 11 and 12:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'$12 == "TRUE"'</span> awk_data/mmc5_metadata.txt <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-f1,11,12</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>This prints:</p>
+<pre><code>Root123D2   TRUE    NA
+CIAT899 TRUE    NA
+R129_E  TRUE    TRUE
+R129_N  TRUE    NA
+R13_A   TRUE    NA
+R13_C   TRUE    NA
+Rg  TRUE    NA
+Root149 TRUE    NA</code></pre>
+<p>Only one of them, <code>R129_E</code>, has <code>TRUE</code> in column 12. Without <code>-F'\t'</code>, values with a space, such as <code>Taxonomy group</code> or <code>50% TSB</code>, are split in two, and AWK’s column 12 is then some other column. The second fix answers a different question: which strains have <code>TRUE</code> in the column <code>RGP</code>.</p>
+<p>Why did both LLMs miss it? The cause, a hidden <code>\r</code> at the end of every line, is invisible in the pasted lines. An LLM can only reason about what it sees, so it picks a cause that it can see. And the three lines that <code>head</code> happened to show have <code>NA</code> in column 12, which pointed both answers in the wrong direction.</p>
+<p>Before you read on: you know the look-at-it checks from the earlier pages. What could you paste instead of the plain lines, so that the LLM can see the cause?</p>
+<section id="the-same-question-with-other-lines-pasted" class="level3">
+<h3 class="anchored" data-anchor-id="the-same-question-with-other-lines-pasted">The same question, with other lines pasted</h3>
+<p>The same question, with <code>head -3 metadata.txt | cat -A</code> instead of plain <code>head -3</code>, gives the LLM something to see:</p>
+<pre><code>strain^IOrder^IFamily^IGenus^Icompartment^Ihost^InifH^ITaxonomy group^Ioptimal dpi^IMedia^IRGP^IColonization^M$
+Root123D2^IRhizobiales^IBradyrhizobiaceae^IAfipia^IRoot^IArabidopsis^IFALSE^IBradyrhizobium^I8^I50% TSB^ITRUE^INA^M$
+Root381^IRhizobiales^IBradyrhizobiaceae^IBosea^IRoot^IArabidopsis^IFALSE^IBradyrhizobium^I3^ITY^ITRUE^INA^M$</code></pre>
+<p>With this, both LLMs named Windows line endings in their first sentence. So when your command does not work, run the look-at-it checks first, paste their output, and ask what it means. The CLI workshop’s section <a href="https://ndombrowski.github.io/cli_workshop/source/llm_usage.html#when-your-code-does-not-work">When your code does not work</a> explains this order in more detail.</p>
+<p>Both answers then offered several fixes. Some of them are fine, but check them as carefully as any other command:</p>
+<ul>
+<li>Both suggested <code>dos2unix metadata.txt</code>, the first answer as its main recommendation. <code>dos2unix</code> changes the file itself, and it is not always installed: in WSL with Ubuntu, it was not (tested October 2026). The <code>sed 's/\r$//'</code> from the sed page writes a new file and works everywhere.</li>
+<li>One fix looked fine and was not. That is the exercise below.</li>
+</ul>
+<div class="callout callout-style-default callout-question callout-titled" title="Exercise">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="true" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Question</span>Exercise
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-2" class="callout-2-contents callout-collapse collapse show">
+<div class="callout-body-container callout-body">
+<p>The first answer suggested this fix, which removes the <code>\r</code> from column 12 inside AWK:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'{ sub(/\r$/, "", $12) } $12 == "TRUE"'</span> awk_data/mmc5_metadata.txt <span class="op">&gt;</span> colonized.txt</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">wc</span> <span class="at">-l</span> colonized.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>It prints <code>11 colonized.txt</code>: the number you expected. Is the result correct? Check it with the commands from the routine above. If something is wrong, can you fix it?</p>
+<div class="callout callout-style-default callout-answer callout-titled" title="Click me to see an answer">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Answer</span>Click me to see an answer
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Look at the lines and count the fields per line:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span> <span class="at">-2</span> colonized.txt <span class="kw">|</span> <span class="fu">cat</span> <span class="at">-A</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'{ print NF }'</span> colonized.txt <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="at">-c</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>This prints:</p>
+<pre><code>Root695 Rhizobiales Phyllobacteriaceae Mesorhizobium Root Arabidopsis FALSE Mesorhizobium 3 TY TRUE TRUE$
+R129_E Rhizobiales Rhizobiaceae Rhizobium Root Arabidopsis FALSE Rhizobium spp. 2 TY TRUE TRUE$
+
+     11 1</code></pre>
+<p>The table has the right 11 strains, but there are no tabs left (no <code>^I</code>): every line is one field. The command changes column 12, and when AWK changes a column, it rebuilds the line with the output separator <code>OFS</code>, a space by default. This is the trap from the box <a href="../source/awk_more.html#begin-before-the-first-line">Forget OFS</a> on the page More useful AWK. Here every printed line was changed, so every line broke.</p>
+<p>The fix is to set <code>OFS</code> as well:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="at">-v</span> OFS=<span class="st">'\t'</span> <span class="st">'{ sub(/\r$/, "", $12) } $12 == "TRUE"'</span> awk_data/mmc5_metadata.txt <span class="op">&gt;</span> colonized2.txt</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Check, and compare with the result from the file without Windows line endings</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'{ print NF }'</span> colonized2.txt <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="at">-c</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$12 == "TRUE"'</span> mmc5_metadata_fixed.txt <span class="kw">|</span> <span class="fu">cmp</span> <span class="at">-</span> colonized2.txt <span class="kw">&amp;&amp;</span> <span class="bu">echo</span> <span class="st">'identical'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>This prints:</p>
+<pre><code>     11 12
+identical</code></pre>
+<p><code>cmp -</code> compares the output of the command before the <code>|</code> with the file. The count of 11 was right, and the lines were still broken. A matching count is a good sign, not a proof. Look at the lines too.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="example-one-question-two-answers" class="level2">
+<h2 class="anchored" data-anchor-id="example-one-question-two-answers">Example: one question, two answers</h2>
+<p>The second example is a request for a command to do some calculations on our growth data. Both LLMs got the same question, with the first 5 lines of <code>Growth_Data.txt</code> pasted in:</p>
+<pre><code>I have a tab-separated file. Here are the first lines:
+
+&lt;the output of: head -5 Growth_Data.txt&gt;
+
+Give me an awk command for the mean Rootlength per Nutrient and Condition.</code></pre>
+<p>These are the important parts of the two commands:</p>
+<pre><code># Answer 1
+awk 'BEGIN {FS=OFS="\t"} NR&gt;1 {sum[$1,$2]+=$4; count[$1,$2]++} END {...}'
+
+# Answer 2
+awk -F'\t' 'NR &gt; 1 &amp;&amp; $4 != "" { key = $1 FS $2; sum[key] += $4; n[key]++ } END {...}'</code></pre>
+<div class="callout callout-style-default callout-question callout-titled" title="Exercise">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="true" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Question</span>Exercise
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-4" class="callout-4-contents callout-collapse collapse show">
+<div class="callout-body-container callout-body">
+<p>What is the difference between the two commands, and which answer gives the right means? You know the table from <a href="../source/awk_table.html#working-with-missing-values-empty-fields">AWK on a table</a>.</p>
+<div class="callout callout-style-default callout-answer callout-titled" title="Click me to see an answer">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Answer</span>Click me to see an answer
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-3" class="callout-3-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Answer 2 skips the empty root lengths with <code>$4 != ""</code>, and answer 1 does not. So answer 1 counts every empty root length as 0, and its means come out too low in every group with empty root lengths.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<p>The difference is the empty root lengths. The first 5 lines have none, so answer 1 had no way to know about them, and it did not ask. Answer 2 added the rule anyway, as a precaution. This is the full command of answer 1, with its output through <code>cat -A</code> (the <code>^\</code> is explained in the tip below):</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'BEGIN {FS=OFS="\t"} NR&gt;1 {sum[$1,$2]+=$4; count[$1,$2]++} END {for (k in sum) print k, sum[k]/count[k]}'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">cat</span> <span class="at">-A</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>This prints:</p>
+<pre><code>high_P^\129E^I98.3585$
+high_P^\13C^I95.4426$
+high_P^\mock^I74.2008$
+low_P^\129E^I64.6906$
+low_P^\13C^I62.7357$
+low_P^\mock^I47.0685$</code></pre>
+<p>Here are the means of both answers side by side, rounded to two decimals. The means of answer 2 are the same as on <a href="../source/awk_table.html#mean-per-nutrient-and-condition">AWK on a table</a>, which skips the empty fields.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Nutrient and condition</th>
+<th style="text-align: right;">Answer 1</th>
+<th style="text-align: right;">Answer 2</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>high_P 129E</td>
+<td style="text-align: right;">98.36</td>
+<td style="text-align: right;">98.36</td>
+</tr>
+<tr class="even">
+<td>high_P 13C</td>
+<td style="text-align: right;">95.44</td>
+<td style="text-align: right;">97.69</td>
+</tr>
+<tr class="odd">
+<td>high_P mock</td>
+<td style="text-align: right;">74.20</td>
+<td style="text-align: right;">76.40</td>
+</tr>
+<tr class="even">
+<td>low_P 129E</td>
+<td style="text-align: right;">64.69</td>
+<td style="text-align: right;">69.92</td>
+</tr>
+<tr class="odd">
+<td>low_P 13C</td>
+<td style="text-align: right;">62.74</td>
+<td style="text-align: right;">64.19</td>
+</tr>
+<tr class="even">
+<td>low_P mock</td>
+<td style="text-align: right;">47.07</td>
+<td style="text-align: right;">47.07</td>
+</tr>
+</tbody>
+</table>
+<p>Four of the six means from answer 1 are too low, because AWK counts an empty field as 0. No error, no warning. And two means are right: high_P 129E and low_P mock have no empty root lengths. If you check only one of those two groups, the command looks correct.</p>
+<div class="callout callout-style-default callout-tip callout-titled" title="Tip: what is the `^` in the output? (optional)">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-5-contents" aria-controls="callout-5" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Tip: what is the <code>^</code> in the output? (optional)
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-5" class="callout-5-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Answer 1 stores its groups as <code>sum[$1,$2]</code>. With a comma between the two columns, AWK glues the two names together with a hidden character. <code>cat -A</code> shows this character as <code>^\</code>. It is not meant to be printed, so it is easy to miss in the normal output.</p>
+<p>For you, this means that the output of answer 1 has 2 columns, not 3: the group name and the mean. You can’t select one condition from it by column, for example with <code>cut -f2</code>. Answer 2 builds its group name with <code>$1 FS $2</code>, with a tab between the two names, so the nutrient and the condition stay separate columns. On <a href="../source/awk_table.html#mean-per-nutrient-and-condition">AWK on a table</a>, you used <code>$1"-"$2</code> for the same reason: you can see the dash, and you can split on it later.</p>
+</div>
+</div>
+</div>
+<p>Answer 2 was right here. But it was not “the better LLM” that made the difference. Each LLM was asked once, and the same LLM may well give the other kind of answer next time. What told the two answers apart were the checks: the missing <code>$4 != ""</code>, and the output.</p>
+<p>So tell the LLM what you know about your file. Here, one sentence would have been enough: “Column 4 has empty fields for missing values.”</p>
+<p>But you can only write that sentence if you know it. An LLM answers the question you ask, and the problems you don’t know about are the ones you don’t ask about. So the most useful thing you can bring to an LLM is knowledge of your own data: what the file looks like, how many lines and empty fields it has, and which values you expect. That is also what you need to check the answer.</p>
+<div class="callout callout-style-default callout-question callout-titled" title="Exercise">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-7-contents" aria-controls="callout-7" aria-expanded="true" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Question</span>Exercise
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-7" class="callout-7-contents callout-collapse collapse show">
+<div class="callout-body-container callout-body">
+<p>Imagine you want to ask an LLM for the mean root length per nutrient and condition, and you have not seen the results above. Which four things about <code>awk_data/Growth_Data.txt</code> should the LLM know? Find each one with a command from the earlier pages, and write the sentence you would add to your question.</p>
+<p>If you have an LLM that you are allowed to use (see <a href="https://ndombrowski.github.io/cli_workshop/source/llm_usage.html#rules-at-the-uva">Rules at the UvA</a>), go one step further: ask the question twice, once with only the first 5 lines and once with your sentence added. Then check both answers with the routine from this page.</p>
+<div class="callout callout-style-default callout-answer callout-titled" title="Click me to see an answer">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-6-contents" aria-controls="callout-6" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Answer</span>Click me to see an answer
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-6" class="callout-6-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># The separator and the header line</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span> <span class="at">-3</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">cat</span> <span class="at">-A</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="co"># The number of lines</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="fu">wc</span> <span class="at">-l</span> awk_data/Growth_Data.txt</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="co"># The number of empty root lengths</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR &gt; 1 &amp;&amp; $4 == ""'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>This prints:</p>
+<pre><code>Nutrient^ICondition^IExperiment^IRootlength^IFW_shoot_mg$
+low_P^Imock^Iex61^I40.4^I6.6$
+low_P^Imock^Iex61^I38^I6.8$
+595 awk_data/Growth_Data.txt
+15</code></pre>
+<p>So the sentence could be: “The file is tab-separated, with one header line and 594 plants. Column 4 (Rootlength) has 15 empty fields for missing values.”</p>
+<p>The <code>$</code> at the end of each line also tells you that the file has no Windows line endings (no <code>^M</code>), so you don’t need to mention them.</p>
+<p>These numbers also tell you what to expect from a correct answer: the counts per group add up to 594 minus 15, so 579 plants. You can check that in the output of any command you get.</p>
+<p>For the second part there is no fixed answer: LLM answers change from run to run. The checks are the answer. Look for <code>$4 != ""</code> or something similar in the command, and compare the counts per group with 579.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled" title="Tip: What if the LLM can read my file? (optional)">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-8-contents" aria-controls="callout-8" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Tip: What if the LLM can read my file? (optional)
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-8" class="callout-8-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Some LLM tools work inside a code editor. They can open your files and run commands themselves, so you don’t need to paste lines. You might expect the problems on this page to disappear then. To find out, the two questions from the examples went to such a tool in October 2026: Claude Code in VS Code, in a folder with a copy of the data. Each question started a new session. The tool ran with the author’s own settings: a file with standing instructions that the tool reads at the start of every session, and that asks it to check its work carefully. A fresh setup without such a file may well do worse.</p>
+<p><strong>The mean root length per group.</strong> The question was: “In this folder there is Growth_Data.txt. Give me an awk command for the mean Rootlength per Nutrient and Condition.” The tool found the file, looked at its first 5 lines with <code>cat -A</code>, counted the lines, and wrote a command without <code>$4 != ""</code>. It ran the command and showed the output: the same too-low means as answer 1 above, for example 64.7 instead of 69.9 for <code>low_P-129E</code>. It had the whole file, but it only looked at the top, where there are no empty fields. And “I ran it and got this output” shows that the command runs, not that the means are right.</p>
+<p><strong>The command that finds nothing.</strong> The question was the one from the first example, without pasted lines. This time the tool looked closely: <code>file</code>, <code>cat -A</code>, and the number of fields per line. It found the Windows line endings and gave correct fixes. It also noticed something about its own setup. It ran its commands in Git Bash, where AWK ignores the <code>\r</code> and your command found all 11 lines. It said so, instead of reporting that the command works.</p>
+<p>So the same tool, with the same access to the files, did very different work. In the second question, the text said that something was wrong, so the tool searched for the cause. In the first question, nothing hinted at a problem, so it did not look for one. Empty fields are exactly the kind of problem you don’t know about until you look. File access makes an LLM better at finding a problem you describe. It does not make it look for a problem you don’t know about. For that, you need to know your data.</p>
+<p>Each question was asked once, so this shows what can happen, not what always happens. Two more points before you let a tool read your files:</p>
+<ul>
+<li>Not everyone has such a tool, and some of them need a paid subscription. Everything on this page works with a free chat tool, such as UvA AI Chat.</li>
+<li>A tool that reads your files sends their content to the company behind the LLM. For published example data like this, that is fine. For your own data, check the rules first: see <a href="https://ndombrowski.github.io/cli_workshop/source/llm_usage.html#rules-at-the-uva">Rules at the UvA</a> on the CLI workshop page.</li>
+</ul>
+</div>
+</div>
+</div>
+</section>
+<section id="check-a-claim-in-an-answer" class="level2">
+<h2 class="anchored" data-anchor-id="check-a-claim-in-an-answer">Check a claim in an answer</h2>
+<div class="callout callout-style-default callout-question callout-titled" title="Exercise">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-10-contents" aria-controls="callout-10" aria-expanded="true" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Question</span>Exercise
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-10" class="callout-10-contents callout-collapse collapse show">
+<div class="callout-body-container callout-body">
+<p>For the question “keep the rows where Rootlength is above 50”, both LLMs gave the same command: <code>awk -F'\t' 'NR == 1 || $4 &gt; 50'</code>. One answer explained <code>NR == 1 ||</code> like this:</p>
+<blockquote class="blockquote">
+<p>Without it, the header is dropped. awk compares the string Rootlength with the number 50 as strings, and “Rootlength” &gt; “50” happens to be true, which would keep the header by accident.</p>
+</blockquote>
+<p>The two sentences contradict each other. Which one is true? Check it with one command.</p>
+<div class="callout callout-style-default callout-answer callout-titled" title="Click me to see an answer">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-9-contents" aria-controls="callout-9" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Answer</span>Click me to see an answer
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-9" class="callout-9-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Run the command without <code>NR == 1 ||</code>, and look at the first line of the result:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$4 &gt; 50'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">head</span> <span class="at">-1</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>This prints:</p>
+<pre><code>Nutrient    Condition   Experiment  Rootlength  FW_shoot_mg</code></pre>
+<p>The header is kept, so the second sentence is true and the first one is wrong. You saw this on <a href="../source/awk_table.html#subset-rows-by-a-number">AWK on a table</a>: <code>$4 &gt; 50</code> gives 476 lines, <code>NR &gt; 1 &amp;&amp; $4 &gt; 50</code> gives 475.</p>
+<p>The command itself was fine. The mistake was in the explanation, in the middle of a long answer with variants and caveats. Long answers are not worse, but they give mistakes more places to hide. The CLI workshop has a tip on how to ask for shorter answers (<a href="https://ndombrowski.github.io/cli_workshop/source/llm_usage.html#using-an-llm-to-understand-code">When the answer is longer than you want to read</a>).</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled" title="Tip: check an explanation, not only a command (optional)">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-11-contents" aria-controls="callout-11" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Tip: check an explanation, not only a command (optional)
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-11" class="callout-11-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>You can also ask an LLM to explain a command, for example the join from <a href="../source/awk_join.html">Combining two files</a>:</p>
+<pre><code>Explain this awk command:
+
+awk 'NR==FNR{a[$1]=$4;next}{print $0,a[$2]}' meta.txt growth.txt</code></pre>
+<p>Both LLMs explained <code>NR == FNR</code>, <code>next</code> and the array correctly, with a small made-up example. One answer added a warning: if the first file is empty, “the first line of growth.txt” also passes <code>NR==FNR</code>. The other warned that swapping the two files “breaks the logic entirely”.</p>
+<p>What did the explanations leave out, or get only half right? Think about it first, then run these commands:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># The command on the files from this tutorial</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'NR==FNR{a[$1]=$4;next}{print $0,a[$2]}'</span> mmc5_metadata_named.txt awk_data/Growth_Data.txt <span class="op">&gt;</span> joined.txt</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="fu">wc</span> <span class="at">-l</span> joined.txt</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span> <span class="at">-1</span> joined.txt <span class="kw">|</span> <span class="fu">cat</span> <span class="at">-A</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-m1</span> <span class="st">'129E'</span> joined.txt <span class="kw">|</span> <span class="fu">cat</span> <span class="at">-A</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a><span class="co"># An empty first file</span></span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a><span class="fu">touch</span> empty.txt</span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'NR==FNR{a[$1]=$4;next}{print $0,a[$2]}'</span> empty.txt awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a><span class="co"># The two files swapped</span></span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'NR==FNR{a[$1]=$4;next}{print $0,a[$2]}'</span> awk_data/Growth_Data.txt mmc5_metadata_named.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><code>touch</code> makes an empty file, and <code>grep -m1</code> stops after the first match. This prints:</p>
+<pre><code>595 joined.txt
+Nutrient^ICondition^IExperiment^IRootlength^IFW_shoot_mg $
+low_P^I129E^Iex61^I86.1^I5.5 Rhizobium$
+0
+28</code></pre>
+<ul>
+<li><strong>The separator.</strong> Neither explanation mentions that the command has no <code>-F'\t'</code>. The genus is added after a space, while the other columns are separated by tabs. A tool that reads tabs sees <code>5.5 Rhizobium</code> as one field. And for a strain with an empty genus, the columns shift, so AWK would store the wrong column as its genus (see <a href="../source/awk_join.html#why--ft-matters-here-too">Why <code>-F'\t'</code> matters here too</a>).</li>
+<li><strong>The header.</strong> Neither mentions that the header gets an empty extra column (the space before <code>$</code>).</li>
+<li><strong>The empty first file.</strong> Not only the first line passes <code>NR == FNR</code>, but every line of the growth data. All of them go into the array, and the output is empty, without an error.</li>
+<li><strong>The swapped files.</strong> True, but the logic does not break with an error. You get 28 lines, quietly.</li>
+</ul>
+<p>An explanation is easier to check than a command, but it can still be incomplete. Test the claims that matter for your data.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="what-you-learned" class="level2">
+<h2 class="anchored" data-anchor-id="what-you-learned">What you learned</h2>
+<ul>
+<li>Before you run a command you did not write, decide what you expect. Then go through the routine: input, separator, header, empty fields, what a sed pattern changes, the original file, and the result.</li>
+<li>A command that runs without an error and prints a plausible number of lines is not yet a correct command. Check fixes as carefully as the first command: a matching count can still hide broken lines.</li>
+<li>An LLM only sees what you show it. Pasted lines hide tabs and Windows line endings. When your own command fails, run the checks first, paste their output, and ask what it means.</li>
+<li>An LLM answers the question you ask, also when it can read your files. Tell it what you know about your data, such as empty fields. To know that, and to check the answer, you need to look at your own data.</li>
+<li>The same LLM can answer differently next time. Judge an answer by your checks, not by the tool or by how sure it sounds.</li>
+</ul>
+<p>Keep the commands you have checked in your own notes, as suggested on <a href="../source/awk_table.html#what-you-learned">AWK on a table</a>. A command you checked yourself is the best answer to the next similar question.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/ndombrowski\.github\.io\/AWK_tutorial\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../source/awk_fasta.html" class="pagination-link" aria-label="AWK and sed on FASTA files">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">AWK and sed on FASTA files</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

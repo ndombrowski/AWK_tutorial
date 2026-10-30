@@ -207,7 +207,7 @@ high_P^Imock^Iex64^I^I22.4$
 high_P^Imock^Iex64^I^I26$
 ```
 
-These are the 15 plants without a root length from the [AWK page](awk_table.qmd#missing-values-empty-fields): an empty field is not a number either. In a new table, this check also finds values such as `NA`, `12,5` or `12 mm`.
+These are the 15 plants without a root length from the [AWK page](awk_table.qmd#working-with-missing-values-empty-fields): an empty field is not a number either. In a new table, this check also finds values such as `NA`, `12,5` or `12 mm`.
 
 :::: {.callout-question .callout-warning collapse="false" title="Exercise"}
 On the [sed page](sed_basics.qmd), you added `_host` to every host in column 6 with `NR > 1 { $6 = $6 "_host" }`. Run twice, that command gives `Arabidopsis_host_host`. Change it, so that it adds `_host` only to hosts that do not end in `_host` yet. Use `mmc5_metadata_fixed.txt`, save the result as `metadata_host.txt`, then run your command a second time on `metadata_host.txt` and check that nothing changes.

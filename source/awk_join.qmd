@@ -50,7 +50,7 @@ This prints:
 
 You see that 13 lines now have more than 12 fields, so the `NF` check shows that something is off.
 
-But the 15 lines with 12 fields are not all right either. If you open the table in a spreadsheet program such as Excel, you see three strains with an empty cell in the Genus column: Root154, Root700 and Root77. All three grew on `50% TSB`, a value with a space. You can also find the empty cells with a command, as on the [AWK page](awk_table.qmd#missing-values-empty-fields):
+But the 15 lines with 12 fields are not all right either. If you open the table in a spreadsheet program such as Excel, you see three strains with an empty cell in the Genus column: Root154, Root700 and Root77. All three grew on `50% TSB`, a value with a space. You can also find the empty cells with a command, as on the [AWK page](awk_table.qmd#working-with-missing-values-empty-fields):
 
 ```{bash}
 awk -F'\t' '$4 == ""' mmc5_metadata_fixed.txt | cut -f1,4,10

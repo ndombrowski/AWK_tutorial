@@ -40,7 +40,7 @@ The last point matters most. A command that fails with an error message is easy 
 3.  **Use more of AWK**: change text in one column (`gsub`), search one column (`~`), pass a value into AWK (`-v`), split a value into parts (`split`), and read `BEGIN`, which you see often in code from an LLM or a forum
 4.  **Combine two files**: add information from the strain table to the growth data, make names match, and check the result
 5.  **Use AWK and sed on FASTA files** (optional): count sequences and clean up sequence names
-6.  **Check code from an LLM**: a short routine to test any AWK or sed command before you trust its output (in planning)
+6.  **Check code from an LLM**: a short routine to test any AWK or sed command before you trust its output
 
 ## Before you start
 

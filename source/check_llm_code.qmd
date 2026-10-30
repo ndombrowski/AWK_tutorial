@@ -3,4 +3,402 @@ title: "Checking code from an LLM"
 engine: knitr
 ---
 
-To be written (PLAN.md, step 6).
+LLMs are good at writing AWK and sed. That is exactly why this page exists: you will get a lot of AWK and sed code that you did not write yourself, and most of it will look fine. This page puts the checks from the earlier pages together into a short routine, and then shows what real LLM answers looked like when they were checked with it.
+
+The answers on this page come from October 2026, and each question was asked only once. If you ask the same questions today, your LLM may well get them right. That doesn't make the checks less useful: they are how you find out whether an answer is right, whatever the LLM is and whenever you ask.
+
+General advice on using LLMs, such as which tools you are allowed to use at the UvA, why you should not paste your data, and why you should use an LLM more as a tutor than as a code machine, is on the [Using LLMs page of the CLI workshop](https://ndombrowski.github.io/cli_workshop/source/llm_usage.html). This page does not repeat it. Everything here works with a free chat tool: you paste a question, you read the answer, and you run the checks yourself in your terminal.
+
+You use the same folder as on the previous pages, with `awk_data/`, `mmc5_metadata_fixed.txt` (made on the [sed page](sed_basics.qmd#windows-line-endings)) and `mmc5_metadata_named.txt` (made on the page [More useful AWK](awk_more.qmd#rename-two-strains)). If you do not have them anymore, make them again:
+
+```{bash}
+sed 's/\r$//' awk_data/mmc5_metadata.txt > mmc5_metadata_fixed.txt
+sed 's/^R129_E/129E/; s/^R13_C/13C/' mmc5_metadata_fixed.txt > mmc5_metadata_named.txt
+```
+
+## A routine for any AWK or sed command
+
+Before you run a command that you did not write yourself, go through these questions. You know every check from an earlier page.
+
+| Question | How to check | Where you learned it |
+|------------------------|-----------------------------|-------------------|
+| What do I expect? | Before you run anything: how many lines, which column, how many changes? Write the number down. Without a number, you can't see that the output is wrong | all pages |
+| What does the input look like? | `head`, `cat -A` (tabs are `^I`, Windows line endings `^M`), `file`. With Windows line endings, a text match on the last column finds nothing | [AWK on a table](awk_table.qmd#look-at-the-table-first), [sed](sed_basics.qmd#windows-line-endings) |
+| Does every line have the same number of fields? | `awk -F'\t' '{ print NF }' file \| sort \| uniq -c`. One number: every line has the same columns. More than one: look at the lines that differ first | [AWK on a table](awk_table.qmd#nf-work-with-the-number-of-fields) |
+| Is the separator set? | Look for `-F'\t'` or `FS`. Without it, a value with a space is split in two, and the columns after it shift. If a column is changed, also look for `OFS`. Without it, the changed lines lose their tabs | [AWK on a table](awk_table.qmd#why--ft-matters), [More useful AWK](awk_more.qmd#begin-before-the-first-line) |
+| What happens to the header? | Look for `NR > 1` (skips the header) or `NR == 1` (handles it on its own). If neither is there, the header goes through the same rule as the data | [AWK on a table](awk_table.qmd#nr-work-with-the-header-line) |
+| What happens to empty fields? | Look for a rule such as `$4 != ""` for the number column, before a comparison or a calculation. Without it, an empty field counts as 0 in sums and means | [AWK on a table](awk_table.qmd#working-with-missing-values-empty-fields) |
+| Does a sed command change more than I want? | sed looks at the whole line, not at one column. Count the lines that contain the pattern before (`grep -c`), and look at what changed after (`diff`) | [sed](sed_basics.qmd#sed-sees-the-whole-line-not-columns) |
+| Does it change the original file? | Look for `sed -i`, `dos2unix`, `mv`. If so, run it on a copy, or write to a new file first | [sed](sed_basics.qmd#change-a-file-safely) |
+| Does the result match what I expected? | `wc -l`, `head`, `cut -f... \| sort \| uniq -c`, `diff`, `cmp` | all pages |
+
+The first question matters most. If you don't know which number you expect, you can't see that the output is wrong.
+
+## Example: a command that finds nothing
+
+Asking an LLM to write a command is one thing. Asking it why your own command does not work is harder, as this example shows.
+
+The strain metadata has a column `Colonization` (column 12) with `TRUE`, `FALSE` or `NA`. You want the strains with `TRUE`, but AWK finds none:
+
+```{bash}
+awk -F'\t' '$12 == "TRUE"' awk_data/mmc5_metadata.txt | wc -l
+```
+
+This prints:
+
+```         
+0
+```
+
+But when you count the values in column 12 with `cut`, there are 11:
+
+```{bash}
+cut -f12 awk_data/mmc5_metadata.txt | sort | uniq -c
+```
+
+This prints:
+
+```         
+      1 Colonization
+      3 FALSE
+     13 NA
+     11 TRUE
+```
+
+You may already know the reason from the sed page: this is the file with Windows line endings. But imagine you don't, and you ask an LLM. In October 2026, this question went to two LLMs, ChatGPT and UvA AI Chat (with Claude Sonnet 5.5), both without any memory of earlier chats:
+
+```         
+I have a tab-separated table, metadata.txt. These are the first lines:
+
+strain  Order   Family  Genus   compartment host    nifH    Taxonomy group  optimal dpi Media   RGP Colonization
+Root123D2   Rhizobiales Bradyrhizobiaceae   Afipia  Root    Arabidopsis FALSE   Bradyrhizobium  8   50% TSB TRUE    NA
+Root381 Rhizobiales Bradyrhizobiaceae   Bosea   Root    Arabidopsis FALSE   Bradyrhizobium  3   TY  TRUE    NA
+
+This awk command prints nothing:
+
+awk -F'\t' '$12 == "TRUE"' metadata.txt
+
+But when I open the file, I can see TRUE in column 12 on several lines. Why?
+```
+
+Neither answer found the real cause:
+
+-   The first answer saw spaces between the columns of the pasted lines (copying from a terminal can turn tabs into spaces) and blamed the separator. Its fix: leave out `-F'\t'`.
+-   The second answer counted the columns of the pasted lines, and noticed correctly that in *these* lines `TRUE` is in column 11 (`RGP`), not in column 12. Its fix: use `$11`. Further down, it did list Windows line endings as a possible cause "if TRUE really is in column 12 on other lines".
+
+Both answers sounded sure of themselves, and both fixes work, in the sense that they print something:
+
+```{bash}
+# Fix from the first answer: no -F'\t'
+awk '$12 == "TRUE"' awk_data/mmc5_metadata.txt | wc -l
+
+# Fix from the second answer: column 11
+awk -F'\t' '$11 == "TRUE"' awk_data/mmc5_metadata.txt | wc -l
+```
+
+This prints:
+
+```         
+8
+15
+```
+
+Neither number is 11. Look at the 8 lines of the first fix, with their real columns 11 and 12:
+
+```{bash}
+awk '$12 == "TRUE"' awk_data/mmc5_metadata.txt | cut -f1,11,12
+```
+
+This prints:
+
+```         
+Root123D2   TRUE    NA
+CIAT899 TRUE    NA
+R129_E  TRUE    TRUE
+R129_N  TRUE    NA
+R13_A   TRUE    NA
+R13_C   TRUE    NA
+Rg  TRUE    NA
+Root149 TRUE    NA
+```
+
+Only one of them, `R129_E`, has `TRUE` in column 12. Without `-F'\t'`, values with a space, such as `Taxonomy group` or `50% TSB`, are split in two, and AWK's column 12 is then some other column. The second fix answers a different question: which strains have `TRUE` in the column `RGP`.
+
+Why did both LLMs miss it? The cause, a hidden `\r` at the end of every line, is invisible in the pasted lines. An LLM can only reason about what it sees, so it picks a cause that it can see. And the three lines that `head` happened to show have `NA` in column 12, which pointed both answers in the wrong direction.
+
+Before you read on: you know the look-at-it checks from the earlier pages. What could you paste instead of the plain lines, so that the LLM can see the cause?
+
+### The same question, with other lines pasted
+
+The same question, with `head -3 metadata.txt | cat -A` instead of plain `head -3`, gives the LLM something to see:
+
+```         
+strain^IOrder^IFamily^IGenus^Icompartment^Ihost^InifH^ITaxonomy group^Ioptimal dpi^IMedia^IRGP^IColonization^M$
+Root123D2^IRhizobiales^IBradyrhizobiaceae^IAfipia^IRoot^IArabidopsis^IFALSE^IBradyrhizobium^I8^I50% TSB^ITRUE^INA^M$
+Root381^IRhizobiales^IBradyrhizobiaceae^IBosea^IRoot^IArabidopsis^IFALSE^IBradyrhizobium^I3^ITY^ITRUE^INA^M$
+```
+
+With this, both LLMs named Windows line endings in their first sentence. So when your command does not work, run the look-at-it checks first, paste their output, and ask what it means. The CLI workshop's section [When your code does not work](https://ndombrowski.github.io/cli_workshop/source/llm_usage.html#when-your-code-does-not-work) explains this order in more detail.
+
+Both answers then offered several fixes. Some of them are fine, but check them as carefully as any other command:
+
+-   Both suggested `dos2unix metadata.txt`, the first answer as its main recommendation. `dos2unix` changes the file itself, and it is not always installed: in WSL with Ubuntu, it was not (tested October 2026). The `sed 's/\r$//'` from the sed page writes a new file and works everywhere.
+-   One fix looked fine and was not. That is the exercise below.
+
+:::: {.callout-question .callout-warning collapse="false" title="Exercise"}
+The first answer suggested this fix, which removes the `\r` from column 12 inside AWK:
+
+```{bash}
+awk -F'\t' '{ sub(/\r$/, "", $12) } $12 == "TRUE"' awk_data/mmc5_metadata.txt > colonized.txt
+wc -l colonized.txt
+```
+
+It prints `11 colonized.txt`: the number you expected. Is the result correct? Check it with the commands from the routine above. If something is wrong, can you fix it?
+
+::: {.callout-answer .callout-warning collapse="true" title="Click me to see an answer"}
+Look at the lines and count the fields per line:
+
+```{bash}
+head -2 colonized.txt | cat -A
+awk -F'\t' '{ print NF }' colonized.txt | sort | uniq -c
+```
+
+This prints:
+
+```         
+Root695 Rhizobiales Phyllobacteriaceae Mesorhizobium Root Arabidopsis FALSE Mesorhizobium 3 TY TRUE TRUE$
+R129_E Rhizobiales Rhizobiaceae Rhizobium Root Arabidopsis FALSE Rhizobium spp. 2 TY TRUE TRUE$
+
+     11 1
+```
+
+The table has the right 11 strains, but there are no tabs left (no `^I`): every line is one field. The command changes column 12, and when AWK changes a column, it rebuilds the line with the output separator `OFS`, a space by default. This is the trap from the box [Forget OFS](awk_more.qmd#begin-before-the-first-line) on the page More useful AWK. Here every printed line was changed, so every line broke.
+
+The fix is to set `OFS` as well:
+
+```{bash}
+awk -F'\t' -v OFS='\t' '{ sub(/\r$/, "", $12) } $12 == "TRUE"' awk_data/mmc5_metadata.txt > colonized2.txt
+
+# Check, and compare with the result from the file without Windows line endings
+awk -F'\t' '{ print NF }' colonized2.txt | sort | uniq -c
+awk -F'\t' '$12 == "TRUE"' mmc5_metadata_fixed.txt | cmp - colonized2.txt && echo 'identical'
+```
+
+This prints:
+
+```         
+     11 12
+identical
+```
+
+`cmp -` compares the output of the command before the `|` with the file. The count of 11 was right, and the lines were still broken. A matching count is a good sign, not a proof. Look at the lines too.
+:::
+::::
+
+## Example: one question, two answers
+
+The second example is a request for a command to do some calculations on our growth data. Both LLMs got the same question, with the first 5 lines of `Growth_Data.txt` pasted in:
+
+```         
+I have a tab-separated file. Here are the first lines:
+
+<the output of: head -5 Growth_Data.txt>
+
+Give me an awk command for the mean Rootlength per Nutrient and Condition.
+```
+
+These are the important parts of the two commands:
+
+```         
+# Answer 1
+awk 'BEGIN {FS=OFS="\t"} NR>1 {sum[$1,$2]+=$4; count[$1,$2]++} END {...}'
+
+# Answer 2
+awk -F'\t' 'NR > 1 && $4 != "" { key = $1 FS $2; sum[key] += $4; n[key]++ } END {...}'
+```
+
+:::: {.callout-question .callout-warning collapse="false" title="Exercise"}
+What is the difference between the two commands, and which answer gives the right means? You know the table from [AWK on a table](awk_table.qmd#working-with-missing-values-empty-fields).
+
+::: {.callout-answer .callout-warning collapse="true" title="Click me to see an answer"}
+Answer 2 skips the empty root lengths with `$4 != ""`, and answer 1 does not. So answer 1 counts every empty root length as 0, and its means come out too low in every group with empty root lengths.
+:::
+::::
+
+The difference is the empty root lengths. The first 5 lines have none, so answer 1 had no way to know about them, and it did not ask. Answer 2 added the rule anyway, as a precaution. This is the full command of answer 1, with its output through `cat -A` (the `^\` is explained in the tip below):
+
+```{bash}
+awk 'BEGIN {FS=OFS="\t"} NR>1 {sum[$1,$2]+=$4; count[$1,$2]++} END {for (k in sum) print k, sum[k]/count[k]}' awk_data/Growth_Data.txt | sort | cat -A
+```
+
+This prints:
+
+```         
+high_P^\129E^I98.3585$
+high_P^\13C^I95.4426$
+high_P^\mock^I74.2008$
+low_P^\129E^I64.6906$
+low_P^\13C^I62.7357$
+low_P^\mock^I47.0685$
+```
+
+Here are the means of both answers side by side, rounded to two decimals. The means of answer 2 are the same as on [AWK on a table](awk_table.qmd#mean-per-nutrient-and-condition), which skips the empty fields.
+
+| Nutrient and condition | Answer 1 | Answer 2 |
+|------------------------|---------:|---------:|
+| high_P 129E            |    98.36 |    98.36 |
+| high_P 13C             |    95.44 |    97.69 |
+| high_P mock            |    74.20 |    76.40 |
+| low_P 129E             |    64.69 |    69.92 |
+| low_P 13C              |    62.74 |    64.19 |
+| low_P mock             |    47.07 |    47.07 |
+
+Four of the six means from answer 1 are too low, because AWK counts an empty field as 0. No error, no warning. And two means are right: high_P 129E and low_P mock have no empty root lengths. If you check only one of those two groups, the command looks correct.
+
+::: {.callout-tip title="Tip: what is the `^` in the output? (optional)" collapse="true"}
+Answer 1 stores its groups as `sum[$1,$2]`. With a comma between the two columns, AWK glues the two names together with a hidden character. `cat -A` shows this character as `^\`. It is not meant to be printed, so it is easy to miss in the normal output.
+
+For you, this means that the output of answer 1 has 2 columns, not 3: the group name and the mean. You can't select one condition from it by column, for example with `cut -f2`. Answer 2 builds its group name with `$1 FS $2`, with a tab between the two names, so the nutrient and the condition stay separate columns. On [AWK on a table](awk_table.qmd#mean-per-nutrient-and-condition), you used `$1"-"$2` for the same reason: you can see the dash, and you can split on it later.
+:::
+
+Answer 2 was right here. But it was not "the better LLM" that made the difference. Each LLM was asked once, and the same LLM may well give the other kind of answer next time. What told the two answers apart were the checks: the missing `$4 != ""`, and the output.
+
+So tell the LLM what you know about your file. Here, one sentence would have been enough: "Column 4 has empty fields for missing values."
+
+But you can only write that sentence if you know it. An LLM answers the question you ask, and the problems you don't know about are the ones you don't ask about. So the most useful thing you can bring to an LLM is knowledge of your own data: what the file looks like, how many lines and empty fields it has, and which values you expect. That is also what you need to check the answer.
+
+:::: {.callout-question .callout-warning collapse="false" title="Exercise"}
+Imagine you want to ask an LLM for the mean root length per nutrient and condition, and you have not seen the results above. Which four things about `awk_data/Growth_Data.txt` should the LLM know? Find each one with a command from the earlier pages, and write the sentence you would add to your question.
+
+If you have an LLM that you are allowed to use (see [Rules at the UvA](https://ndombrowski.github.io/cli_workshop/source/llm_usage.html#rules-at-the-uva)), go one step further: ask the question twice, once with only the first 5 lines and once with your sentence added. Then check both answers with the routine from this page.
+
+::: {.callout-answer .callout-warning collapse="true" title="Click me to see an answer"}
+```{bash}
+# The separator and the header line
+head -3 awk_data/Growth_Data.txt | cat -A
+
+# The number of lines
+wc -l awk_data/Growth_Data.txt
+
+# The number of empty root lengths
+awk -F'\t' 'NR > 1 && $4 == ""' awk_data/Growth_Data.txt | wc -l
+```
+
+This prints:
+
+```         
+Nutrient^ICondition^IExperiment^IRootlength^IFW_shoot_mg$
+low_P^Imock^Iex61^I40.4^I6.6$
+low_P^Imock^Iex61^I38^I6.8$
+595 awk_data/Growth_Data.txt
+15
+```
+
+So the sentence could be: "The file is tab-separated, with one header line and 594 plants. Column 4 (Rootlength) has 15 empty fields for missing values."
+
+The `$` at the end of each line also tells you that the file has no Windows line endings (no `^M`), so you don't need to mention them.
+
+These numbers also tell you what to expect from a correct answer: the counts per group add up to 594 minus 15, so 579 plants. You can check that in the output of any command you get.
+
+For the second part there is no fixed answer: LLM answers change from run to run. The checks are the answer. Look for `$4 != ""` or something similar in the command, and compare the counts per group with 579.
+:::
+::::
+
+::: {.callout-tip title="Tip: What if the LLM can read my file? (optional)" collapse="true"}
+Some LLM tools work inside a code editor. They can open your files and run commands themselves, so you don't need to paste lines. You might expect the problems on this page to disappear then. To find out, the two questions from the examples went to such a tool in October 2026: Claude Code in VS Code, in a folder with a copy of the data. Each question started a new session. The tool ran with the author's own settings: a file with standing instructions that the tool reads at the start of every session, and that asks it to check its work carefully. A fresh setup without such a file may well do worse.
+
+**The mean root length per group.** The question was: "In this folder there is Growth_Data.txt. Give me an awk command for the mean Rootlength per Nutrient and Condition." The tool found the file, looked at its first 5 lines with `cat -A`, counted the lines, and wrote a command without `$4 != ""`. It ran the command and showed the output: the same too-low means as answer 1 above, for example 64.7 instead of 69.9 for `low_P-129E`. It had the whole file, but it only looked at the top, where there are no empty fields. And "I ran it and got this output" shows that the command runs, not that the means are right.
+
+**The command that finds nothing.** The question was the one from the first example, without pasted lines. This time the tool looked closely: `file`, `cat -A`, and the number of fields per line. It found the Windows line endings and gave correct fixes. It also noticed something about its own setup. It ran its commands in Git Bash, where AWK ignores the `\r` and your command found all 11 lines. It said so, instead of reporting that the command works.
+
+So the same tool, with the same access to the files, did very different work. In the second question, the text said that something was wrong, so the tool searched for the cause. In the first question, nothing hinted at a problem, so it did not look for one. Empty fields are exactly the kind of problem you don't know about until you look. File access makes an LLM better at finding a problem you describe. It does not make it look for a problem you don't know about. For that, you need to know your data.
+
+Each question was asked once, so this shows what can happen, not what always happens. Two more points before you let a tool read your files:
+
+-   Not everyone has such a tool, and some of them need a paid subscription. Everything on this page works with a free chat tool, such as UvA AI Chat.
+-   A tool that reads your files sends their content to the company behind the LLM. For published example data like this, that is fine. For your own data, check the rules first: see [Rules at the UvA](https://ndombrowski.github.io/cli_workshop/source/llm_usage.html#rules-at-the-uva) on the CLI workshop page.
+:::
+
+## Check a claim in an answer
+
+:::: {.callout-question .callout-warning collapse="false" title="Exercise"}
+For the question "keep the rows where Rootlength is above 50", both LLMs gave the same command: `awk -F'\t' 'NR == 1 || $4 > 50'`. One answer explained `NR == 1 ||` like this:
+
+> Without it, the header is dropped. awk compares the string Rootlength with the number 50 as strings, and "Rootlength" \> "50" happens to be true, which would keep the header by accident.
+
+The two sentences contradict each other. Which one is true? Check it with one command.
+
+::: {.callout-answer .callout-warning collapse="true" title="Click me to see an answer"}
+Run the command without `NR == 1 ||`, and look at the first line of the result:
+
+```{bash}
+awk -F'\t' '$4 > 50' awk_data/Growth_Data.txt | head -1
+```
+
+This prints:
+
+```         
+Nutrient    Condition   Experiment  Rootlength  FW_shoot_mg
+```
+
+The header is kept, so the second sentence is true and the first one is wrong. You saw this on [AWK on a table](awk_table.qmd#subset-rows-by-a-number): `$4 > 50` gives 476 lines, `NR > 1 && $4 > 50` gives 475.
+
+The command itself was fine. The mistake was in the explanation, in the middle of a long answer with variants and caveats. Long answers are not worse, but they give mistakes more places to hide. The CLI workshop has a tip on how to ask for shorter answers ([When the answer is longer than you want to read](https://ndombrowski.github.io/cli_workshop/source/llm_usage.html#using-an-llm-to-understand-code)).
+:::
+::::
+
+::: {.callout-tip title="Tip: check an explanation, not only a command (optional)" collapse="true"}
+You can also ask an LLM to explain a command, for example the join from [Combining two files](awk_join.qmd):
+
+```         
+Explain this awk command:
+
+awk 'NR==FNR{a[$1]=$4;next}{print $0,a[$2]}' meta.txt growth.txt
+```
+
+Both LLMs explained `NR == FNR`, `next` and the array correctly, with a small made-up example. One answer added a warning: if the first file is empty, "the first line of growth.txt" also passes `NR==FNR`. The other warned that swapping the two files "breaks the logic entirely".
+
+What did the explanations leave out, or get only half right? Think about it first, then run these commands:
+
+```{bash}
+# The command on the files from this tutorial
+awk 'NR==FNR{a[$1]=$4;next}{print $0,a[$2]}' mmc5_metadata_named.txt awk_data/Growth_Data.txt > joined.txt
+wc -l joined.txt
+head -1 joined.txt | cat -A
+grep -m1 '129E' joined.txt | cat -A
+
+# An empty first file
+touch empty.txt
+awk 'NR==FNR{a[$1]=$4;next}{print $0,a[$2]}' empty.txt awk_data/Growth_Data.txt | wc -l
+
+# The two files swapped
+awk 'NR==FNR{a[$1]=$4;next}{print $0,a[$2]}' awk_data/Growth_Data.txt mmc5_metadata_named.txt | wc -l
+```
+
+`touch` makes an empty file, and `grep -m1` stops after the first match. This prints:
+
+```         
+595 joined.txt
+Nutrient^ICondition^IExperiment^IRootlength^IFW_shoot_mg $
+low_P^I129E^Iex61^I86.1^I5.5 Rhizobium$
+0
+28
+```
+
+-   **The separator.** Neither explanation mentions that the command has no `-F'\t'`. The genus is added after a space, while the other columns are separated by tabs. A tool that reads tabs sees `5.5 Rhizobium` as one field. And for a strain with an empty genus, the columns shift, so AWK would store the wrong column as its genus (see [Why `-F'\t'` matters here too](awk_join.qmd#why--ft-matters-here-too)).
+-   **The header.** Neither mentions that the header gets an empty extra column (the space before `$`).
+-   **The empty first file.** Not only the first line passes `NR == FNR`, but every line of the growth data. All of them go into the array, and the output is empty, without an error.
+-   **The swapped files.** True, but the logic does not break with an error. You get 28 lines, quietly.
+
+An explanation is easier to check than a command, but it can still be incomplete. Test the claims that matter for your data.
+:::
+
+## What you learned
+
+-   Before you run a command you did not write, decide what you expect. Then go through the routine: input, separator, header, empty fields, what a sed pattern changes, the original file, and the result.
+-   A command that runs without an error and prints a plausible number of lines is not yet a correct command. Check fixes as carefully as the first command: a matching count can still hide broken lines.
+-   An LLM only sees what you show it. Pasted lines hide tabs and Windows line endings. When your own command fails, run the checks first, paste their output, and ask what it means.
+-   An LLM answers the question you ask, also when it can read your files. Tell it what you know about your data, such as empty fields. To know that, and to check the answer, you need to look at your own data.
+-   The same LLM can answer differently next time. Judge an answer by your checks, not by the tool or by how sure it sounds.
+
+Keep the commands you have checked in your own notes, as suggested on [AWK on a table](awk_table.qmd#what-you-learned). A command you checked yourself is the best answer to the next similar question.

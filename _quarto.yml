@@ -6,8 +6,6 @@ project:
   # AWK_tutorial.Rmd do not become pages
   render:
     - "*.qmd"
-    # Not part of the site yet (not written yet)
-    - "!source/check_llm_code.qmd"
 
 website:
   title: "Working with tables using AWK and sed"
@@ -27,6 +25,7 @@ website:
       - source/awk_more.qmd
       - source/awk_join.qmd
       - source/awk_fasta.qmd
+      - source/check_llm_code.qmd
 
 format:
   html:

@@ -348,6 +348,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text">AWK and sed on FASTA files</span></a>
   </div>
 </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../source/check_llm_code.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Checking code from an LLM</span></a>
+  </div>
+</li>
     </ul>
     </div>
 </nav>
@@ -427,7 +433,7 @@ Root381 Rhizobiales Bradyrhizobiaceae   Bosea   Root    Arabidopsis
      12 13
       1 14</code></pre>
 <p>You see that 13 lines now have more than 12 fields, so the <code>NF</code> check shows that something is off.</p>
-<p>But the 15 lines with 12 fields are not all right either. If you open the table in a spreadsheet program such as Excel, you see three strains with an empty cell in the Genus column: Root154, Root700 and Root77. All three grew on <code>50% TSB</code>, a value with a space. You can also find the empty cells with a command, as on the <a href="../source/awk_table.html#missing-values-empty-fields">AWK page</a>:</p>
+<p>But the 15 lines with 12 fields are not all right either. If you open the table in a spreadsheet program such as Excel, you see three strains with an empty cell in the Genus column: Root154, Root700 and Root77. All three grew on <code>50% TSB</code>, a value with a space. You can also find the empty cells with a command, as on the <a href="../source/awk_table.html#working-with-missing-values-empty-fields">AWK page</a>:</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$4 == ""'</span> mmc5_metadata_fixed.txt <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-f1,4,10</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
@@ -930,7 +936,7 @@ low_P   mock    ex61    38  6.8
 <li>A missing name gives an empty field, not an error. After a join, count the lines, count the empty fields and see which names they belong to, and look for entries that were not used. Read the names these checks print, not only the counts.</li>
 <li>A Windows line ending travels into your result when you add the last column. Remove it before the join.</li>
 </ul>
-<p>The next page, <a href="../source/awk_fasta.html">AWK and sed on FASTA files</a>, is optional. It uses AWK and sed on sequence files. After it, <a href="check_llm_code.qmd">Checking code from an LLM</a> puts the checks from all pages together.</p>
+<p>The next page, <a href="../source/awk_fasta.html">AWK and sed on FASTA files</a>, is optional. It uses AWK and sed on sequence files. After it, <a href="../source/check_llm_code.html">Checking code from an LLM</a> puts the checks from all pages together.</p>
 
 
 </section>
