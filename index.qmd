@@ -4,8 +4,6 @@ title: "Welcome"
 
 This tutorial shows you how to work with tables and other text files on the command line with two small tools: AWK and sed. You can use these tools to select rows and columns, to calculate sums and means, to clean up names, and to combine information from two files. You will try every command on real biological data: a table with plant growth measurements, and a table with information on the bacterial strains used in that experiment.
 
-**Important: This tutorial is still work in progress, missing chapters will be added over time**
-
 ## What are AWK and sed?
 
 **AWK** is a small programming language made for tables. It reads a file one line at a time and splits each line into **fields**, the separate values in a line, like the cells in one row of a spreadsheet. You then tell AWK what to do with these fields, for example "print the second and fourth column" or "keep only the rows where the root length is above 50".

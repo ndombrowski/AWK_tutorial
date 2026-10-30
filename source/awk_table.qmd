@@ -328,12 +328,26 @@ This prints:
 You sometimes might also need `||`, which means "or": use this if you want at least one of the conditions to be true.
 
 ```{bash}
-# Low phosphorus and no bacteria
-awk -F'\t' '$1 == "low_P" && $2 == "mock"' awk_data/Growth_Data.txt
+# Low phosphorus and no bacteria: show the first 3 lines
+awk -F'\t' '$1 == "low_P" && $2 == "mock"' awk_data/Growth_Data.txt | head -3
 
-# Either of the two bacteria
-awk -F'\t' '$2 == "129E" || $2 == "13C"' awk_data/Growth_Data.txt
+# Either of the two bacteria: show the first 3 lines
+awk -F'\t' '$2 == "129E" || $2 == "13C"' awk_data/Growth_Data.txt | head -3
 ```
+
+This prints:
+
+```
+low_P   mock    ex61    40.4    6.6
+low_P   mock    ex61    38  6.8
+low_P   mock    ex61    74.7    8.1
+
+low_P   13C ex61    54.3    1.56
+low_P   13C ex61    81  4
+low_P   13C ex61    64  5.7
+```
+
+With one line you just answered "which plants grew with low phosphorus and no bacteria?". The same line works on a table with 50 rows or with a million, and you can save it and run it again next month.
 
 :::: {.callout-question .callout-warning collapse="false" title="Exercise"}
 1.  How many plants grew with high phosphorus and bacterium `13C`? Before you run it, predict roughly: the table has 594 plants, in 2 nutrient levels × 3 conditions = 6 groups. About how many plants do you expect in one group?
@@ -364,7 +378,7 @@ For question 1, 594 / 6 gives about 99 plants per group, so 87 is close to what 
 
 ## Working with missing values: empty fields
 
-Next let's look at one example to showcase why it is important to carefully check your data. For this, look for plants with very short roots, below 10 mm:
+The next example shows why it is important to check your data carefully. Look for plants with very short roots, below 10 mm:
 
 ```{bash}
 awk -F'\t' 'NR > 1 && $4 < 10' awk_data/Growth_Data.txt | wc -l
@@ -435,10 +449,11 @@ AWK can also run without `-F'\t'`. It then splits lines at any run of spaces and
 ```{bash}
 # Line 123, and its column 4 with -F'\t'
 awk -F'\t' 'NR == 123' awk_data/Growth_Data.txt
-awk -F'\t' 'NR == 123 { print $4 }' awk_data/Growth_Data.txt
+# cat -A marks the end of the line with $, so you can see an empty value
+awk -F'\t' 'NR == 123 { print $4 }' awk_data/Growth_Data.txt | cat -A
 
 # Column 4 of the same line without -F'\t'
-awk 'NR == 123 { print $4 }' awk_data/Growth_Data.txt
+awk 'NR == 123 { print $4 }' awk_data/Growth_Data.txt | cat -A
 
 # Number of fields per line without -F'\t'
 awk '{ print NF }' awk_data/Growth_Data.txt | sort | uniq -c
@@ -449,13 +464,15 @@ This prints:
 ```         
 high_P  mock    ex61        18.2
 
-18.2
+$
+
+18.2$
 
      23 4
     572 5
 ```
 
-With `-F'\t'`, column 4 of line 123 is empty (the empty line in the output). Without it, column 4 is 18.2, the shoot weight. The 23 lines with an empty field now have only 4 fields. Again there is no error. The `NF` check from above shows the problem right away, so it is worth running on every new table.
+With `-F'\t'`, column 4 of line 123 is empty: `cat -A` shows only the `$` for the end of the line, with nothing before it. Without `-F'\t'`, column 4 is 18.2, the shoot weight. The 23 lines with an empty field now have only 4 fields. Again there is no error. The `NF` check from above shows the problem right away, so it is worth running on every new table.
 
 The count tells you that 23 lines are different, but not which ones. To find them, use `NF` as a pattern: `NF != 5` keeps only the lines that do not have 5 fields. `print NR, $0` prints the line number in front of each line:
 

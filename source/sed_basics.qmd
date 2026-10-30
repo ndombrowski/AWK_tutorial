@@ -291,9 +291,11 @@ cmp Growth_Data_from_csv.txt awk_data/Growth_Data.txt && echo 'identical'
 
 This prints:
 
-```         
+```
 identical
 ```
+
+One line of sed turned a file from a Dutch spreadsheet into the table you know, byte for byte. If you get 20 such files, a `for` loop does them all with the same line.
 
 :::: {.callout-question .callout-warning collapse="false" title="Exercise"}
 1.  Turn `Growth_Data_dutch.csv` into a real comma-separated file: commas between the columns, and dots as decimal symbol. Check the result with `head` and with the number of fields per line.

@@ -5,10 +5,11 @@ engine: knitr
 
 On this page, you add information from one table to another: the genus of each bacterial strain, from the strain metadata, to each plant in the growth data. Combining two tables by a shared name is called a **join**. It is one of the most common jobs in bioinformatics, for example when you add sample information to a table of read counts, or a taxonomy to a list of sequences. It is also a job where small mistakes give a wrong result without any error message, so a large part of this page is about checking the result.
 
-You use the same folder as on the previous pages. You need two files: `awk_data/Growth_Data.txt`, and `mmc5_metadata_fixed.txt`, the strain metadata without Windows line endings that you made at the end of the [sed page](sed_basics.qmd#windows-line-endings). If you do not have it anymore, make it again:
+You use the same folder as on the previous pages. Besides `awk_data/Growth_Data.txt`, you need two versions of the strain metadata: `mmc5_metadata_fixed.txt`, without Windows line endings, from the [sed page](sed_basics.qmd#windows-line-endings), and `mmc5_metadata_named.txt`, with two strains renamed, from the page [More useful AWK](awk_more.qmd#rename-two-strains). If you do not have them anymore, make them again:
 
 ```{bash}
 sed 's/\r$//' awk_data/mmc5_metadata.txt > mmc5_metadata_fixed.txt
+sed 's/^R129_E/129E/; s/^R13_C/13C/' mmc5_metadata_fixed.txt > mmc5_metadata_named.txt
 ```
 
 ## Look at both files first
@@ -67,18 +68,20 @@ Root77      50% TSB
 Without `-F'\t'`, that line loses one field (the empty genus) and gains one (the space in `50% TSB`), so the count looks fine while the table itself is actually not what you want:
 
 ```{bash}
-awk -F'\t' '$1 == "Root154" { print $4 }' mmc5_metadata_fixed.txt
-awk '$1 == "Root154" { print $4 }' mmc5_metadata_fixed.txt
+# cat -A marks the end of the line with $, so you can see an empty value
+awk -F'\t' '$1 == "Root154" { print $4 }' mmc5_metadata_fixed.txt | cat -A
+awk '$1 == "Root154" { print $4 }' mmc5_metadata_fixed.txt | cat -A
 ```
 
 This prints:
 
-```         
+```
+$
 
-Root
+Root$
 ```
 
-With `-F'\t'`, column 4 of Root154 is empty, which is correct. Without it, column 4 is `Root`, the value from column 5. So always set the field separator, also when a table looks simple.
+With `-F'\t'`, column 4 of Root154 is empty (only the `$` for the end of the line), which is correct. Without it, column 4 is `Root`, the value from column 5. So always set the field separator, also when a table looks simple.
 
 ### The names in both files
 
@@ -114,32 +117,7 @@ You can see that bacteria `129E` and `13C` are the names used in the growth data
 
 This happens all the time: one person writes `Sample-01`, another `Sample_01`, and the sequencing center sends back `S01`. A good habit is to choose one way of naming your samples at the start of a project, for example short names without spaces or special characters, and to use it everywhere: in your lab notes, in file names and in every table. Fixing names afterwards is extra work, and it is easy to get wrong.
 
-Here you change the names in the metadata, the smaller of the two tables. You need to change two names, so it is best to write the two changes out. The `^` means "the start of the line", as on the page [More useful AWK](awk_more.qmd#rename-two-strains). It makes sure that sed changes a name only at the start of a line, in column 1:
-
-```{bash}
-sed 's/^R129_E/129E/; s/^R13_C/13C/' mmc5_metadata_fixed.txt > mmc5_metadata_named.txt
-
-# Check: the same number of lines, and only the lines you wanted changed
-wc -l mmc5_metadata_named.txt
-diff mmc5_metadata_fixed.txt mmc5_metadata_named.txt | cut -f1,4
-```
-
-This prints:
-
-```         
-28 mmc5_metadata_named.txt
-
-11c11
-< R129_E    Rhizobium
----
-> 129E	Rhizobium
-14c14
-< R13_C	Rhizobium
----
-> 13C   Rhizobium
-```
-
-You see that exactly two lines changed. If you made `mmc5_metadata_named.txt` on the previous page, this gives the same file: there, an AWK command did the same rename with `gsub`, and the result was identical. This also shows a good habit: whenever you use a command to change names, check it as above: look at all names after the change, not only at the ones you wanted to change.
+You already made the names match at the start of the page [More useful AWK](awk_more.qmd#rename-two-strains). There you renamed the two strains in the metadata, the smaller of the two tables, with one explicit change per name, and saved the result as `mmc5_metadata_named.txt`. The `diff` showed that exactly two lines changed, lines 11 and 14. That is a good habit to keep: whenever you use a command to change names, look at all names after the change, not only at the ones you wanted to change.
 
 ::: {.callout-tip title="Tip: why not one general rule? (optional)" collapse="true"}
 Another idea to change names is to change all names at once, for example: remove the `R` at the start, and the underscore. `^R` means "an `R` at the start of the line":
@@ -203,7 +181,11 @@ low_P   13C ex61    54.3    1.56    Rhizobium
 low_P   13C ex61    81  4   Rhizobium
 ```
 
-595 lines, as many as in the growth data. The plants with `129E` and `13C` now have `Rhizobium` in a new column 6. The `mock` plants have an empty column 6, because no strain is called `mock`. You will see `NR == FNR` in many AWK commands that combine two files, so it is worth taking it apart.
+595 lines, as many as in the growth data. The plants with `129E` and `13C` now have `Rhizobium` in a new column 6. The `mock` plants have an empty column 6, because no strain is called `mock`.
+
+With two lines of AWK, all 595 plants now carry the genus of their bacterium. With a metadata table of 1,000 strains and a count table of 10,000 samples, the command stays exactly the same.
+
+You will see `NR == FNR` in many AWK commands that combine two files, so it is worth taking it apart.
 
 The command has two parts, each with its own pattern and action: `NR == FNR { genus[$1] = $4; next }` and `{ print $0, genus[$2] }`. For each line, AWK checks the parts from top to bottom, and runs the action of every part whose pattern matches. A part without a pattern runs on every line. `next` stops this: AWK skips the remaining parts and goes on to the next line. Below, you look at each piece in turn.
 

@@ -404,6 +404,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 <p>On this page, you calculate with the growth data: you add a new column, and you calculate sums, counts and means, first for the whole table and then per group. You use the same folder as on the <a href="../source/awk_table.html">last page</a>, with the data in <code>awk_data/</code>.</p>
+<p>You will notice that the commands on this page are longer than the ones on the last page. You could do the same thing in R or Python, and you might wonder why even learn them in AWK? The reason is that in bioinformatics you often only need a quick look at your data: what is the total number of reads I work with, how many plants are in each group, and do the means look sensible? AWK gives you that answer in the terminal, without starting another program or loading the table first. On a computer cluster, where R or Python may not be set up for you, AWK is always there. And because AWK reads a file one line at a time, it also works on files that are too large to open comfortably in R or Excel. For statistics and plots, R or Python remain the better tools. AWK is for the quick check before, or for cleaning up a table before you load it there.</p>
 <p>Calculations are where empty fields do the most damage, so keep the rule from <a href="../source/awk_table.html#working-with-missing-values-empty-fields">AWK on a table</a> in mind: skip empty fields with <code>$4 != ""</code> before you compare or calculate.</p>
 <section id="add-a-column" class="level2">
 <h2 class="anchored" data-anchor-id="add-a-column">Add a column</h2>
@@ -454,7 +455,6 @@ low_P   mock    ex61    38  6.8 0.178947
 </section>
 <section id="sum-and-mean-of-a-column-variables-and-end" class="level2">
 <h2 class="anchored" data-anchor-id="sum-and-mean-of-a-column-variables-and-end">Sum and mean of a column: variables and <code>END</code></h2>
-<p>You will notice that the commands on this page are longer than the ones on the last page. You could do the same thing in R or Python, and you might wonder why even learn them in AWK? The reason is that in bioinformatics you often only need a quick look at your data: what is the total number of reads I work with, how many plants are in each group, and do the means look sensible? AWK gives you that answer in the terminal, without starting another program or loading the table first. On a computer cluster, where R or Python may not be set up for you, AWK is always there. And because AWK reads a file one line at a time, it also works on files that are too large to open comfortably in R or Excel. For statistics and plots, R or Python remain the better tools. AWK is for the quick check before, or for cleaning up a table before you load it there.</p>
 <p>Start with one number: the total shoot weight of all plants. For this, AWK needs a variable, a name that holds a value. You do not need to create it first: AWK makes the variable the first time you use it, and it starts at 0.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR &gt; 1 &amp;&amp; $5 != "" { sum += $5 } END { print sum }'</span> awk_data/Growth_Data.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -576,6 +576,7 @@ high_P-mock 101 76.4
 low_P-129E  99  69.9
 low_P-13C   86  64.2
 low_P-mock  105 47.1</code></pre>
+<p>One command gave you the count and the mean for all six groups, sorted. In Excel, this would be a pivot table that you build by clicking, with no record of how you made it. Here the command is the record.</p>
 <p>Taken apart:</p>
 <ul>
 <li><code>printf</code> with the format <code>"%s\t%d\t%.1f\n"</code>: the group name, a tab, the count as a whole number, a tab, and the mean with one decimal. <code>%s</code> is new: it stands for text, here the group name.</li>

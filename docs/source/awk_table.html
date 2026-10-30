@@ -683,12 +683,21 @@ low_P   mock    ex61    66.5    8.9
 <pre><code>475</code></pre>
 <p>You sometimes might also need <code>||</code>, which means “or”: use this if you want at least one of the conditions to be true.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Low phosphorus and no bacteria</span></span>
-<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$1 == "low_P" &amp;&amp; $2 == "mock"'</span> awk_data/Growth_Data.txt</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Low phosphorus and no bacteria: show the first 3 lines</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$1 == "low_P" &amp;&amp; $2 == "mock"'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">head</span> <span class="at">-3</span></span>
 <span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Either of the two bacteria</span></span>
-<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$2 == "129E" || $2 == "13C"'</span> awk_data/Growth_Data.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Either of the two bacteria: show the first 3 lines</span></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$2 == "129E" || $2 == "13C"'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">head</span> <span class="at">-3</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
+<p>This prints:</p>
+<pre><code>low_P   mock    ex61    40.4    6.6
+low_P   mock    ex61    38  6.8
+low_P   mock    ex61    74.7    8.1
+
+low_P   13C ex61    54.3    1.56
+low_P   13C ex61    81  4
+low_P   13C ex61    64  5.7</code></pre>
+<p>With one line you just answered “which plants grew with low phosphorus and no bacteria?”. The same line works on a table with 50 rows or with a million, and you can save it and run it again next month.</p>
 <div class="callout callout-style-default callout-question callout-titled" title="Exercise">
 <div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-5-contents" aria-controls="callout-5" aria-expanded="true" aria-label="Toggle callout">
 <div class="callout-icon-container">
@@ -718,11 +727,11 @@ low_P   mock    ex61    66.5    8.9
 <div id="callout-4" class="callout-4-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Two text conditions with &amp;&amp;</span></span>
-<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$1 == "high_P" &amp;&amp; $2 == "13C"'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
-<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. NR &gt; 1 keeps the header out</span></span>
-<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR &gt; 1 &amp;&amp; $5 &gt; 20'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Two text conditions with &amp;&amp;</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$1 == "high_P" &amp;&amp; $2 == "13C"'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. NR &gt; 1 keeps the header out</span></span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR &gt; 1 &amp;&amp; $5 &gt; 20'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>87
@@ -739,10 +748,10 @@ low_P   mock    ex61    66.5    8.9
 </section>
 <section id="working-with-missing-values-empty-fields" class="level2">
 <h2 class="anchored" data-anchor-id="working-with-missing-values-empty-fields">Working with missing values: empty fields</h2>
-<p>Next let’s look at one example to showcase why it is important to carefully check your data. For this, look for plants with very short roots, below 10 mm:</p>
+<p>The next example shows why it is important to check your data carefully. Look for plants with very short roots, below 10 mm:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR &gt; 1 &amp;&amp; $4 &lt; 10'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
-<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR &gt; 1 &amp;&amp; $4 &lt; 10'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">head</span> <span class="at">-3</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR &gt; 1 &amp;&amp; $4 &lt; 10'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR &gt; 1 &amp;&amp; $4 &lt; 10'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">head</span> <span class="at">-3</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>15
@@ -752,7 +761,7 @@ high_P  mock    ex64        22.4
 high_P  mock    ex64        26</code></pre>
 <p>This tells you that there seem to be 15 plants with short roots. However, if you look at the table, you notice that none of them actually has a root length below 10. Instead, these rows have no root length at all. <code>cat -A</code> shows you exactly what is in the file for these fields:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR &gt; 1 &amp;&amp; $4 &lt; 10'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">head</span> <span class="at">-3</span> <span class="kw">|</span> <span class="fu">cat</span> <span class="at">-A</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR &gt; 1 &amp;&amp; $4 &lt; 10'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">head</span> <span class="at">-3</span> <span class="kw">|</span> <span class="fu">cat</span> <span class="at">-A</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>high_P^Imock^Iex61^I^I18.2$
@@ -760,9 +769,9 @@ high_P^Imock^Iex64^I^I22.4$
 high_P^Imock^Iex64^I^I26$</code></pre>
 <p>You see two tabs side by side, <code>^I^I</code>, with nothing between them: this is an <strong>empty field</strong> and also how a missing value often looks, for example in a table saved from Excel with empty cells. Now count how many empty fields each column has:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Empty root length (column 4) and empty shoot weight (column 5)</span></span>
-<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$4 == ""'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
-<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$5 == ""'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Empty root length (column 4) and empty shoot weight (column 5)</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$4 == ""'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$5 == ""'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>15
@@ -780,7 +789,7 @@ high_P^Imock^Iex64^I^I26$</code></pre>
 <div class="callout-body-container callout-body">
 <p>Before you compare or calculate with a column, keep only the rows that have a value in it, with <code>$4 != ""</code>. <code>!=</code> means “is not equal to”, and <code>""</code> is empty text, so <code>$4 != ""</code> means “column 4 is not empty”:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR &gt; 1 &amp;&amp; $4 != "" &amp;&amp; $4 &lt; 10'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR &gt; 1 &amp;&amp; $4 != "" &amp;&amp; $4 &lt; 10'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>0</code></pre>
@@ -791,28 +800,31 @@ high_P^Imock^Iex64^I^I26$</code></pre>
 <h3 class="anchored" data-anchor-id="why--ft-matters">Why <code>-F'\t'</code> matters</h3>
 <p>AWK can also run without <code>-F'\t'</code>. It then splits lines at any run of spaces and tabs. For most lines in this table, the result is the same. But AWK then treats the two tabs around an empty field as one separator, and the values move one column to the left. Line 123 is the first row with an empty root length:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb42"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Line 123, and its column 4 with -F'\t'</span></span>
-<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR == 123'</span> awk_data/Growth_Data.txt</span>
-<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR == 123 { print $4 }'</span> awk_data/Growth_Data.txt</span>
-<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Column 4 of the same line without -F'\t'</span></span>
-<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'NR == 123 { print $4 }'</span> awk_data/Growth_Data.txt</span>
-<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb42-8"><a href="#cb42-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Number of fields per line without -F'\t'</span></span>
-<span id="cb42-9"><a href="#cb42-9" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'{ print NF }'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="at">-c</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb43"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Line 123, and its column 4 with -F'\t'</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR == 123'</span> awk_data/Growth_Data.txt</span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a><span class="co"># cat -A marks the end of the line with $, so you can see an empty value</span></span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR == 123 { print $4 }'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">cat</span> <span class="at">-A</span></span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Column 4 of the same line without -F'\t'</span></span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'NR == 123 { print $4 }'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">cat</span> <span class="at">-A</span></span>
+<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-9"><a href="#cb43-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Number of fields per line without -F'\t'</span></span>
+<span id="cb43-10"><a href="#cb43-10" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'{ print NF }'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="at">-c</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>high_P  mock    ex61        18.2
 
-18.2
+$
+
+18.2$
 
      23 4
     572 5</code></pre>
-<p>With <code>-F'\t'</code>, column 4 of line 123 is empty (the empty line in the output). Without it, column 4 is 18.2, the shoot weight. The 23 lines with an empty field now have only 4 fields. Again there is no error. The <code>NF</code> check from above shows the problem right away, so it is worth running on every new table.</p>
+<p>With <code>-F'\t'</code>, column 4 of line 123 is empty: <code>cat -A</code> shows only the <code>$</code> for the end of the line, with nothing before it. Without <code>-F'\t'</code>, column 4 is 18.2, the shoot weight. The 23 lines with an empty field now have only 4 fields. Again there is no error. The <code>NF</code> check from above shows the problem right away, so it is worth running on every new table.</p>
 <p>The count tells you that 23 lines are different, but not which ones. To find them, use <code>NF</code> as a pattern: <code>NF != 5</code> keeps only the lines that do not have 5 fields. <code>print NR, $0</code> prints the line number in front of each line:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb44"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Which lines do not have 5 fields without -F'\t'?</span></span>
-<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'NF != 5 { print NR, $0 }'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">head</span> <span class="at">-3</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb45"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Which lines do not have 5 fields without -F'\t'?</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'NF != 5 { print NR, $0 }'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">head</span> <span class="at">-3</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>33 low_P    mock    ex61    49.6
@@ -847,11 +859,11 @@ high_P^Imock^Iex64^I^I26$</code></pre>
 <div id="callout-7" class="callout-7-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb46"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Without the rule</span></span>
-<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR &gt; 1 &amp;&amp; $5 &lt; 5'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
-<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a><span class="co"># With the rule: skip empty shoot weights</span></span>
-<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR &gt; 1 &amp;&amp; $5 != "" &amp;&amp; $5 &lt; 5'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb47"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Without the rule</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR &gt; 1 &amp;&amp; $5 &lt; 5'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a><span class="co"># With the rule: skip empty shoot weights</span></span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR &gt; 1 &amp;&amp; $5 != "" &amp;&amp; $5 &lt; 5'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>10
@@ -877,20 +889,20 @@ high_P^Imock^Iex64^I^I26$</code></pre>
 <div class="callout-body-container callout-body">
 <p>Empty fields are easy to miss. One way to make them visible is to fill each empty field with <code>NA</code> (not available) and save the result as a new file. In this table, only column 4 and column 5 have empty fields, so you fill those two:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb48"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="co"># If column 4 is empty, put NA into it.</span></span>
-<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a><span class="co"># If column 5 is empty, put NA into it.</span></span>
-<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Then print every line.</span></span>
-<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a><span class="co"># The command is spread over several lines to make it easier to read</span></span>
-<span id="cb48-5"><a href="#cb48-5" aria-hidden="true" tabindex="-1"></a><span class="co"># (more on this on the next page, "Calculate with AWK").</span></span>
-<span id="cb48-6"><a href="#cb48-6" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="at">-v</span> OFS=<span class="st">'\t'</span> <span class="st">'</span></span>
-<span id="cb48-7"><a href="#cb48-7" aria-hidden="true" tabindex="-1"></a><span class="st">  $4 == "" { $4 = "NA" }</span></span>
-<span id="cb48-8"><a href="#cb48-8" aria-hidden="true" tabindex="-1"></a><span class="st">  $5 == "" { $5 = "NA" }</span></span>
-<span id="cb48-9"><a href="#cb48-9" aria-hidden="true" tabindex="-1"></a><span class="st">  { print }</span></span>
-<span id="cb48-10"><a href="#cb48-10" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt <span class="op">&gt;</span> Growth_Data_NA.txt</span>
-<span id="cb48-11"><a href="#cb48-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb48-12"><a href="#cb48-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Check: same number of lines, and line 123 now has NA</span></span>
-<span id="cb48-13"><a href="#cb48-13" aria-hidden="true" tabindex="-1"></a><span class="fu">wc</span> <span class="at">-l</span> Growth_Data_NA.txt</span>
-<span id="cb48-14"><a href="#cb48-14" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR == 123'</span> Growth_Data_NA.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb49"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="co"># If column 4 is empty, put NA into it.</span></span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a><span class="co"># If column 5 is empty, put NA into it.</span></span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Then print every line.</span></span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a><span class="co"># The command is spread over several lines to make it easier to read</span></span>
+<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a><span class="co"># (more on this on the next page, "Calculate with AWK").</span></span>
+<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="at">-v</span> OFS=<span class="st">'\t'</span> <span class="st">'</span></span>
+<span id="cb49-7"><a href="#cb49-7" aria-hidden="true" tabindex="-1"></a><span class="st">  $4 == "" { $4 = "NA" }</span></span>
+<span id="cb49-8"><a href="#cb49-8" aria-hidden="true" tabindex="-1"></a><span class="st">  $5 == "" { $5 = "NA" }</span></span>
+<span id="cb49-9"><a href="#cb49-9" aria-hidden="true" tabindex="-1"></a><span class="st">  { print }</span></span>
+<span id="cb49-10"><a href="#cb49-10" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt <span class="op">&gt;</span> Growth_Data_NA.txt</span>
+<span id="cb49-11"><a href="#cb49-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-12"><a href="#cb49-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Check: same number of lines, and line 123 now has NA</span></span>
+<span id="cb49-13"><a href="#cb49-13" aria-hidden="true" tabindex="-1"></a><span class="fu">wc</span> <span class="at">-l</span> Growth_Data_NA.txt</span>
+<span id="cb49-14"><a href="#cb49-14" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR == 123'</span> Growth_Data_NA.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>595 Growth_Data_NA.txt
@@ -900,22 +912,22 @@ high_P  mock    ex61    NA  18.2</code></pre>
 low_P^Imock^Iex61^I40.4^I6.6$</code></pre>
 <p>If you do not know which columns have empty fields, or there are many columns, you can let AWK go through all fields with a loop. You do not need to remember this form. Keep it in your notes, or ask an LLM for it and check the result as shown here. In this table it gives exactly the same file:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb51"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="co"># For each field in the line (i = 1 up to the number of fields NF):</span></span>
-<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a><span class="co"># if the field is empty, put NA into it. Then print the line.</span></span>
-<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="at">-v</span> OFS=<span class="st">'\t'</span> <span class="st">'</span></span>
-<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a><span class="st">  {</span></span>
-<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a><span class="st">    for (i = 1; i &lt;= NF; i++) {</span></span>
-<span id="cb51-6"><a href="#cb51-6" aria-hidden="true" tabindex="-1"></a><span class="st">      if ($i == "") { $i = "NA" }</span></span>
-<span id="cb51-7"><a href="#cb51-7" aria-hidden="true" tabindex="-1"></a><span class="st">    }</span></span>
-<span id="cb51-8"><a href="#cb51-8" aria-hidden="true" tabindex="-1"></a><span class="st">    print</span></span>
-<span id="cb51-9"><a href="#cb51-9" aria-hidden="true" tabindex="-1"></a><span class="st">  }</span></span>
-<span id="cb51-10"><a href="#cb51-10" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb52"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="co"># For each field in the line (i = 1 up to the number of fields NF):</span></span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a><span class="co"># if the field is empty, put NA into it. Then print the line.</span></span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="at">-v</span> OFS=<span class="st">'\t'</span> <span class="st">'</span></span>
+<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a><span class="st">  {</span></span>
+<span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a><span class="st">    for (i = 1; i &lt;= NF; i++) {</span></span>
+<span id="cb52-6"><a href="#cb52-6" aria-hidden="true" tabindex="-1"></a><span class="st">      if ($i == "") { $i = "NA" }</span></span>
+<span id="cb52-7"><a href="#cb52-7" aria-hidden="true" tabindex="-1"></a><span class="st">    }</span></span>
+<span id="cb52-8"><a href="#cb52-8" aria-hidden="true" tabindex="-1"></a><span class="st">    print</span></span>
+<span id="cb52-9"><a href="#cb52-9" aria-hidden="true" tabindex="-1"></a><span class="st">  }</span></span>
+<span id="cb52-10"><a href="#cb52-10" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Now the missing values are visible when you look at the file. Also, the columns no longer shift in tools that split at spaces and tabs, such as AWK without <code>-F'\t'</code>, or <code>join</code> and <code>column -t</code> with their default settings.</p>
 <p>But when you do this, it’s important to know that <code>NA</code> does not make comparisons safe. <code>NA</code> is text too, and in a text comparison it counts as larger than 50:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb52"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR &gt; 1 &amp;&amp; $4 &gt; 50'</span> Growth_Data_NA.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
-<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR &gt; 1 &amp;&amp; $4 != "NA" &amp;&amp; $4 &gt; 50'</span> Growth_Data_NA.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb53"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR &gt; 1 &amp;&amp; $4 &gt; 50'</span> Growth_Data_NA.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR &gt; 1 &amp;&amp; $4 != "NA" &amp;&amp; $4 &gt; 50'</span> Growth_Data_NA.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>490

@@ -5,6 +5,8 @@ engine: knitr
 
 On this page, you calculate with the growth data: you add a new column, and you calculate sums, counts and means, first for the whole table and then per group. You use the same folder as on the [last page](awk_table.qmd), with the data in `awk_data/`.
 
+You will notice that the commands on this page are longer than the ones on the last page. You could do the same thing in R or Python, and you might wonder why even learn them in AWK? The reason is that in bioinformatics you often only need a quick look at your data: what is the total number of reads I work with, how many plants are in each group, and do the means look sensible? AWK gives you that answer in the terminal, without starting another program or loading the table first. On a computer cluster, where R or Python may not be set up for you, AWK is always there. And because AWK reads a file one line at a time, it also works on files that are too large to open comfortably in R or Excel. For statistics and plots, R or Python remain the better tools. AWK is for the quick check before, or for cleaning up a table before you load it there.
+
 Calculations are where empty fields do the most damage, so keep the rule from [AWK on a table](awk_table.qmd#working-with-missing-values-empty-fields) in mind: skip empty fields with `$4 != ""` before you compare or calculate.
 
 ## Add a column
@@ -60,8 +62,6 @@ When you spread a command over several lines, the opening `{` of an action must 
 :::
 
 ## Sum and mean of a column: variables and `END`
-
-You will notice that the commands on this page are longer than the ones on the last page. You could do the same thing in R or Python, and you might wonder why even learn them in AWK? The reason is that in bioinformatics you often only need a quick look at your data: what is the total number of reads I work with, how many plants are in each group, and do the means look sensible? AWK gives you that answer in the terminal, without starting another program or loading the table first. On a computer cluster, where R or Python may not be set up for you, AWK is always there. And because AWK reads a file one line at a time, it also works on files that are too large to open comfortably in R or Excel. For statistics and plots, R or Python remain the better tools. AWK is for the quick check before, or for cleaning up a table before you load it there.
 
 Start with one number: the total shoot weight of all plants. For this, AWK needs a variable, a name that holds a value. You do not need to create it first: AWK makes the variable the first time you use it, and it starts at 0.
 
@@ -237,6 +237,8 @@ low_P-129E  99  69.9
 low_P-13C   86  64.2
 low_P-mock  105 47.1
 ```
+
+One command gave you the count and the mean for all six groups, sorted. In Excel, this would be a pivot table that you build by clicking, with no record of how you made it. Here the command is the record.
 
 Taken apart:
 
