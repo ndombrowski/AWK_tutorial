@@ -65,8 +65,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../">
-<link href="../source/awk_more.html" rel="next">
-<link href="../source/sed_basics.html" rel="prev">
+<link href="../source/awk_more.html" rel="prev">
 <script src="../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
 <script src="../site_libs/quarto-html/axe/axe-check.js" type="module"></script>
@@ -332,14 +331,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../source/awk_join.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text">Combining two files</span></a>
+  <a href="../source/awk_more.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">More useful AWK</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../source/awk_more.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">AWK forms you will meet</span></a>
+  <a href="../source/awk_join.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Combining two files</span></a>
   </div>
 </li>
     </ul>
@@ -467,7 +466,7 @@ R13_C</code></pre>
 <section id="make-the-names-match" class="level2">
 <h2 class="anchored" data-anchor-id="make-the-names-match">Make the names match</h2>
 <p>This happens all the time: one person writes <code>Sample-01</code>, another <code>Sample_01</code>, and the sequencing center sends back <code>S01</code>. A good habit is to choose one way of naming your samples at the start of a project, for example short names without spaces or special characters, and to use it everywhere: in your lab notes, in file names and in every table. Fixing names afterwards is extra work, and it is easy to get wrong.</p>
-<p>Here you change the names in the metadata, the smaller of the two tables. You need to change two names, so it is best to write the two changes out. The <code>^</code> means “the start of the line”. It makes sure that sed changes a name only at the start of a line, in column 1:</p>
+<p>Here you change the names in the metadata, the smaller of the two tables. You need to change two names, so it is best to write the two changes out. The <code>^</code> means “the start of the line”, as on the page <a href="../source/awk_more.html#rename-two-strains">More useful AWK</a>. It makes sure that sed changes a name only at the start of a line, in column 1:</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'s/^R129_E/129E/; s/^R13_C/13C/'</span> mmc5_metadata_fixed.txt <span class="op">&gt;</span> mmc5_metadata_named.txt</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -486,7 +485,7 @@ R13_C</code></pre>
 &lt; R13_C Rhizobium
 ---
 &gt; 13C   Rhizobium</code></pre>
-<p>You see that exactly two lines changed. This also shows a good habit: whenever you use a command to change names, check it as above: look at all names after the change, not only at the ones you wanted to change.</p>
+<p>You see that exactly two lines changed. If you made <code>mmc5_metadata_named.txt</code> on the previous page, this gives the same file: there, an AWK command did the same rename with <code>gsub</code>, and the result was identical. This also shows a good habit: whenever you use a command to change names, check it as above: look at all names after the change, not only at the ones you wanted to change.</p>
 <div class="callout callout-style-default callout-tip callout-titled" title="Tip: why not one general rule? (optional)">
 <div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
@@ -924,7 +923,7 @@ low_P   mock    ex61    38  6.8
 <li>A missing name gives an empty field, not an error. After a join, count the lines, count the empty fields and see which names they belong to, and look for entries that were not used. Read the names these checks print, not only the counts.</li>
 <li>A Windows line ending travels into your result when you add the last column. Remove it before the join.</li>
 </ul>
-<p>On the next page, <a href="../source/awk_more.html">AWK forms you will meet</a>, you learn to read some AWK forms that are common in code from an LLM, but that this tutorial has not used so far.</p>
+<p>The next page, <a href="awk_fasta.qmd">AWK and sed on FASTA files</a>, is optional. It uses AWK and sed on sequence files. After it, <a href="check_llm_code.qmd">Checking code from an LLM</a> puts the checks from all pages together.</p>
 
 
 </section>
@@ -1345,14 +1344,11 @@ low_P   mock    ex61    38  6.8
   </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="../source/sed_basics.html" class="pagination-link" aria-label="sed basics">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">sed basics</span>
+      <a href="../source/awk_more.html" class="pagination-link" aria-label="More useful AWK">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">More useful AWK</span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="../source/awk_more.html" class="pagination-link" aria-label="AWK forms you will meet">
-        <span class="nav-page-text">AWK forms you will meet</span> <i class="bi bi-arrow-right-short"></i>
-      </a>
   </div>
 </nav>
 </div> <!-- /content -->
