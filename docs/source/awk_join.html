@@ -775,6 +775,7 @@ USDA61</code></pre>
 <div class="callout-body-container callout-body">
 <p>The <code>mock</code> plants got an empty field in the new column. But their genus is not unknown: they got no bacteria at all. Write a second command that puts the text <code>none</code> into column 6 of the <code>mock</code> plants, and leaves all other lines as they are. Use <code>growth_genus.txt</code> as input, save the result as <code>growth_genus_none.txt</code>, and check it.</p>
 <p>Hint: on the sed page, you changed column 2 on some lines only, with a pattern, an action and <code>{ print }</code>.</p>
+<p>Before you check, predict: how many lines should get <code>none</code>, and how many empty fields should be left in column 6? Which checks would show whether you are right?</p>
 <div class="callout callout-style-default callout-answer callout-titled" title="Click me to see an answer">
 <div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-5-contents" aria-controls="callout-5" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
@@ -810,6 +811,7 @@ low_P   mock    ex61    38  6.8 none
     175 13C Rhizobium
       1 Condition   Genus
     209 mock    none</code></pre>
+<p>You can predict both numbers from check 1: the 209 lines without a genus were all <code>mock</code> plants. So 209 lines should get <code>none</code>, and 0 empty fields should be left. Counting the empty fields and counting the values per condition test exactly these two numbers.</p>
 <p>No empty fields are left, and each condition got the value you expected. Note that the command only changes the <code>mock</code> plants. A strain whose name does not match still gets an empty field, so check 1 still finds it. If you filled in every empty field instead, a name that did not match would look the same as a <code>mock</code> plant.</p>
 </div>
 </div>
@@ -848,21 +850,8 @@ low_P   mock    ex61    38  6.8 none
 0
 low_P^I129E^Iex61^I86.1^I5.5^ITRUE^M$</code></pre>
 <p>The <code>\r</code> (<code>^M</code>) came along with the value, so the next command that looks for <code>TRUE</code> finds nothing. If you add column 4 (the genus) from the Windows file instead, the result is exactly the same as from the clean file, because the <code>\r</code> is not in column 4. So a file with Windows line endings can work fine in one join and quietly break the next one. Remove the <code>\r</code> before you combine files, as on the sed page.</p>
-<div class="callout callout-style-default callout-important callout-titled" title="Git Bash hides this problem">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Important</span>Git Bash hides this problem
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>In Git Bash on Windows, AWK drops the <code>\r</code> when it reads the file. There, the join with the Windows file gives exactly the same result as with the clean one, and you find 210 plants with <code>TRUE</code>. On Linux, for example on a computer cluster, you find 0. Check new files with <code>file</code> or <code>cat -A</code> before you combine them, whatever system you work on.</p>
-</div>
-</div>
 <div class="callout callout-style-default callout-question callout-titled" title="Exercise">
-<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-9-contents" aria-controls="callout-9" aria-expanded="true" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-8-contents" aria-controls="callout-8" aria-expanded="true" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -871,14 +860,14 @@ low_P^I129E^Iex61^I86.1^I5.5^ITRUE^M$</code></pre>
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-9" class="callout-9-contents callout-collapse collapse show">
+<div id="callout-8" class="callout-8-contents callout-collapse collapse show">
 <div class="callout-body-container callout-body">
 <ol type="1">
 <li>Add two columns from the metadata to the growth data in one command: the genus (column 4) and <code>Colonization</code> (column 12). Give both new columns a name in the header. Save the result as <code>growth_meta.txt</code>.</li>
-<li>Check the result: the number of lines, the number of fields per line, and which values of <code>Colonization</code> each condition got.</li>
+<li>Before you check, predict: how many lines and how many fields per line do you expect? Then check the result: the number of lines, the number of fields per line, and which values of <code>Colonization</code> each condition got.</li>
 </ol>
 <div class="callout callout-style-default callout-answer callout-titled" title="Click me to see an answer">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-8-contents" aria-controls="callout-8" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-7-contents" aria-controls="callout-7" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -887,7 +876,7 @@ low_P^I129E^Iex61^I86.1^I5.5^ITRUE^M$</code></pre>
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-8" class="callout-8-contents callout-collapse collapse">
+<div id="callout-7" class="callout-7-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
 <p>Use one array per column you want to add:</p>
 <div class="cell">
@@ -917,7 +906,7 @@ low_P   mock    ex61    38  6.8
     175 13C NA
       1 Condition   Colonization
     209 mock</code></pre>
-<p>All 595 lines have 7 fields. <code>129E</code> got <code>TRUE</code>, <code>13C</code> got the text <code>NA</code>, and the <code>mock</code> plants got nothing. Note that the table now holds two kinds of missing values: the text <code>NA</code> from the metadata, and empty fields for the <code>mock</code> plants. When you calculate with such a column, you need the rule from the AWK page for both.</p>
+<p>You can predict both numbers: a join adds columns, not lines, so you expect the 595 lines of the growth data, and 5 + 2 = 7 fields per line. All 595 lines have 7 fields. <code>129E</code> got <code>TRUE</code>, <code>13C</code> got the text <code>NA</code>, and the <code>mock</code> plants got nothing. Note that the table now holds two kinds of missing values: the text <code>NA</code> from the metadata, and empty fields for the <code>mock</code> plants. When you calculate with such a column, you need the rule from the AWK page for both.</p>
 </div>
 </div>
 </div>

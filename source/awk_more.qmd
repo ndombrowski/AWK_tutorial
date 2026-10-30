@@ -210,7 +210,7 @@ high_P^Imock^Iex64^I^I26$
 These are the 15 plants without a root length from the [AWK page](awk_table.qmd#working-with-missing-values-empty-fields): an empty field is not a number either. In a new table, this check also finds values such as `NA`, `12,5` or `12 mm`.
 
 :::: {.callout-question .callout-warning collapse="false" title="Exercise"}
-On the [sed page](sed_basics.qmd), you added `_host` to every host in column 6 with `NR > 1 { $6 = $6 "_host" }`. Run twice, that command gives `Arabidopsis_host_host`. Change it, so that it adds `_host` only to hosts that do not end in `_host` yet. Use `mmc5_metadata_fixed.txt`, save the result as `metadata_host.txt`, then run your command a second time on `metadata_host.txt` and check that nothing changes.
+On the [sed page](sed_basics.qmd), you added `_host` to every host in column 6 with `NR > 1 { $6 = $6 "_host" }`. Run twice, that command gives `Arabidopsis_host_host`. Change it, so that it adds `_host` only to hosts that do not end in `_host` yet. Use `mmc5_metadata_fixed.txt`, save the result as `metadata_host.txt`, then run your command a second time on `metadata_host.txt` and check that nothing changes. Finally, explain your pattern in one sentence, in your own words.
 
 ::: {.callout-answer .callout-warning collapse="true" title="Click me to see an answer"}
 Add `$6 !~ /_host$/` to the pattern. `_host$` means "`_host` at the end", and `!~` means "does not match":
@@ -237,6 +237,8 @@ identical
 ```
 
 The second run changed nothing. A command that you can safely run twice is worth a lot in a script or a notebook that you run again later.
+
+In one sentence, the pattern could read: "on every line after the header, if column 6 does not end in `_host` yet, add `_host` to it". If you can say a command back like this, you understand it well enough to check it. If you cannot, that is the part to look at again.
 :::
 ::::
 

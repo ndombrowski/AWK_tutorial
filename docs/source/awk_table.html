@@ -558,7 +558,7 @@ low_P   38</code></pre>
 <div id="callout-3" class="callout-3-contents callout-collapse collapse show">
 <div class="callout-body-container callout-body">
 <ol type="1">
-<li>Print the columns <code>Experiment</code> and <code>FW_shoot_mg</code>, separated by a tab. Look at the first 4 lines of the result.</li>
+<li>Print the columns <code>Experiment</code> and <code>FW_shoot_mg</code>, separated by a tab. Before you run it, predict: will the header line be in the output? Then look at the first 4 lines of the result.</li>
 </ol>
 <div class="callout callout-style-default callout-answer callout-titled" title="Click me to see an answer">
 <div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
@@ -581,6 +581,7 @@ low_P   38</code></pre>
 ex61    6.6
 ex61    6.8
 ex61    8.1</code></pre>
+<p>The header is in the output. The command has no pattern, so AWK runs the action on every line, the header too. The next section shows how to leave it out.</p>
 </div>
 </div>
 </div>
@@ -701,7 +702,7 @@ low_P   mock    ex61    66.5    8.9
 <div id="callout-5" class="callout-5-contents callout-collapse collapse show">
 <div class="callout-body-container callout-body">
 <ol type="1">
-<li>How many plants grew with high phosphorus and bacterium <code>13C</code>?</li>
+<li>How many plants grew with high phosphorus and bacterium <code>13C</code>? Before you run it, predict roughly: the table has 594 plants, in 2 nutrient levels × 3 conditions = 6 groups. About how many plants do you expect in one group?</li>
 <li>How many plants have a shoot weight above 20 mg?</li>
 </ol>
 <div class="callout callout-style-default callout-answer callout-titled" title="Click me to see an answer">
@@ -728,6 +729,7 @@ low_P   mock    ex61    66.5    8.9
 
 140</code></pre>
 <p>So 87 plants grew with high phosphorus and <code>13C</code>, and 140 plants have a shoot weight above 20 mg.</p>
+<p>For question 1, 594 / 6 gives about 99 plants per group, so 87 is close to what you expect. The groups are not exactly the same size. A result such as 0, or all 594 plants, would tell you at once that the command is wrong.</p>
 </div>
 </div>
 </div>
@@ -830,7 +832,7 @@ high_P^Imock^Iex64^I^I26$</code></pre>
 <div id="callout-8" class="callout-8-contents callout-collapse collapse show">
 <div class="callout-body-container callout-body">
 <ol type="1">
-<li>How many plants have a shoot weight below 5 mg? First write the command without the rule from above. Then add the rule. What is the difference, and why?</li>
+<li>How many plants have a shoot weight below 5 mg? First write the command without the rule from above, and run it. Before you add the rule, predict: how many plants will the rule remove, and why? Then add the rule and compare the result with your prediction.</li>
 </ol>
 <div class="callout callout-style-default callout-answer callout-titled" title="Click me to see an answer">
 <div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-7-contents" aria-controls="callout-7" aria-expanded="false" aria-label="Toggle callout">
@@ -854,7 +856,7 @@ high_P^Imock^Iex64^I^I26$</code></pre>
 <p>This prints:</p>
 <pre><code>10
 2</code></pre>
-<p>Only 2 plants have a shoot weight below 5 mg. The first command also keeps the 8 plants without a shoot weight.</p>
+<p>Only 2 plants have a shoot weight below 5 mg. The rule removes 8 plants: the 8 empty shoot weights you found above. The first command keeps them, because an empty field passes <code>$5 &lt; 5</code>.</p>
 </div>
 </div>
 </div>
@@ -1133,6 +1135,7 @@ low_P-mock  105 47.1</code></pre>
 <div class="callout-body-container callout-body">
 <ol type="1">
 <li>Calculate the mean shoot weight per <code>Condition</code>, with one decimal. How many plants are in each group?</li>
+<li>Before you run it, predict: how many groups do you expect, and what should the counts add up to? Check the output against both numbers.</li>
 </ol>
 <div class="callout callout-style-default callout-answer callout-titled" title="Click me to see an answer">
 <div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-12-contents" aria-controls="callout-12" aria-expanded="false" aria-label="Toggle callout">
@@ -1157,6 +1160,7 @@ low_P-mock  105 47.1</code></pre>
 <pre><code>129E    208 17.6
 13C 173 15.3
 mock    205 16.6</code></pre>
+<p>You expect 3 groups, one per condition. The counts should add up to the 594 plants minus the 8 without a shoot weight: 586, the same number as in the mean for the whole file. And 208 + 173 + 205 = 586. If the counts add up to more, the command did not skip the empty fields or the header.</p>
 </div>
 </div>
 </div>

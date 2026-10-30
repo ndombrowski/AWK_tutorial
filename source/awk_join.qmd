@@ -455,6 +455,8 @@ The `mock` plants got an empty field in the new column. But their genus is not u
 
 Hint: on the sed page, you changed column 2 on some lines only, with a pattern, an action and `{ print }`.
 
+Before you check, predict: how many lines should get `none`, and how many empty fields should be left in column 6? Which checks would show whether you are right?
+
 ::: {.callout-answer .callout-warning collapse="true" title="Click me to see an answer"}
 The pattern `$2 == "mock"` picks the `mock` plants, and the action puts `none` into column 6. The second part, `{ print }`, prints every line, changed or not. `-v OFS='\t'` keeps the tabs in the lines that changed:
 
@@ -484,6 +486,8 @@ low_P   mock    ex61    38  6.8 none
       1 Condition   Genus
     209 mock    none
 ```
+
+You can predict both numbers from check 1: the 209 lines without a genus were all `mock` plants. So 209 lines should get `none`, and 0 empty fields should be left. Counting the empty fields and counting the values per condition test exactly these two numbers.
 
 No empty fields are left, and each condition got the value you expected. Note that the command only changes the `mock` plants. A strain whose name does not match still gets an empty field, so check 1 still finds it. If you filled in every empty field instead, a name that did not match would look the same as a `mock` plant.
 :::
@@ -526,13 +530,9 @@ low_P^I129E^Iex61^I86.1^I5.5^ITRUE^M$
 
 The `\r` (`^M`) came along with the value, so the next command that looks for `TRUE` finds nothing. If you add column 4 (the genus) from the Windows file instead, the result is exactly the same as from the clean file, because the `\r` is not in column 4. So a file with Windows line endings can work fine in one join and quietly break the next one. Remove the `\r` before you combine files, as on the sed page.
 
-::: {.callout-important title="Git Bash hides this problem"}
-In Git Bash on Windows, AWK drops the `\r` when it reads the file. There, the join with the Windows file gives exactly the same result as with the clean one, and you find 210 plants with `TRUE`. On Linux, for example on a computer cluster, you find 0. Check new files with `file` or `cat -A` before you combine them, whatever system you work on.
-:::
-
 :::: {.callout-question .callout-warning collapse="false" title="Exercise"}
 1.  Add two columns from the metadata to the growth data in one command: the genus (column 4) and `Colonization` (column 12). Give both new columns a name in the header. Save the result as `growth_meta.txt`.
-2.  Check the result: the number of lines, the number of fields per line, and which values of `Colonization` each condition got.
+2.  Before you check, predict: how many lines and how many fields per line do you expect? Then check the result: the number of lines, the number of fields per line, and which values of `Colonization` each condition got.
 
 ::: {.callout-answer .callout-warning collapse="true" title="Click me to see an answer"}
 Use one array per column you want to add:
@@ -569,7 +569,7 @@ low_P   mock    ex61    38  6.8
     209 mock
 ```
 
-All 595 lines have 7 fields. `129E` got `TRUE`, `13C` got the text `NA`, and the `mock` plants got nothing. Note that the table now holds two kinds of missing values: the text `NA` from the metadata, and empty fields for the `mock` plants. When you calculate with such a column, you need the rule from the AWK page for both.
+You can predict both numbers: a join adds columns, not lines, so you expect the 595 lines of the growth data, and 5 + 2 = 7 fields per line. All 595 lines have 7 fields. `129E` got `TRUE`, `13C` got the text `NA`, and the `mock` plants got nothing. Note that the table now holds two kinds of missing values: the text `NA` from the metadata, and empty fields for the `mock` plants. When you calculate with such a column, you need the rule from the AWK page for both.
 :::
 ::::
 

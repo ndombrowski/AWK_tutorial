@@ -564,7 +564,7 @@ high_P^Imock^Iex64^I^I26$</code></pre>
 </div>
 <div id="callout-3" class="callout-3-contents callout-collapse collapse show">
 <div class="callout-body-container callout-body">
-<p>On the <a href="../source/sed_basics.html">sed page</a>, you added <code>_host</code> to every host in column 6 with <code>NR &gt; 1 { $6 = $6 "_host" }</code>. Run twice, that command gives <code>Arabidopsis_host_host</code>. Change it, so that it adds <code>_host</code> only to hosts that do not end in <code>_host</code> yet. Use <code>mmc5_metadata_fixed.txt</code>, save the result as <code>metadata_host.txt</code>, then run your command a second time on <code>metadata_host.txt</code> and check that nothing changes.</p>
+<p>On the <a href="../source/sed_basics.html">sed page</a>, you added <code>_host</code> to every host in column 6 with <code>NR &gt; 1 { $6 = $6 "_host" }</code>. Run twice, that command gives <code>Arabidopsis_host_host</code>. Change it, so that it adds <code>_host</code> only to hosts that do not end in <code>_host</code> yet. Use <code>mmc5_metadata_fixed.txt</code>, save the result as <code>metadata_host.txt</code>, then run your command a second time on <code>metadata_host.txt</code> and check that nothing changes. Finally, explain your pattern in one sentence, in your own words.</p>
 <div class="callout callout-style-default callout-answer callout-titled" title="Click me to see an answer">
 <div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
@@ -595,6 +595,7 @@ high_P^Imock^Iex64^I^I26$</code></pre>
 
 identical</code></pre>
 <p>The second run changed nothing. A command that you can safely run twice is worth a lot in a script or a notebook that you run again later.</p>
+<p>In one sentence, the pattern could read: “on every line after the header, if column 6 does not end in <code>_host</code> yet, add <code>_host</code> to it”. If you can say a command back like this, you understand it well enough to check it. If you cannot, that is the part to look at again.</p>
 </div>
 </div>
 </div>

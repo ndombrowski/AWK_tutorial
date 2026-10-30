@@ -260,9 +260,11 @@ Only the letters between the dash and the first underscore (`-LLMG`) are gone, t
 
 ::: {.callout-question .callout-warning collapse="false" title="Exercise"}
 1. Use version 3 on all FASTA files together (`cat awk_data/*.fasta`), not only on the headers, and save the result as `sequences_clean.fasta`.
-2. Check the result: Does it have the same number of lines? Are there duplicate names? Are the sequence lines unchanged? Tip: `cmp` from the [sed page](sed_basics.qmd) compares two files.
+2. Which checks would show that sed changed only the headers, and that the names are still unique? Think of three, then run them. Tip: `cmp` from the [sed page](sed_basics.qmd) compares two files.
 
 ::: {.callout-answer .callout-warning collapse="true" title="Click me to see an answer"}
+Three things could go wrong: a line gets lost, two headers get the same name, or sed changes a sequence line. One check for each:
+
 ```{bash}
 # 1. The sequence lines have no dash, so sed only changes the headers
 cat awk_data/*.fasta | sed 's/-[^_]*_/_/' > sequences_clean.fasta

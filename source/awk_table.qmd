@@ -170,7 +170,7 @@ This prints:
 This tells you that all 595 lines have 5 fields. If some lines had 4 or 6, this would immediately tell you that something in the table would be off. So this is a quick command to check that your data has the right structure.
 
 :::: {.callout-question .callout-warning collapse="false" title="Exercise"}
-1.  Print the columns `Experiment` and `FW_shoot_mg`, separated by a tab. Look at the first 4 lines of the result.
+1.  Print the columns `Experiment` and `FW_shoot_mg`, separated by a tab. Before you run it, predict: will the header line be in the output? Then look at the first 4 lines of the result.
 
 ::: {.callout-answer .callout-warning collapse="true" title="Click me to see an answer"}
 `Experiment` is column 3 and `FW_shoot_mg` is column 5:
@@ -187,6 +187,8 @@ ex61    6.6
 ex61    6.8
 ex61    8.1
 ```
+
+The header is in the output. The command has no pattern, so AWK runs the action on every line, the header too. The next section shows how to leave it out.
 :::
 ::::
 
@@ -334,7 +336,7 @@ awk -F'\t' '$2 == "129E" || $2 == "13C"' awk_data/Growth_Data.txt
 ```
 
 :::: {.callout-question .callout-warning collapse="false" title="Exercise"}
-1.  How many plants grew with high phosphorus and bacterium `13C`?
+1.  How many plants grew with high phosphorus and bacterium `13C`? Before you run it, predict roughly: the table has 594 plants, in 2 nutrient levels × 3 conditions = 6 groups. About how many plants do you expect in one group?
 2.  How many plants have a shoot weight above 20 mg?
 
 ::: {.callout-answer .callout-warning collapse="true" title="Click me to see an answer"}
@@ -355,6 +357,8 @@ This prints:
 ```
 
 So 87 plants grew with high phosphorus and `13C`, and 140 plants have a shoot weight above 20 mg.
+
+For question 1, 594 / 6 gives about 99 plants per group, so 87 is close to what you expect. The groups are not exactly the same size. A result such as 0, or all 594 plants, would tell you at once that the command is wrong.
 :::
 ::::
 
@@ -471,7 +475,7 @@ This prints:
 Lines 33 and 34 have no shoot weight, and line 123 has no root length. Together, the 15 empty root lengths and 8 empty shoot weights make the 23 lines. On a new table, the line numbers tell you where to look, for example with `awk 'NR == 33'`.
 
 :::: {.callout-question .callout-warning collapse="false" title="Exercise"}
-1.  How many plants have a shoot weight below 5 mg? First write the command without the rule from above. Then add the rule. What is the difference, and why?
+1.  How many plants have a shoot weight below 5 mg? First write the command without the rule from above, and run it. Before you add the rule, predict: how many plants will the rule remove, and why? Then add the rule and compare the result with your prediction.
 
 ::: {.callout-answer .callout-warning collapse="true" title="Click me to see an answer"}
 ```{bash}
@@ -489,7 +493,7 @@ This prints:
 2
 ```
 
-Only 2 plants have a shoot weight below 5 mg. The first command also keeps the 8 plants without a shoot weight.
+Only 2 plants have a shoot weight below 5 mg. The rule removes 8 plants: the 8 empty shoot weights you found above. The first command keeps them, because an empty field passes `$5 < 5`.
 :::
 ::::
 
@@ -814,6 +818,7 @@ Without the rule `$4 != ""`, four of the six means are lower. For example, low_P
 
 :::: {.callout-question .callout-warning collapse="false" title="Exercise"}
 1.  Calculate the mean shoot weight per `Condition`, with one decimal. How many plants are in each group?
+2.  Before you run it, predict: how many groups do you expect, and what should the counts add up to? Check the output against both numbers.
 
 ::: {.callout-answer .callout-warning collapse="true" title="Click me to see an answer"}
 `Condition` is column 2, and the shoot weight is column 5. Skip the empty shoot weights:
@@ -832,6 +837,8 @@ This prints:
 13C 173 15.3
 mock    205 16.6
 ```
+
+You expect 3 groups, one per condition. The counts should add up to the 594 plants minus the 8 without a shoot weight: 586, the same number as in the mean for the whole file. And 208 + 173 + 205 = 586. If the counts add up to more, the command did not skip the empty fields or the header.
 :::
 ::::
 

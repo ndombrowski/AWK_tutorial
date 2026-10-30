@@ -98,7 +98,7 @@ All 595 lines have 5 fields, so every tab was replaced.
 
 :::: {.callout-question .callout-warning collapse="false" title="Exercise"}
 1.  Replace `mock` with `control`, and look at the first 3 lines of the result.
-2.  How many lines contain `control` after the change (use `grep` for this task)? Afterwards, confirm the number with AWK: how many lines have `mock` in column 2 in the original file?
+2.  How many lines contain `control` after the change (use `grep` for this task)? Before you count, predict roughly: the table has 594 plants and 3 conditions. Afterwards, confirm the number with AWK: how many lines have `mock` in column 2 in the original file?
 
 ::: {.callout-answer .callout-warning collapse="true" title="Click me to see an answer"}
 ```{bash}
@@ -122,7 +122,7 @@ low_P   control ex61    38  6.8
 209
 ```
 
-Both give 209, so sed changed exactly the 209 `mock` plants. `mock` appears at most once per line, so you do not need the `g` flag here.
+594 / 3 gives about 198, so 209 is close to what you expect. Both commands give 209, so sed changed exactly the 209 `mock` plants. `mock` appears at most once per line, so you do not need the `g` flag here.
 :::
 ::::
 
@@ -297,7 +297,7 @@ identical
 
 :::: {.callout-question .callout-warning collapse="false" title="Exercise"}
 1.  Turn `Growth_Data_dutch.csv` into a real comma-separated file: commas between the columns, and dots as decimal symbol. Check the result with `head` and with the number of fields per line.
-2.  Now swap the order of the two changes in your command. What happens, and why?
+2.  Now swap the order of the two changes in your command. Before you run it, predict: what will the first line look like, and how many fields will each line have? Why? Then run it and compare.
 
 ::: {.callout-answer .callout-warning collapse="true" title="Click me to see an answer"}
 ```{bash}
@@ -686,10 +686,6 @@ Root381^INA$
 ```
 
 The `^M` is gone, and AWK finds the 11 rows. `wc -c` counts characters: the fixed file has 28 lines and 28 characters fewer, one `\r` per line. Keep `mmc5_metadata_fixed.txt`, you use it on the next page.
-
-::: {.callout-important title="Git Bash hides this problem"}
-The outputs on this page come from Linux (Ubuntu in WSL). In Git Bash on Windows, AWK and grep ignore the `\r`: they find 11 rows with `TRUE` also in the original file. The file still has the `\r`, though, and `file`, `cat -A` and sed show it in Git Bash too. As soon as you use the file on Linux, for example on a computer cluster, the problem appears. So check new files with `file` or `cat -A`, whatever system you work on.
-:::
 
 ::: {.callout-tip title="Tip: remove the `\\r` with tr (optional)" collapse="true"}
 You will often see another command for the same job: `tr -d '\r'` deletes every `\r` in a file. `tr` reads only from a pipe or with `<`, not from a file name:

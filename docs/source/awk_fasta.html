@@ -629,7 +629,7 @@ GCF_000714595-ECOLIN_RS22205_97 1726</code></pre>
 <div class="callout-body-container callout-body">
 <ol type="1">
 <li>Use version 3 on all FASTA files together (<code>cat awk_data/*.fasta</code>), not only on the headers, and save the result as <code>sequences_clean.fasta</code>.</li>
-<li>Check the result: Does it have the same number of lines? Are there duplicate names? Are the sequence lines unchanged? Tip: <code>cmp</code> from the <a href="../source/sed_basics.html">sed page</a> compares two files.</li>
+<li>Which checks would show that sed changed only the headers, and that the names are still unique? Think of three, then run them. Tip: <code>cmp</code> from the <a href="../source/sed_basics.html">sed page</a> compares two files.</li>
 </ol>
 <div class="callout callout-style-default callout-answer callout-titled" title="Click me to see an answer">
 <div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
@@ -643,6 +643,7 @@ GCF_000714595-ECOLIN_RS22205_97 1726</code></pre>
 </div>
 <div id="callout-3" class="callout-3-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
+<p>Three things could go wrong: a line gets lost, two headers get the same name, or sed changes a sequence line. One check for each:</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. The sequence lines have no dash, so sed only changes the headers</span></span>
 <span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> awk_data/<span class="pp">*</span>.fasta <span class="kw">|</span> <span class="fu">sed</span> <span class="st">'s/-[^_]*_/_/'</span> <span class="op">&gt;</span> sequences_clean.fasta</span>
