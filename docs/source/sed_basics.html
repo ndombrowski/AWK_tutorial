@@ -66,7 +66,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../">
 <link href="../source/awk_more.html" rel="next">
-<link href="../source/awk_table.html" rel="prev">
+<link href="../source/awk_calc.html" rel="prev">
 <script src="../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
 <script src="../site_libs/quarto-html/axe/axe-check.js" type="module"></script>
@@ -326,6 +326,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="../source/awk_calc.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Calculate with AWK</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="../source/sed_basics.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text">sed basics</span></a>
   </div>
@@ -414,7 +420,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>Making names match.</strong> One table calls a sample <code>Sample-01</code>, another <code>Sample_01</code>. Before you can combine the two tables, in AWK or in R, the names must be written the same way.</li>
 <li><strong>Cleaning a file before another tool reads it.</strong> A table may use commas as decimal symbol, have extra lines at the top, or come with Windows line endings. Some tools stop with an unclear error message on such a file. Others read it without complaint, but wrongly.</li>
 </ul>
-<p>sed does both jobs with one short command, and like AWK, it never changes the file it reads unless you ask for that. You use the same folder as on the <a href="../source/awk_table.html">last page</a>, with the data in <code>awk_data/</code>.</p>
+<p>sed does both jobs with one short command, and like AWK, it never changes the file it reads unless you ask for that. You use the same folder as on the <a href="../source/awk_table.html">previous pages</a>, with the data in <code>awk_data/</code>.</p>
 <section id="the-shape-of-a-sed-command" class="level2">
 <h2 class="anchored" data-anchor-id="the-shape-of-a-sed-command">The shape of a sed command</h2>
 <p>The command you use most often in sed is <code>s</code>, for <strong>substitute</strong> (replace):</p>
@@ -459,7 +465,7 @@ low_P,mock  ex61    38  6.8</code></pre>
 <pre><code>Nutrient,Condition,Experiment,Rootlength,FW_shoot_mg
 low_P,mock,ex61,40.4,6.6
 low_P,mock,ex61,38,6.8</code></pre>
-<p>To check that this worked on the whole file, not only the first lines, count the fields per line with AWK, as on the last page. Since this time the fields are separated by commas, you use <code>-F','</code>:</p>
+<p>To check that this worked on the whole file, not only the first lines, count the fields per line with AWK, as on <a href="../source/awk_table.html#nf-work-with-the-number-of-fields">AWK on a table</a>. Since this time the fields are separated by commas, you use <code>-F','</code>:</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'s/\t/,/g'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">awk</span> <span class="at">-F</span><span class="st">','</span> <span class="st">'{ print NF }'</span> <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="at">-c</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
@@ -547,7 +553,7 @@ low_P   mock    ex61    38  6,8</code></pre>
 </section>
 <section id="sed-sees-the-whole-line-not-columns" class="level2">
 <h2 class="anchored" data-anchor-id="sed-sees-the-whole-line-not-columns">sed sees the whole line, not columns</h2>
-<p>On the last page, <code>grep '13'</code> found 36 more lines than the plants with bacterium <code>13C</code>, because <code>13</code> also appears in numbers such as 13.3. sed has the same problem: it looks for patterns in the whole line, not only in a single column. To test this, replace <code>13</code> with <code>X</code>, then count and look at the lines with an <code>X</code>:</p>
+<p>On <a href="../source/awk_table.html#why-not-use-grep">AWK on a table</a>, <code>grep '13'</code> found 36 more lines than the plants with bacterium <code>13C</code>, because <code>13</code> also appears in numbers such as 13.3. sed has the same problem: it looks for patterns in the whole line, not only in a single column. To test this, replace <code>13</code> with <code>X</code>, then count and look at the lines with an <code>X</code>:</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'s/13/X/g'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-c</span> <span class="st">'X'</span></span>
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'s/13/X/g'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">grep</span> <span class="st">'X'</span> <span class="kw">|</span> <span class="fu">head</span> <span class="at">-3</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -728,7 +734,7 @@ low_P   mock    ex61    38  6.8
 low_P   mock    ex61    40.4    6.6
 low_P   mock    ex61    38  6.8
 low_P   mock    ex61    74.7    8.1</code></pre>
-<p><code>awk 'NR == 123'</code> from the last page does the same.</p>
+<p><code>awk 'NR == 123'</code> from <a href="../source/awk_table.html#why--ft-matters">AWK on a table</a> does the same.</p>
 </div>
 </div>
 </div>
@@ -903,7 +909,7 @@ C58 Legume_host_host</code></pre>
 <div id="callout-10" class="callout-10-contents callout-collapse collapse show">
 <div class="callout-body-container callout-body">
 <ol type="1">
-<li>Add <code>_host</code> to every host in column 6 of <code>awk_data/mmc5_metadata.txt</code>, and save the result in a new file. First look at which hosts there are. Do it once with sed, and once with AWK. Tip: on the <a href="../source/awk_table.html#mean-per-nutrient-and-condition">AWK page</a>, you glued text together with <code>$1"-"$2</code>.</li>
+<li>Add <code>_host</code> to every host in column 6 of <code>awk_data/mmc5_metadata.txt</code>, and save the result in a new file. First look at which hosts there are. Do it once with sed, and once with AWK. Tip: on <a href="../source/awk_calc.html#mean-per-nutrient-and-condition">Calculate with AWK</a>, you glued text together with <code>$1"-"$2</code>.</li>
 <li>Check both results: count the values in column 6, and compare the two files.</li>
 </ol>
 <div class="callout callout-style-default callout-answer callout-titled" title="Click me to see an answer">
@@ -1501,8 +1507,8 @@ Root381^INA$
   </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="../source/awk_table.html" class="pagination-link" aria-label="AWK on a table">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">AWK on a table</span>
+      <a href="../source/awk_calc.html" class="pagination-link" aria-label="Calculate with AWK">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Calculate with AWK</span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">

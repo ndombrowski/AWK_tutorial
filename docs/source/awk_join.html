@@ -326,6 +326,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="../source/awk_calc.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Calculate with AWK</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="../source/sed_basics.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">sed basics</span></a>
   </div>
@@ -433,7 +439,7 @@ Root381 Rhizobiales Bradyrhizobiaceae   Bosea   Root    Arabidopsis
      12 13
       1 14</code></pre>
 <p>You see that 13 lines now have more than 12 fields, so the <code>NF</code> check shows that something is off.</p>
-<p>But the 15 lines with 12 fields are not all right either. If you open the table in a spreadsheet program such as Excel, you see three strains with an empty cell in the Genus column: Root154, Root700 and Root77. All three grew on <code>50% TSB</code>, a value with a space. You can also find the empty cells with a command, as on the <a href="../source/awk_table.html#working-with-missing-values-empty-fields">AWK page</a>:</p>
+<p>But the 15 lines with 12 fields are not all right either. If you open the table in a spreadsheet program such as Excel, you see three strains with an empty cell in the Genus column: Root154, Root700 and Root77. All three grew on <code>50% TSB</code>, a value with a space. You can also find the empty cells with a command, as on <a href="../source/awk_table.html#working-with-missing-values-empty-fields">AWK on a table</a>:</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$4 == ""'</span> mmc5_metadata_fixed.txt <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-f1,4,10</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
@@ -573,7 +579,7 @@ low_P   13C ex61    54.3    1.56    Rhizobium
 low_P   13C ex61    81  4   Rhizobium</code></pre>
 <p>595 lines, as many as in the growth data. The plants with <code>129E</code> and <code>13C</code> now have <code>Rhizobium</code> in a new column 6. The <code>mock</code> plants have an empty column 6, because no strain is called <code>mock</code>. You will see <code>NR == FNR</code> in many AWK commands that combine two files, so it is worth taking it apart.</p>
 <p>The command has two parts, each with its own pattern and action: <code>NR == FNR { genus[$1] = $4; next }</code> and <code>{ print $0, genus[$2] }</code>. For each line, AWK checks the parts from top to bottom, and runs the action of every part whose pattern matches. A part without a pattern runs on every line. <code>next</code> stops this: AWK skips the remaining parts and goes on to the next line. Below, you look at each piece in turn.</p>
-<p><strong><code>NR</code> and <code>FNR</code>.</strong> You know <code>NR</code> from the AWK page: the line number. When AWK reads several files, <code>NR</code> keeps counting across all of them. <code>FNR</code> is the line number within the current file, and starts at 1 again in each new file. <code>FILENAME</code> holds the name of the current file. You can see the difference where AWK moves from the first file to the second (<code>sed -n '27,30p'</code> prints lines 27 to 30):</p>
+<p><strong><code>NR</code> and <code>FNR</code>.</strong> You know <code>NR</code> from <a href="../source/awk_table.html#nr-work-with-the-header-line">AWK on a table</a>: the line number. When AWK reads several files, <code>NR</code> keeps counting across all of them. <code>FNR</code> is the line number within the current file, and starts at 1 again in each new file. <code>FILENAME</code> holds the name of the current file. You can see the difference where AWK moves from the first file to the second (<code>sed -n '27,30p'</code> prints lines 27 to 30):</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'{ print FILENAME, NR, FNR }'</span> mmc5_metadata_named.txt awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">sed</span> <span class="at">-n</span> <span class="st">'27,30p'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
@@ -583,7 +589,7 @@ mmc5_metadata_named.txt 28 28
 awk_data/Growth_Data.txt 29 1
 awk_data/Growth_Data.txt 30 2</code></pre>
 <p>In the first file, <code>NR</code> and <code>FNR</code> are the same. From the second file on, they differ. So the pattern <code>NR == FNR</code> is true only while AWK reads the first file.</p>
-<p><strong>The first part</strong>, <code>NR == FNR { genus[$1] = $4; next }</code>, therefore runs only on the metadata. Here, <code>genus</code> is an array, a variable that holds one value per name, as on the <a href="../source/awk_table.html#count-and-mean-per-group-arrays">AWK page</a>. Take line 11 of the metadata, now that you renamed the strain:</p>
+<p><strong>The first part</strong>, <code>NR == FNR { genus[$1] = $4; next }</code>, therefore runs only on the metadata. Here, <code>genus</code> is an array, a variable that holds one value per name, as on <a href="../source/awk_calc.html#count-and-mean-per-group-arrays">Calculate with AWK</a>. Take line 11 of the metadata, now that you renamed the strain:</p>
 <pre><code>129E    Rhizobiales Rhizobiaceae    Rhizobium   Root    Arabidopsis FALSE   Rhizobium spp.  2   TY  TRUE    TRUE</code></pre>
 <p>Here <code>$1</code> is <code>129E</code> and <code>$4</code> is <code>Rhizobium</code>. So <code>genus[$1] = $4</code> means <code>genus["129E"] = "Rhizobium"</code>: store the genus from column 4 under the name of the strain in column 1. You use the strain as the name, because the strain is what you want to look up later in the growth data. The genus is the value, because that is what you want back. Then <code>next</code> makes AWK go on to the next line, so the second part does not run on the metadata.</p>
 <p>You can look at the values in the array after AWK has read the whole metadata table:</p>
@@ -672,7 +678,7 @@ Root381</code></pre>
 <section id="check-the-result" class="level2">
 <h2 class="anchored" data-anchor-id="check-the-result">Check the result</h2>
 <p>The line count tells you that no lines were lost or added. It does not tell you whether each line got the right genus. Two more checks help.</p>
-<p><strong>Check 1: lines without a genus.</strong> Count the empty fields in column 6, as on the AWK page, and look at which strains they belong to:</p>
+<p><strong>Check 1: lines without a genus.</strong> Count the empty fields in column 6, as on <a href="../source/awk_table.html#working-with-missing-values-empty-fields">AWK on a table</a>, and look at which strains they belong to:</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$6 == ""'</span> growth_genus.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
 <span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$6 == "" { print $2 }'</span> growth_genus.txt <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="at">-c</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -906,7 +912,7 @@ low_P   mock    ex61    38  6.8
     175 13C NA
       1 Condition   Colonization
     209 mock</code></pre>
-<p>You can predict both numbers: a join adds columns, not lines, so you expect the 595 lines of the growth data, and 5 + 2 = 7 fields per line. All 595 lines have 7 fields. <code>129E</code> got <code>TRUE</code>, <code>13C</code> got the text <code>NA</code>, and the <code>mock</code> plants got nothing. Note that the table now holds two kinds of missing values: the text <code>NA</code> from the metadata, and empty fields for the <code>mock</code> plants. When you calculate with such a column, you need the rule from the AWK page for both.</p>
+<p>You can predict both numbers: a join adds columns, not lines, so you expect the 595 lines of the growth data, and 5 + 2 = 7 fields per line. All 595 lines have 7 fields. <code>129E</code> got <code>TRUE</code>, <code>13C</code> got the text <code>NA</code>, and the <code>mock</code> plants got nothing. Note that the table now holds two kinds of missing values: the text <code>NA</code> from the metadata, and empty fields for the <code>mock</code> plants. When you calculate with such a column, you need the rule from <a href="../source/awk_table.html#working-with-missing-values-empty-fields">AWK on a table</a> for both.</p>
 </div>
 </div>
 </div>

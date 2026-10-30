@@ -21,6 +21,7 @@ website:
     contents:
       - index.qmd
       - source/awk_table.qmd
+      - source/awk_calc.qmd
       - source/sed_basics.qmd
       - source/awk_more.qmd
       - source/awk_join.qmd

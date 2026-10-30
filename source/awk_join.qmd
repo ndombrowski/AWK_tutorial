@@ -50,7 +50,7 @@ This prints:
 
 You see that 13 lines now have more than 12 fields, so the `NF` check shows that something is off.
 
-But the 15 lines with 12 fields are not all right either. If you open the table in a spreadsheet program such as Excel, you see three strains with an empty cell in the Genus column: Root154, Root700 and Root77. All three grew on `50% TSB`, a value with a space. You can also find the empty cells with a command, as on the [AWK page](awk_table.qmd#working-with-missing-values-empty-fields):
+But the 15 lines with 12 fields are not all right either. If you open the table in a spreadsheet program such as Excel, you see three strains with an empty cell in the Genus column: Root154, Root700 and Root77. All three grew on `50% TSB`, a value with a space. You can also find the empty cells with a command, as on [AWK on a table](awk_table.qmd#working-with-missing-values-empty-fields):
 
 ```{bash}
 awk -F'\t' '$4 == ""' mmc5_metadata_fixed.txt | cut -f1,4,10
@@ -207,7 +207,7 @@ low_P   13C ex61    81  4   Rhizobium
 
 The command has two parts, each with its own pattern and action: `NR == FNR { genus[$1] = $4; next }` and `{ print $0, genus[$2] }`. For each line, AWK checks the parts from top to bottom, and runs the action of every part whose pattern matches. A part without a pattern runs on every line. `next` stops this: AWK skips the remaining parts and goes on to the next line. Below, you look at each piece in turn.
 
-**`NR` and `FNR`.** You know `NR` from the AWK page: the line number. When AWK reads several files, `NR` keeps counting across all of them. `FNR` is the line number within the current file, and starts at 1 again in each new file. `FILENAME` holds the name of the current file. You can see the difference where AWK moves from the first file to the second (`sed -n '27,30p'` prints lines 27 to 30):
+**`NR` and `FNR`.** You know `NR` from [AWK on a table](awk_table.qmd#nr-work-with-the-header-line): the line number. When AWK reads several files, `NR` keeps counting across all of them. `FNR` is the line number within the current file, and starts at 1 again in each new file. `FILENAME` holds the name of the current file. You can see the difference where AWK moves from the first file to the second (`sed -n '27,30p'` prints lines 27 to 30):
 
 ```{bash}
 awk '{ print FILENAME, NR, FNR }' mmc5_metadata_named.txt awk_data/Growth_Data.txt | sed -n '27,30p'
@@ -224,7 +224,7 @@ awk_data/Growth_Data.txt 30 2
 
 In the first file, `NR` and `FNR` are the same. From the second file on, they differ. So the pattern `NR == FNR` is true only while AWK reads the first file.
 
-**The first part**, `NR == FNR { genus[$1] = $4; next }`, therefore runs only on the metadata. Here, `genus` is an array, a variable that holds one value per name, as on the [AWK page](awk_table.qmd#count-and-mean-per-group-arrays). Take line 11 of the metadata, now that you renamed the strain:
+**The first part**, `NR == FNR { genus[$1] = $4; next }`, therefore runs only on the metadata. Here, `genus` is an array, a variable that holds one value per name, as on [Calculate with AWK](awk_calc.qmd#count-and-mean-per-group-arrays). Take line 11 of the metadata, now that you renamed the strain:
 
 ```         
 129E    Rhizobiales Rhizobiaceae    Rhizobium   Root    Arabidopsis FALSE   Rhizobium spp.  2   TY  TRUE    TRUE
@@ -345,7 +345,7 @@ You get 623 lines instead of 595: first the 28 lines of the metadata, each with 
 
 The line count tells you that no lines were lost or added. It does not tell you whether each line got the right genus. Two more checks help.
 
-**Check 1: lines without a genus.** Count the empty fields in column 6, as on the AWK page, and look at which strains they belong to:
+**Check 1: lines without a genus.** Count the empty fields in column 6, as on [AWK on a table](awk_table.qmd#working-with-missing-values-empty-fields), and look at which strains they belong to:
 
 ```{bash}
 awk -F'\t' '$6 == ""' growth_genus.txt | wc -l
@@ -569,7 +569,7 @@ low_P   mock    ex61    38  6.8
     209 mock
 ```
 
-You can predict both numbers: a join adds columns, not lines, so you expect the 595 lines of the growth data, and 5 + 2 = 7 fields per line. All 595 lines have 7 fields. `129E` got `TRUE`, `13C` got the text `NA`, and the `mock` plants got nothing. Note that the table now holds two kinds of missing values: the text `NA` from the metadata, and empty fields for the `mock` plants. When you calculate with such a column, you need the rule from the AWK page for both.
+You can predict both numbers: a join adds columns, not lines, so you expect the 595 lines of the growth data, and 5 + 2 = 7 fields per line. All 595 lines have 7 fields. `129E` got `TRUE`, `13C` got the text `NA`, and the `mock` plants got nothing. Note that the table now holds two kinds of missing values: the text `NA` from the metadata, and empty fields for the `mock` plants. When you calculate with such a column, you need the rule from [AWK on a table](awk_table.qmd#working-with-missing-values-empty-fields) for both.
 :::
 ::::
 

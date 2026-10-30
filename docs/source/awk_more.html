@@ -326,6 +326,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="../source/awk_calc.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Calculate with AWK</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="../source/sed_basics.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">sed basics</span></a>
   </div>
@@ -434,7 +440,7 @@ identical</code></pre>
 </section>
 <section id="begin-before-the-first-line" class="level2">
 <h2 class="anchored" data-anchor-id="begin-before-the-first-line"><code>BEGIN</code>: before the first line</h2>
-<p><code>BEGIN</code> is a pattern, like <code>NR == 1</code>. Its action runs once, before AWK reads the first line. It is the opposite of <code>END</code>, which you know from the <a href="../source/awk_table.html">AWK page</a>: that action runs once, after the last line. You can see both in a small test:</p>
+<p><code>BEGIN</code> is a pattern, like <code>NR == 1</code>. Its action runs once, before AWK reads the first line. It is the opposite of <code>END</code>, which you know from <a href="../source/awk_calc.html#sum-and-mean-of-a-column-variables-and-end">Calculate with AWK</a>: that action runs once, after the last line. You can see both in a small test:</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'BEGIN { print "start" } END { print "end, lines read:", NR }'</span> mmc5_metadata_fixed.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
@@ -500,7 +506,7 @@ end, lines read: 28</code></pre>
 strain  Order   Family  Genus   compartment host    nifH    Taxonomy_group  optimal dpi Media   RGP Colonization
 
 strain  Order   Family  Genus   compartment host    nifH    Taxonomy_group  optimal_dpi Media   RGP Colonization</code></pre>
-<p><code>sub</code> changed only the first space, <code>gsub</code> both. Here neither has a field after the regular expression, so they work on the whole line. The pattern <code>NR == 1</code> limits the change to the header: the values <code>Rhizobium spp.</code> and <code>50% TSB</code> further down keep their spaces. Check that with <code>diff</code>:</p>
+<p><code>sub</code> changed only the first space, <code>gsub</code> both. Here you give no field after the replacement, so both work on the whole line. The pattern <code>NR == 1</code> limits the change to the header: the values <code>Rhizobium spp.</code> and <code>50% TSB</code> further down keep their spaces. Check that with <code>diff</code>:</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'NR == 1 { gsub(/ /, "_") } { print }'</span> mmc5_metadata_fixed.txt <span class="op">&gt;</span> mmc5_metadata_header.txt</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -551,7 +557,7 @@ Root149 Rhizobium spp.</code></pre>
 high_P^Imock^Iex61^I^I18.2$
 high_P^Imock^Iex64^I^I22.4$
 high_P^Imock^Iex64^I^I26$</code></pre>
-<p>These are the 15 plants without a root length from the <a href="../source/awk_table.html#working-with-missing-values-empty-fields">AWK page</a>: an empty field is not a number either. In a new table, this check also finds values such as <code>NA</code>, <code>12,5</code> or <code>12 mm</code>.</p>
+<p>These are the 15 plants without a root length from <a href="../source/awk_table.html#working-with-missing-values-empty-fields">AWK on a table</a>: an empty field is not a number either. In a new table, this check also finds values such as <code>NA</code>, <code>12,5</code> or <code>12 mm</code>.</p>
 <div class="callout callout-style-default callout-question callout-titled" title="Exercise">
 <div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="true" aria-label="Toggle callout">
 <div class="callout-icon-container">

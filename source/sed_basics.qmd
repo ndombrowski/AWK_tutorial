@@ -10,7 +10,7 @@ Why would you change text with a command, and not by hand? Two jobs come up agai
 -   **Making names match.** One table calls a sample `Sample-01`, another `Sample_01`. Before you can combine the two tables, in AWK or in R, the names must be written the same way.
 -   **Cleaning a file before another tool reads it.** A table may use commas as decimal symbol, have extra lines at the top, or come with Windows line endings. Some tools stop with an unclear error message on such a file. Others read it without complaint, but wrongly.
 
-sed does both jobs with one short command, and like AWK, it never changes the file it reads unless you ask for that. You use the same folder as on the [last page](awk_table.qmd), with the data in `awk_data/`.
+sed does both jobs with one short command, and like AWK, it never changes the file it reads unless you ask for that. You use the same folder as on the [previous pages](awk_table.qmd), with the data in `awk_data/`.
 
 ## The shape of a sed command
 
@@ -82,7 +82,7 @@ low_P,mock,ex61,40.4,6.6
 low_P,mock,ex61,38,6.8
 ```
 
-To check that this worked on the whole file, not only the first lines, count the fields per line with AWK, as on the last page. Since this time the fields are separated by commas, you use `-F','`:
+To check that this worked on the whole file, not only the first lines, count the fields per line with AWK, as on [AWK on a table](awk_table.qmd#nf-work-with-the-number-of-fields). Since this time the fields are separated by commas, you use `-F','`:
 
 ```{bash}
 sed 's/\t/,/g' awk_data/Growth_Data.txt | awk -F',' '{ print NF }' | sort | uniq -c
@@ -173,7 +173,7 @@ Other characters with a special meaning include `*`, `[`, `]`, `^` and `$`. You 
 
 ## sed sees the whole line, not columns
 
-On the last page, `grep '13'` found 36 more lines than the plants with bacterium `13C`, because `13` also appears in numbers such as 13.3. sed has the same problem: it looks for patterns in the whole line, not only in a single column. To test this, replace `13` with `X`, then count and look at the lines with an `X`:
+On [AWK on a table](awk_table.qmd#why-not-use-grep), `grep '13'` found 36 more lines than the plants with bacterium `13C`, because `13` also appears in numbers such as 13.3. sed has the same problem: it looks for patterns in the whole line, not only in a single column. To test this, replace `13` with `X`, then count and look at the lines with an `X`:
 
 ```{bash}
 sed 's/13/X/g' awk_data/Growth_Data.txt | grep -c 'X'
@@ -382,7 +382,7 @@ low_P   mock    ex61    38  6.8
 low_P   mock    ex61    74.7    8.1
 ```
 
-`awk 'NR == 123'` from the last page does the same.
+`awk 'NR == 123'` from [AWK on a table](awk_table.qmd#why--ft-matters) does the same.
 :::
 
 :::: {.callout-question .callout-warning collapse="false" title="Exercise"}
@@ -543,7 +543,7 @@ C58 Legume_host_host
 :::
 
 :::: {.callout-question .callout-warning collapse="false" title="Exercise"}
-1.  Add `_host` to every host in column 6 of `awk_data/mmc5_metadata.txt`, and save the result in a new file. First look at which hosts there are. Do it once with sed, and once with AWK. Tip: on the [AWK page](awk_table.qmd#mean-per-nutrient-and-condition), you glued text together with `$1"-"$2`.
+1.  Add `_host` to every host in column 6 of `awk_data/mmc5_metadata.txt`, and save the result in a new file. First look at which hosts there are. Do it once with sed, and once with AWK. Tip: on [Calculate with AWK](awk_calc.qmd#mean-per-nutrient-and-condition), you glued text together with `$1"-"$2`.
 2.  Check both results: count the values in column 6, and compare the two files.
 
 ::: {.callout-answer .callout-warning collapse="true" title="Click me to see an answer"}

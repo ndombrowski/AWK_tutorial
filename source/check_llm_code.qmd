@@ -242,7 +242,7 @@ low_P^\13C^I62.7357$
 low_P^\mock^I47.0685$
 ```
 
-Here are the means of both answers side by side, rounded to two decimals. The means of answer 2 are the same as on [AWK on a table](awk_table.qmd#mean-per-nutrient-and-condition), which skips the empty fields.
+Here are the means of both answers side by side, rounded to two decimals. The means of answer 2 are the same as on [Calculate with AWK](awk_calc.qmd#mean-per-nutrient-and-condition), which skips the empty fields.
 
 | Nutrient and condition | Answer 1 | Answer 2 |
 |------------------------|---------:|---------:|
@@ -258,7 +258,7 @@ Four of the six means from answer 1 are too low, because AWK counts an empty fie
 ::: {.callout-tip title="Tip: what is the `^` in the output? (optional)" collapse="true"}
 Answer 1 stores its groups as `sum[$1,$2]`. With a comma between the two columns, AWK glues the two names together with a hidden character. `cat -A` shows this character as `^\`. It is not meant to be printed, so it is easy to miss in the normal output.
 
-For you, this means that the output of answer 1 has 2 columns, not 3: the group name and the mean. You can't select one condition from it by column, for example with `cut -f2`. Answer 2 builds its group name with `$1 FS $2`, with a tab between the two names, so the nutrient and the condition stay separate columns. On [AWK on a table](awk_table.qmd#mean-per-nutrient-and-condition), you used `$1"-"$2` for the same reason: you can see the dash, and you can split on it later.
+For you, this means that the output of answer 1 has 2 columns, not 3: the group name and the mean. You can't select one condition from it by column, for example with `cut -f2`. Answer 2 builds its group name with `$1 FS $2`, with a tab between the two names, so the nutrient and the condition stay separate columns. On [Calculate with AWK](awk_calc.qmd#mean-per-nutrient-and-condition), you used `$1"-"$2` for the same reason: you can see the dash, and you can split on it later.
 :::
 
 Answer 2 was right here. But it was not "the better LLM" that made the difference. Each LLM was asked once, and the same LLM may well give the other kind of answer next time. What told the two answers apart were the checks: the missing `$4 != ""`, and the output.

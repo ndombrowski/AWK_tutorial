@@ -325,6 +325,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="../source/awk_calc.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Calculate with AWK</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="../source/sed_basics.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">sed basics</span></a>
   </div>
@@ -658,7 +664,7 @@ high_P^\mock^I74.2008$
 low_P^\129E^I64.6906$
 low_P^\13C^I62.7357$
 low_P^\mock^I47.0685$</code></pre>
-<p>Here are the means of both answers side by side, rounded to two decimals. The means of answer 2 are the same as on <a href="../source/awk_table.html#mean-per-nutrient-and-condition">AWK on a table</a>, which skips the empty fields.</p>
+<p>Here are the means of both answers side by side, rounded to two decimals. The means of answer 2 are the same as on <a href="../source/awk_calc.html#mean-per-nutrient-and-condition">Calculate with AWK</a>, which skips the empty fields.</p>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -714,7 +720,7 @@ low_P^\mock^I47.0685$</code></pre>
 <div id="callout-5" class="callout-5-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
 <p>Answer 1 stores its groups as <code>sum[$1,$2]</code>. With a comma between the two columns, AWK glues the two names together with a hidden character. <code>cat -A</code> shows this character as <code>^\</code>. It is not meant to be printed, so it is easy to miss in the normal output.</p>
-<p>For you, this means that the output of answer 1 has 2 columns, not 3: the group name and the mean. You can’t select one condition from it by column, for example with <code>cut -f2</code>. Answer 2 builds its group name with <code>$1 FS $2</code>, with a tab between the two names, so the nutrient and the condition stay separate columns. On <a href="../source/awk_table.html#mean-per-nutrient-and-condition">AWK on a table</a>, you used <code>$1"-"$2</code> for the same reason: you can see the dash, and you can split on it later.</p>
+<p>For you, this means that the output of answer 1 has 2 columns, not 3: the group name and the mean. You can’t select one condition from it by column, for example with <code>cut -f2</code>. Answer 2 builds its group name with <code>$1 FS $2</code>, with a tab between the two names, so the nutrient and the condition stay separate columns. On <a href="../source/awk_calc.html#mean-per-nutrient-and-condition">Calculate with AWK</a>, you used <code>$1"-"$2</code> for the same reason: you can see the dash, and you can split on it later.</p>
 </div>
 </div>
 </div>
