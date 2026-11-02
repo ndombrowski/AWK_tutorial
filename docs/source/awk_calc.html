@@ -372,6 +372,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#add-a-column" id="toc-add-a-column" class="nav-link active" data-scroll-target="#add-a-column">Add a column</a></li>
   <li><a href="#sum-and-mean-of-a-column-variables-and-end" id="toc-sum-and-mean-of-a-column-variables-and-end" class="nav-link" data-scroll-target="#sum-and-mean-of-a-column-variables-and-end">Sum and mean of a column: variables and <code>END</code></a></li>
+  <li><a href="#nicer-printing-of-results-printf" id="toc-nicer-printing-of-results-printf" class="nav-link" data-scroll-target="#nicer-printing-of-results-printf">Nicer printing of results: <code>printf</code></a></li>
+  <li><a href="#smallest-and-largest-value" id="toc-smallest-and-largest-value" class="nav-link" data-scroll-target="#smallest-and-largest-value">Smallest and largest value</a></li>
   <li><a href="#count-and-mean-per-group-arrays" id="toc-count-and-mean-per-group-arrays" class="nav-link" data-scroll-target="#count-and-mean-per-group-arrays">Count and mean per group: arrays</a>
   <ul class="collapse">
   <li><a href="#mean-per-nutrient-and-condition" id="toc-mean-per-nutrient-and-condition" class="nav-link" data-scroll-target="#mean-per-nutrient-and-condition">Mean per nutrient and condition</a></li>
@@ -403,12 +405,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>On this page, you calculate with the growth data: you add a new column, and you calculate sums, counts and means, first for the whole table and then per group. You use the same folder as on the <a href="../source/awk_table.html">last page</a>, with the data in <code>awk_data/</code>.</p>
-<p>You will notice that the commands on this page are longer than the ones on the last page. You could do the same thing in R or Python, and you might wonder why even learn them in AWK? The reason is that in bioinformatics you often only need a quick look at your data: what is the total number of reads I work with, how many plants are in each group, and do the means look sensible? AWK gives you that answer in the terminal, without starting another program or loading the table first. On a computer cluster, where R or Python may not be set up for you, AWK is always there. And because AWK reads a file one line at a time, it also works on files that are too large to open comfortably in R or Excel. For statistics and plots, R or Python remain the better tools. AWK is for the quick check before, or for cleaning up a table before you load it there.</p>
+<p>On this page, you learn how to do math with AWK with the growth data: you add a new column, and you calculate sums, counts and means, first for the whole table and then per group. You use the same folder as on the <a href="../source/awk_table.html">last page</a>, with the data in <code>awk_data/</code>.</p>
+<p>You will notice that the commands on this page are longer than the ones on the last page. You could do the same thing in R or Python, and you might wonder why even learn them in AWK? The reason is that in bioinformatics you often only need a quick look at your data before you decide to continue with your analysis: what is the total number of reads you work with, how many plants are in each group, and do the means look sensible? AWK gives you that answer in the terminal, without starting another program or loading the table first. And because AWK reads a file one line at a time, it also works on files that are too large to open comfortably in R or Excel. For statistics and plots, R or Python remain the better tools. AWK is for the quick check before, or for cleaning up a table before you load it there.</p>
 <p>Calculations are where empty fields do the most damage, so keep the rule from <a href="../source/awk_table.html#working-with-missing-values-empty-fields">AWK on a table</a> in mind: skip empty fields with <code>$4 != ""</code> before you compare or calculate.</p>
 <section id="add-a-column" class="level2">
 <h2 class="anchored" data-anchor-id="add-a-column">Add a column</h2>
-<p>AWK can calculate with fields. For example, the shoot weight per mm of root is <code>$5 / $4</code>. To add it as a new column at the end of each line, print the whole line <code>$0</code> and then the result:</p>
+<p>AWK can calculate with fields. For example, the shoot weight per mm of root length is <code>$5 / $4</code>. To add it as a new column at the end of each line, print the whole line <code>$0</code> and then the result:</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="at">-v</span> OFS=<span class="st">'\t'</span> <span class="st">'NR &gt; 1 { print $0, $5 / $4 }'</span> awk_data/Growth_Data.txt <span class="op">&gt;</span> shoot_per_root.txt</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -416,9 +418,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <p>This prints:</p>
 <pre><code>awk: cmd. line:1: (FILENAME=awk_data/Growth_Data.txt FNR=123) fatal: division by zero attempted
+
 121 shoot_per_root.txt</code></pre>
-<p>The error message tells you that AWK stopped at line 123: the first row with an empty root length. That is because it treated the empty field as 0, and a division by 0 is not possible. The file <code>shoot_per_root.txt</code> still exists, but it has only 121 lines instead of 594. If you missed the error message and only looked at <code>head</code>, the file would look fine. This is why you want to make it a habit to count lines after each step.</p>
-<p>To fix this, you need to skip rows with an empty root length or shoot weight, and print a header for the new column. The command now has two parts, each with its own pattern and action.</p>
+<p>This didn’t turn out as expected. If you look at the error message it tells you that AWK stopped at line 123: the first row with an empty root length. The error happens because an empty field is treated as a 0, and a division by 0 is not possible. You also see that the file <code>shoot_per_root.txt</code> was generated, but it has only 121 lines instead of 594. If you missed the error message and only looked at <code>head</code>, the file would look fine. This is why you want to make it a habit to count lines after each step.</p>
+<p>To fix this, you need to skip rows with an empty root length or shoot weight, and also print a header for the new column. The command now has two parts, each with its own pattern and action.</p>
 <p>A command with several parts gets long on one line. AWK lets you spread the part between the single quotes over several lines, so you can put each pattern and its action on a line of its own. The command does exactly the same, it is only easier to read. You can copy it into your terminal as it is: the terminal waits for the closing quote before it runs the command.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Part 1: on line 1, print the current header and add a name for the new column</span></span>
@@ -438,7 +441,7 @@ low_P   mock    ex61    40.4    6.6 0.163366
 low_P   mock    ex61    38  6.8 0.178947
 
 572 shoot_per_root.txt</code></pre>
-<p>572 lines: the header plus 571 plants. Does that add up? 594 plants, minus 15 without a root length, minus 8 without a shoot weight, is 571. No plant misses both values, so no row is subtracted twice.</p>
+<p>Your file now has 572 lines: the header plus 571 plants. You want to make it a habit to check, whether this adds up: 594 plants, minus 15 without a root length, minus 8 without a shoot weight, is 571. No plant misses both values, so no row is subtracted twice.</p>
 <div class="callout callout-style-default callout-important callout-titled" title="Keep the opening brace on the same line as its pattern">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -450,6 +453,9 @@ low_P   mock    ex61    38  6.8 0.178947
 </div>
 <div class="callout-body-container callout-body">
 <p>When you spread a command over several lines, the opening <code>{</code> of an action must stay on the same line as its pattern. If you move the <code>{</code> to the next line, AWK reads the pattern on its own (which prints every matching line) and the action on its own (which runs on every line). You get no error, only a different result.</p>
+<p>The same rule holds for <code>END</code>, which you meet in the next section. If its <code>{</code> is on the next line, you do get an error:</p>
+<pre><code>awk: cmd. line:3: END blocks must have an action part</code></pre>
+<p>Here “action part” means the { … } after END. Move the <code>{</code> back up to the line with END.</p>
 </div>
 </div>
 </section>
@@ -457,7 +463,7 @@ low_P   mock    ex61    38  6.8 0.178947
 <h2 class="anchored" data-anchor-id="sum-and-mean-of-a-column-variables-and-end">Sum and mean of a column: variables and <code>END</code></h2>
 <p>Start with one number: the total shoot weight of all plants. For this, AWK needs a variable, a name that holds a value. You do not need to create it first: AWK makes the variable the first time you use it, and it starts at 0.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR &gt; 1 &amp;&amp; $5 != "" { sum += $5 } END { print sum }'</span> awk_data/Growth_Data.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR &gt; 1 &amp;&amp; $5 != "" { sum += $5 } END { print sum }'</span> awk_data/Growth_Data.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>9715.23</code></pre>
@@ -466,74 +472,128 @@ low_P   mock    ex61    38  6.8 0.178947
 <li><code>sum += $5</code>: add the shoot weight of this line to the variable <code>sum</code>. <code>+=</code> means “add to the value that is already in <code>sum</code>”.</li>
 <li><code>END { print sum }</code>: <code>END</code> is a special pattern. Its action runs once, after AWK has read the last line. By then, <code>sum</code> holds the total.</li>
 </ul>
+<p>You use <code>END</code> when you want one answer about the whole file, such as a total, a count or a mean. AWK only knows that answer after it has read every line. When you want a result for each line, such as the filtered rows or the new column above, you don’t need <code>END</code>.</p>
 <p>The name <code>sum</code> is your own choice. You could call it <code>total</code> or <code>weight</code> instead, and get the same result. Names such as <code>NR</code>, <code>NF</code> and <code>END</code> are different: they belong to AWK and have a fixed meaning.</p>
-<p>For the mean, you need a second variable that counts the number of plants measured. Here it is called <code>n</code> (short for “number of plants”), and <code>n++</code> adds 1 to it for each line AWK passed. The <code>;</code> separates two steps inside one action:</p>
+<p>To calculate the mean, you need a second variable that counts the number of plants measured. Here it is called <code>n</code> (short for “number of plants”), and <code>n++</code> adds 1 to it each time the action runs, so once for each line that matches the pattern (here <code>n++</code> does the same as if you would write <code>n += 1</code>). The <code>;</code> separates two steps inside one action:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="st">  NR &gt; 1 &amp;&amp; $5 != "" { sum += $5; n++ }</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="st">  END                { print n, sum, sum / n }</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="st">  NR &gt; 1 &amp;&amp; $5 != "" { sum += $5; n++ }</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="st">  END                { print n, sum, sum / n }</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints the number of plants, the total and the mean:</p>
 <pre><code>586 9715.23 16.5789</code></pre>
 <p>When you run such calculations, you want to check if 586 adds up: 594 plants, minus the 8 without a shoot weight, is 586.</p>
-<p>Now leave out the rule for empty fields, and then also <code>NR &gt; 1</code> to see how slight differences in the code can make a difference:</p>
+<p>Now leave out the check for empty fields, and then also <code>NR &gt; 1</code> to see how slight differences in the code can make a difference:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Without $5 != ""</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="st">  NR &gt; 1 { sum += $5; n++ }</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="st">  END    { print n, sum, sum / n }</span></span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt</span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Also without NR &gt; 1</span></span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'</span></span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="st">  { sum += $5; n++ }</span></span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="st">  END { print n, sum, sum / n }</span></span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Without $5 != ""</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="st">  NR &gt; 1 { sum += $5; n++ }</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="st">  END    { print n, sum, sum / n }</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Also without NR &gt; 1</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="st">  { sum += $5; n++ }</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="st">  END { print n, sum, sum / n }</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>594 9715.23 16.3556
 
 595 9715.23 16.3281</code></pre>
-<p>The total is the same all three times. AWK adds an empty field as 0, and the header text <code>FW_shoot_mg</code> as 0 too, so the sum does not change. But <code>n</code> still counts these lines, so the mean drops. A mean that looks right does not mean that it is actually right. This is a good example to carefully think about what your code is doing since the code runs without any error but the output is still incorrect. In this case the difference is small, but depending on your data, such silent errors can have a large effect.</p>
-<p>The means above have more decimals than the measurements. To round them, use <code>printf</code> instead of <code>print</code>. <code>printf</code> prints with a format that you choose: a piece of text with placeholders that the values fill in order. <code>%d</code> stands for a whole number and <code>%.1f</code> for a number with one decimal. <code>\t</code> is a tab and <code>\n</code> a new line. Everything else in the format, such as <code>n:</code> and <code>mean:</code>, is printed as it is:</p>
+<p>The total is the same all three times. AWK adds an empty field as 0, and the header text <code>FW_shoot_mg</code> as 0 too, so the sum does not change. But <code>n</code> still counts these lines and because of that the mean drops. This means that a mean that looks right does not mean that it is actually right. This is a good example to carefully think about what your code is doing since the code runs without any error but the output is still incorrect. In this case the difference is small, but depending on your data, such silent errors can have a large effect.</p>
+</section>
+<section id="nicer-printing-of-results-printf" class="level2">
+<h2 class="anchored" data-anchor-id="nicer-printing-of-results-printf">Nicer printing of results: <code>printf</code></h2>
+<p>The means above have more decimals than the measurements. To round them, use <code>printf</code> instead of <code>print</code>. With <code>printf</code>, you write the line you want to print as a template in double quotes, with placeholders where the numbers go. After the template, you list the values, separated by commas:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="st">  NR &gt; 1 &amp;&amp; $5 != "" { sum += $5; n++ }</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="st">  END                { printf "n: %d\tmean: %.1f\n", n, sum / n }</span></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="st">  NR &gt; 1 &amp;&amp; $5 != "" { sum += $5; n++ }</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="st">  END                { printf "n: %d\tmean: %.1f\n", n, sum / n }</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>n: 586  mean: 16.6</code></pre>
+<p>Taken apart: <code>printf "n: %d\tmean: %.1f\n", n, sum / n</code></p>
+<ul>
+<li><code>"n: %d\tmean: %.1f\n"</code> is the template. Everything in it is printed as it is, except the placeholders and the two special characters:
+<ul>
+<li><code>%d</code> is a placeholder for a whole number.</li>
+<li><code>%.1f</code> is a placeholder for a number with one decimal. The number after the dot sets the decimals: <code>%.2f</code> gives two, <code>%.0f</code> none.</li>
+<li><code>\t</code> is a tab, and <code>\n</code> a new line.</li>
+</ul></li>
+<li><code>n</code>, <code>sum / n</code> are the values. The first value fills the first placeholder, the second value the second. So <code>n</code> goes into <code>%d</code>, and <code>sum / n</code> into <code>%.1f</code>.</li>
+</ul>
 <p>Unlike <code>print</code>, <code>printf</code> does not start a new line by itself, and it ignores <code>OFS</code>. Leave out the <code>\n</code>, and the prompt of your terminal ends up on the same line as the result. The tab between the values is there only because <code>\t</code> is in the format.</p>
+<p><strong>Placeholders and values must match</strong>. AWK fills the placeholders in order and does not check what you meant. If you swap the values, you get <code>n: 16   mean: 586.0</code> and no error. <code>%d</code> also cuts off the decimals instead of rounding: 16.58 becomes 16. Use <code>%.0f</code> to round to a whole number.</p>
+</section>
+<section id="smallest-and-largest-value" class="level2">
+<h2 class="anchored" data-anchor-id="smallest-and-largest-value">Smallest and largest value</h2>
+<p>Before you calculate with a column, it helps to know its smallest and largest value. A typo such as <code>404</code> instead of <code>40.4</code> shows up at once as the largest value, while a mean would hide it.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="st">  NR &gt; 1 &amp;&amp; $4 != "" {</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="st">    if (n == 0)   { min = $4; max = $4 }</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="st">    if ($4 &lt; min) { min = $4 }</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="st">    if ($4 &gt; max) { max = $4 }</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="st">    n++</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="st">  }</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="st">  END { print n, min, max }</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>This prints the number of plants with a root length, the smallest and the largest root length:</p>
+<pre><code>579 28.73 135.49</code></pre>
+<p>The action has several steps, so it is spread over several lines too. As before, the <code>{</code> stays on the line with the pattern.</p>
+<p>Taken apart:</p>
+<ul>
+<li><code>if (...) { ... }</code>: AWK runs the step in the braces only when the test in the brackets is true.</li>
+<li><code>if (n == 0) { min = $4; max = $4 }</code>: <code>n</code> counts the rows with a root length. It is 0 only on the first of them, so this line gives <code>min</code> and <code>max</code> their start value from that row.</li>
+<li><code>if ($4 &lt; min) { min = $4 }</code>: if this root length is smaller than the smallest one so far, it becomes the new smallest. The next line does the same for the largest.</li>
+<li><code>n++</code>: count this row. It comes after the <code>if</code> lines, so <code>n</code> is still 0 while AWK reads the first row.</li>
+</ul>
+<p>Now leave out the line <code>if (n == 0) ...</code>. Before you run it, predict what <code>min</code> and <code>max</code> will be.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="st">  NR &gt; 1 &amp;&amp; $4 != "" {</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="st">    if ($4 &lt; min) { min = $4 }</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="st">    if ($4 &gt; max) { max = $4 }</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="st">    n++</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="st">  }</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="st">  END { print n, min, max }</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>This prints:</p>
+<pre><code>579  135.49</code></pre>
+<p>Look closely: there are two spaces between the numbers, because the smallest value is missing. <code>min</code> never gets a value, because no root length is smaller than a variable that was never set: AWK treats it as 0 here. <code>print</code> then shows it as empty text. The largest value is still right, because every root length is larger than 0. There is no error, so give <code>min</code> and <code>max</code> a start value from the data, not 0.</p>
 </section>
 <section id="count-and-mean-per-group-arrays" class="level2">
 <h2 class="anchored" data-anchor-id="count-and-mean-per-group-arrays">Count and mean per group: arrays</h2>
-<p><code>sum</code> and <code>n</code> are single variables: each holds one value for the whole file. You can do more than that, for example count the plants per nutrient level. For this, you need one count per group. An <strong>array</strong> is a variable that holds one value per name. <code>n["low_P"]</code> is the count for <code>low_P</code>, and <code>n["high_P"]</code> the count for <code>high_P</code>. Just like a single variable, AWK makes the value for a new name the first time you use it, and it starts at 0.</p>
+<p><code>sum</code> and <code>n</code> are single variables: each holds one value for the whole file. You can do more than that, for example count the plants per nutrient level. For this, you need one count per group. You get this by using an <strong>array</strong>, a variable that holds one value per name. <code>n["low_P"]</code> is the count for <code>low_P</code>, and <code>n["high_P"]</code> the count for <code>high_P</code>. Just like a single variable, AWK makes the value for a new name the first time you use it, and it starts at 0.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="st">  NR &gt; 1 { n[$1]++ }</span></span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="st">  END    { for (group in n) { print group, n[group] } }</span></span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="st">  NR &gt; 1 { n[$1]++ }</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="st">  END    { for (group in n) { print group, n[group] } }</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>low_P 300
 high_P 294</code></pre>
 <p>Taken apart:</p>
 <ul>
-<li><p><code>NR &gt; 1 { n[$1]++ }</code>: for each row of data, add 1 to the count of its nutrient level. Piece by piece:</p>
+<li><code>NR &gt; 1 { n[$1]++ }</code>: for each row of data, add 1 to the count of its nutrient level (in column 1 the levels are: <code>low_P</code> or <code>high_P</code>). Piece by piece::
 <ul>
-<li><code>n</code> is the name of the array.</li>
-<li><code>[$1]</code> picks one name in the array: the text in column 1. On a <code>low_P</code> row that is <code>n["low_P"]</code>.</li>
-<li><code>++</code> adds 1 to the value under that name.</li>
-</ul>
-<p>So after the first <code>low_P</code> row, <code>n["low_P"]</code> is 1, after the second it is 2, and so on.</p></li>
-<li><p><code>END { ... }</code>: as before, this runs once, after the last line.</p></li>
-<li><p><code>for (group in n) { print group, n[group] }</code>: go through all names in <code>n</code>. For each name, put it into the variable <code>group</code>, and print the name and its count.</p></li>
+<li><code>n</code> is the array</li>
+<li><code>[$1]</code>says which count to use: the one named after the text in column 1. On a <code>low_P</code> row that is <code>n["low_P"]</code>, on a high_P row <code>n["high_P"]</code></li>
+<li><code>++</code> adds 1 to that count</li>
+<li>AWK does not need to know the levels in advance. The first time it sees a new text in column 1, it makes a new count for it, starting at 0. So the different values in column 1 become your groups. After the first <code>low_P</code> row, <code>n["low_P"]</code> is 1, after the second it is 2, and so on.</li>
+</ul></li>
+<li><code>END { ... }</code>: as before, this runs once, after the last line</li>
+<li><code>for (group in n) { print group, n[group] }</code>: go through all names in <code>n</code>. For each name, put it into the variable <code>group</code>, and print the name and its count</li>
 </ul>
 <p>You can check the result with tools from the CLI workshop:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cut</span> <span class="at">-f1</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="at">-c</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cut</span> <span class="at">-f1</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="at">-c</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>      1 Nutrient
@@ -541,17 +601,17 @@ high_P 294</code></pre>
     300 low_P</code></pre>
 <p>To calculate the mean per group, you do the same as for the whole file, but with two arrays: <code>sum</code> for the sum per group and <code>n</code> for the count per group. <code>sum[$1] += $4</code> adds the root length to the sum of its group.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Without the rule for empty fields</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'</span></span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="st">  NR &gt; 1 { sum[$1] += $4; n[$1]++ }</span></span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="st">  END    { for (group in sum) { print group, n[group], sum[group] / n[group] } }</span></span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt</span>
-<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="co"># With the rule: skip empty root lengths</span></span>
-<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'</span></span>
-<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a><span class="st">  NR &gt; 1 &amp;&amp; $4 != "" { sum[$1] += $4; n[$1]++ }</span></span>
-<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a><span class="st">  END                { for (group in sum) { print group, n[group], sum[group] / n[group] } }</span></span>
-<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Without the rule for empty fields</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="st">  NR &gt; 1 { sum[$1] += $4; n[$1]++ }</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="st">  END    { for (group in sum) { print group, n[group], sum[group] / n[group] } }</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="co"># With the rule: skip empty root lengths</span></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'</span></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a><span class="st">  NR &gt; 1 &amp;&amp; $4 != "" { sum[$1] += $4; n[$1]++ }</span></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a><span class="st">  END                { for (group in sum) { print group, n[group], sum[group] / n[group] } }</span></span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>low_P 300 57.9494
@@ -560,14 +620,56 @@ high_P 294 88.9501
 low_P 290 59.9477
 high_P 289 90.489</code></pre>
 <p>Without the rule, AWK adds 0 for each empty root length and still counts the plant. This is another silent error: both means come out too low, and nothing warns you.</p>
+<div class="callout callout-style-default callout-question callout-titled" title="Exercise">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="true" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Question</span>Exercise
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-3" class="callout-3-contents callout-collapse collapse show">
+<div class="callout-body-container callout-body">
+<p>Start from the command with the rule <code>$4 != ""</code>. Change only the <code>END</code> part, and before each run predict what you will see:</p>
+<ol type="1">
+<li>Replace <code>print group, n[group], sum[group] / n[group]</code> with <code>print group</code>. What does <code>group</code> hold?</li>
+<li>Now try <code>print group, sum[group]</code>. What is the difference between group and <code>sum[group]</code>?</li>
+<li>Change <code>for (group in sum)</code> to <code>for (group in n)</code>. Does the output change? Why, or why not?</li>
+</ol>
+<div class="callout callout-style-default callout-answer callout-titled" title="Click me to see an answer">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Answer</span>Click me to see an answer
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<ol type="1">
+<li><code>group</code> holds the names in the array, one per round: <code>low_P</code>, then <code>high_P</code>.</li>
+<li><code>sum[group]</code> is the value stored under that name, the summed root length: <code>low_P 17384.8</code> and <code>high_P 26151.3</code>. <code>group</code> is the name, <code>sum[group]</code> what is stored under it.</li>
+<li>No.&nbsp;Each row adds to <code>sum</code> and to <code>n</code> with the same name, so both arrays hold the same names. It does not matter which one the loop goes through.</li>
+</ol>
+<p><code>group</code> is a name you choose, just like <code>sum</code>. You can call it <code>x</code> instead, but then change it everywhere in the <code>END</code> part. If you change it only in for <code>(...)</code>, AWK still uses the old <code>group</code> in <code>print</code>, which is empty here, and you get an error.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
 <section id="mean-per-nutrient-and-condition" class="level3">
 <h3 class="anchored" data-anchor-id="mean-per-nutrient-and-condition">Mean per nutrient and condition</h3>
-<p>To group data by more than one column, you can glue the columns together into one name: <code>$1"-"$2</code> is column 1, a dash and column 2, for example <code>low_P-mock</code>. The dash goes in double quotes, because it is text here. A dash appears in none of the values, so you can split the name again later if you need to.</p>
+<p>To group data by more than one column, you can glue the columns together into one name: <code>$1"-"$2</code> is column 1, a dash and column 2, for example <code>low_P-mock</code>. The dash goes in double quotes, because it is text here. A dash appears in none of the values, so you can split the name again later if you need to. Store this name in a variable, here called <code>key</code>, and use it in both arrays.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="st">  NR &gt; 1 &amp;&amp; $4 != "" { group = $1"-"$2; sum[group] += $4; n[group]++ }</span></span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="st">  END                { for (group in sum) { printf "%s\t%d\t%.1f\n", group, n[group], sum[group] / n[group] } }</span></span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">sort</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="st">  NR &gt; 1 &amp;&amp; $4 != "" { key = $1"-"$2; sum[key] += $4; n[key]++ }</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="st">  END                { for (group in sum) { printf "%s\t%d\t%.1f\n", group, n[group], sum[group] / n[group] } }</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">sort</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>high_P-129E 103 98.4
@@ -592,7 +694,7 @@ low_P-mock  105 47.1</code></pre>
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>If you write <code>group = $1-$2</code> without the quotes, AWK reads the dash as a minus and subtracts column 2 from column 1. Text that does not start with a number counts as 0, so <code>low_P</code> and <code>high_P</code> both become 0, and <code>129E</code> becomes 129. The command runs without an error, but prints this:</p>
+<p>If you write <code>key = $1-$2</code> without the quotes, AWK reads the dash as a minus and subtracts column 2 from column 1. Text that does not start with a number counts as 0, so <code>low_P</code> and <code>high_P</code> both become 0, and <code>129E</code> becomes 129. The command runs without an error, but prints this:</p>
 <pre><code>-129    202 84.4
 -13 171 80.8
 0   206 61.5</code></pre>
@@ -601,7 +703,7 @@ low_P-mock  105 47.1</code></pre>
 </div>
 <p>Without the rule <code>$4 != ""</code>, four of the six means are lower. For example, low_P with <code>129E</code> gives 64.7 instead of 69.9, because the 8 plants without a root length count as 0 mm.</p>
 <div class="callout callout-style-default callout-question callout-titled" title="Exercise">
-<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="true" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-6-contents" aria-controls="callout-6" aria-expanded="true" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -610,14 +712,14 @@ low_P-mock  105 47.1</code></pre>
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-4" class="callout-4-contents callout-collapse collapse show">
+<div id="callout-6" class="callout-6-contents callout-collapse collapse show">
 <div class="callout-body-container callout-body">
 <ol type="1">
 <li>Calculate the mean shoot weight per <code>Condition</code>, with one decimal. How many plants are in each group?</li>
 <li>Before you run it, predict: how many groups do you expect, and what should the counts add up to? Check the output against both numbers.</li>
 </ol>
 <div class="callout callout-style-default callout-answer callout-titled" title="Click me to see an answer">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-5-contents" aria-controls="callout-5" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -626,20 +728,76 @@ low_P-mock  105 47.1</code></pre>
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-3" class="callout-3-contents callout-collapse collapse">
+<div id="callout-5" class="callout-5-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
 <p><code>Condition</code> is column 2, and the shoot weight is column 5. Skip the empty shoot weights:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'</span></span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="st">  NR &gt; 1 &amp;&amp; $5 != "" { sum[$2] += $5; n[$2]++ }</span></span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="st">  END                { for (group in sum) { printf "%s\t%d\t%.1f\n", group, n[group], sum[group] / n[group] } }</span></span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">sort</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="st">  NR &gt; 1 &amp;&amp; $5 != "" { sum[$2] += $5; n[$2]++ }</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a><span class="st">  END                { for (group in sum) { printf "%s\t%d\t%.1f\n", group, n[group], sum[group] / n[group] } }</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">sort</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>129E    208 17.6
 13C 173 15.3
 mock    205 16.6</code></pre>
 <p>You expect 3 groups, one per condition. The counts should add up to the 594 plants minus the 8 without a shoot weight: 586, the same number as in the mean for the whole file. And 208 + 173 + 205 = 586. If the counts add up to more, the command did not skip the empty fields or the header.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-question callout-titled" title="Exercise">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-8-contents" aria-controls="callout-8" aria-expanded="true" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Question</span>Exercise
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-8" class="callout-8-contents callout-collapse collapse show">
+<div class="callout-body-container callout-body">
+<ol type="1">
+<li>Calculate per nutrient and condition what percentage of plants has no root length. You need two counts per group: all plants, and the plants with an empty root length. You can do this with two parts, each with its own pattern.</li>
+<li>Before you run it, predict: what should the counts of plants without a root length add up to?</li>
+<li>In the <code>END</code> part, does it matter whether the loop goes through the array with all plants or the array with the missing ones? Try both.</li>
+</ol>
+<div class="callout callout-style-default callout-answer callout-titled" title="Click me to see an answer">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-7-contents" aria-controls="callout-7" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Answer</span>Click me to see an answer
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-7" class="callout-7-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="st">  NR &gt; 1               { key = $1"-"$2; n[key]++ }</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a><span class="st">  NR &gt; 1 &amp;&amp; $4 == ""   { key = $1"-"$2; missing[key]++ }</span></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="st">  END                  { for (group in n) { printf "%s\t%d\t%d\t%.1f\n", group, n[group], missing[group], 100 * missing[group] / n[group] } }</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">sort</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>This prints the group, the number of plants, the number without a root length, and the percentage:</p>
+<pre><code>high_P-129E 103 0   0.0
+high_P-13C  87  2   2.3
+high_P-mock 104 3   2.9
+low_P-129E  107 8   7.5
+low_P-13C   88  2   2.3
+low_P-mock  105 0   0.0</code></pre>
+<p>The missing counts add up to 15, the number of empty root lengths in the table, and the group sizes add up to all 594 plants. With 7.5%, low_P with <code>129E</code> misses more root lengths than the other groups.</p>
+<p>It does matter which array the loop goes through. With <code>for (group in missing)</code>, you get only four lines:</p>
+<pre><code>high_P-13C  87  2   2.3
+high_P-mock 104 3   2.9
+low_P-129E  107 8   7.5
+low_P-13C   88  2   2.3</code></pre>
+<p><code>missing</code> only gets a name when AWK finds a plant without a root length in that group. The two groups without missing values never get one, so the loop skips them, again without an error. In the exercise before, the choice did not matter, because each row added to both arrays. So loop through an array that holds every group.</p>
 </div>
 </div>
 </div>
@@ -655,6 +813,8 @@ mock    205 16.6</code></pre>
 <li>A long AWK command can be spread over several lines, one pattern and action per line. Keep the opening <code>{</code> on the same line as its pattern.</li>
 <li>A variable (<code>sum += $5</code>) and <code>END</code> give a total or a mean for the whole file. An array (<code>sum[$1] += $5</code>) gives one per group.</li>
 <li><code>printf</code> prints with a format that you choose, for example <code>%.1f</code> for one decimal. It needs <code>\n</code> for a new line.</li>
+<li><code>if (...) { ... }</code> runs a step only when a test is true. Give <code>min</code> and <code>max</code> a start value from the first row with data, not 0.</li>
+<li>An array only holds the names AWK has added to it. In <code>END</code>, loop through an array that holds every group.</li>
 <li>To group by two columns, glue them together with text in quotes: <code>$1"-"$2</code>. Without the quotes, the dash is a minus.</li>
 <li>Skip empty fields before you calculate, and check that the counts add up to the number of rows you expect.</li>
 </ul>

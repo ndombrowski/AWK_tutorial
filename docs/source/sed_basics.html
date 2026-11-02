@@ -687,14 +687,65 @@ low_P.mock.ex61.38.6.8
 </div>
 </div>
 </div>
+<div class="callout callout-style-default callout-important callout-titled" title="A comma inside a value breaks -F','">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>A comma inside a value breaks -F’,’
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>A comma-separated file can have a comma inside a value, for example a place name such as <code>Texel, NL</code>. To show that this comma belongs to the value, the program that wrote the file puts the value between double quotes. AWK and sed do not know this rule. They split at every comma. Make a small file and see what happens:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co"># printf writes the text into a file, \n starts a new line</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="bu">printf</span> <span class="st">'sample,location,reads\nS01,Amsterdam,12000\nS02,"Texel, NL",8500\nS03,Utrecht,9100\n'</span> <span class="op">&gt;</span> samples.csv</span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> samples.csv</span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">','</span> <span class="st">'{ print NF }'</span> samples.csv <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="at">-c</span></span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">','</span> <span class="st">'NR &gt; 1 { sum += $3 } END { print sum }'</span> samples.csv</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>This prints:</p>
+<pre><code>sample,location,reads
+S01,Amsterdam,12000
+S02,"Texel, NL",8500
+S03,Utrecht,9100
+
+      3 3
+      1 4
+
+21100</code></pre>
+<p>The line of <code>S02</code> has 4 fields instead of 3. For AWK, its column 3 is now <code>NL"</code>, which is not a number and counts as 0. So the total number of reads comes out as 21100 instead of 29600, without an error. <code>sed 's/,/\t/g'</code> has the same problem: it also turns the comma inside the quotes into a tab. The <code>NF</code> check catches it: one line has more fields than the header.</p>
+<p>For a file like this, use a tool that knows the quote rule, and turn the file into a tab-separated table first. After that, AWK works as usual. One such tool is csvtk:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="ex">csvtk</span> csv2tab samples.csv <span class="op">&gt;</span> samples.tsv</span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Check</span></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> samples.tsv</span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'{ print NF }'</span> samples.tsv <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="at">-c</span></span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR &gt; 1 { sum += $3 } END { print sum }'</span> samples.tsv</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>This prints:</p>
+<pre><code>sample  location    reads
+S01 Amsterdam   12000
+S02 Texel, NL   8500
+S03 Utrecht 9100
+
+      4 3
+
+29600</code></pre>
+<p>If you continue in R anyway, <code>read.csv("samples.csv")</code> also reads the quoted value correctly. In code from an LLM, you may see <code>gawk --csv</code> or <code>gawk -v FPAT=...</code> for this job. Not every AWK version knows these options: in WSL with Ubuntu 24.04 (gawk 5.2.1), <code>gawk --csv</code> gave an error (tested November 2026).</p>
+</div>
+</div>
 </section>
 </section>
 <section id="delete-lines" class="level2">
 <h2 class="anchored" data-anchor-id="delete-lines">Delete lines</h2>
 <p>Besides <code>s</code>, sed has a command <code>d</code> to <strong>delete</strong> lines. In front of <code>d</code>, you say which lines you want to delete and you can use a line number, or a pattern between slashes. To delete the header, line 1:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'1d'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">head</span> <span class="at">-2</span></span>
-<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'1d'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'1d'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">head</span> <span class="at">-2</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'1d'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>low_P   mock    ex61    40.4    6.6
@@ -703,15 +754,15 @@ low_P   mock    ex61    38  6.8
 594</code></pre>
 <p>To delete every line that contains <code>high_P</code>, use a pattern (and compare with AWK):</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'/high_P/d'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
-<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$1 != "high_P"'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb42"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'/high_P/d'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$1 != "high_P"'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>301
 301</code></pre>
 <p>301 lines: the header and the 300 <code>low_P</code> plants. As with <code>s</code>, sed looks for the pattern in the whole line. Here that is fine, because <code>high_P</code> appears only in column 1.</p>
 <div class="callout callout-style-default callout-tip callout-titled" title="Tip: print only some lines with -n and p (optional)">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-5-contents" aria-controls="callout-5" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-6-contents" aria-controls="callout-6" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -720,15 +771,15 @@ low_P   mock    ex61    38  6.8
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-5" class="callout-5-contents callout-collapse collapse">
+<div id="callout-6" class="callout-6-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
 <p>sed prints every line by default. With <code>-n</code>, it prints nothing, unless you ask for it with the command <code>p</code> (print). This is a quick way to look at one line, or a range of lines, by number:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Line 123, the first plant without a root length</span></span>
-<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-n</span> <span class="st">'123p'</span> awk_data/Growth_Data.txt</span>
-<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Lines 2 to 4</span></span>
-<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-n</span> <span class="st">'2,4p'</span> awk_data/Growth_Data.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb44"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Line 123, the first plant without a root length</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-n</span> <span class="st">'123p'</span> awk_data/Growth_Data.txt</span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Lines 2 to 4</span></span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-n</span> <span class="st">'2,4p'</span> awk_data/Growth_Data.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>high_P  mock    ex61        18.2
@@ -740,7 +791,7 @@ low_P   mock    ex61    74.7    8.1</code></pre>
 </div>
 </div>
 <div class="callout callout-style-default callout-question callout-titled" title="Exercise">
-<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-7-contents" aria-controls="callout-7" aria-expanded="true" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-8-contents" aria-controls="callout-8" aria-expanded="true" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -749,13 +800,13 @@ low_P   mock    ex61    74.7    8.1</code></pre>
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-7" class="callout-7-contents callout-collapse collapse show">
+<div id="callout-8" class="callout-8-contents callout-collapse collapse show">
 <div class="callout-body-container callout-body">
 <ol type="1">
 <li>Delete the header and all plants from experiment <code>ex65</code>, with one sed command. How many lines are left? Check the number with AWK.</li>
 </ol>
 <div class="callout callout-style-default callout-answer callout-titled" title="Click me to see an answer">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-6-contents" aria-controls="callout-6" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-7-contents" aria-controls="callout-7" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -764,14 +815,14 @@ low_P   mock    ex61    74.7    8.1</code></pre>
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-6" class="callout-6-contents callout-collapse collapse">
+<div id="callout-7" class="callout-7-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb42"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Two commands, separated by ;</span></span>
-<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'1d; /ex65/d'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
-<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Check: rows after the header, where column 3 is not ex65</span></span>
-<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR &gt; 1 &amp;&amp; $3 != "ex65"'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb46"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Two commands, separated by ;</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'1d; /ex65/d'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Check: rows after the header, where column 3 is not ex65</span></span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR &gt; 1 &amp;&amp; $3 != "ex65"'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>399
@@ -789,8 +840,8 @@ low_P   mock    ex61    74.7    8.1</code></pre>
 <p>For the rest of this page, you use a second table, <code>mmc5_metadata.txt</code>. It describes 27 bacterial strains, for example their taxonomy and the plant they were isolated from. It comes from a <a href="https://www.cell.com/cell-host-microbe/fulltext/S1931-3128(18)30318-4">published study</a>, and two of its strains are the bacteria <code>129E</code> and <code>13C</code> from the growth data. Later, on the <a href="../source/awk_join.html">join page</a>, you combine the two tables.</p>
 <p>Make a copy, so the file in <code>awk_data/</code> stays as it is, and look at the strains isolated from legumes. The table has 12 columns, and with <code>cut -f1,6</code> you only look at the strain name (column 1) and the host plant (column 6):</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb44"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> awk_data/mmc5_metadata.txt metadata.txt</span>
-<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="st">'Legume'</span> metadata.txt <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-f1,6</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb48"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> awk_data/mmc5_metadata.txt metadata.txt</span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="st">'Legume'</span> metadata.txt <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-f1,6</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>USDA61  Legume
@@ -800,12 +851,12 @@ NGR234  Legume
 C58 Legume</code></pre>
 <p>The safe way to change a file has three steps: write the result to a new file, check it, and only then replace the old file with the new one. Say you want <code>Legume_host</code> instead of <code>Legume</code>:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb46"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Write the result to a new file</span></span>
-<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'s/Legume/Legume_host/'</span> metadata.txt <span class="op">&gt;</span> metadata_new.txt</span>
-<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Check: the same number of lines, and only the lines you wanted changed</span></span>
-<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a><span class="fu">wc</span> <span class="at">-l</span> metadata.txt metadata_new.txt</span>
-<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a><span class="fu">diff</span> metadata.txt metadata_new.txt <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-f1,6</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb50"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Write the result to a new file</span></span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'s/Legume/Legume_host/'</span> metadata.txt <span class="op">&gt;</span> metadata_new.txt</span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Check: the same number of lines, and only the lines you wanted changed</span></span>
+<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a><span class="fu">wc</span> <span class="at">-l</span> metadata.txt metadata_new.txt</span>
+<span id="cb50-6"><a href="#cb50-6" aria-hidden="true" tabindex="-1"></a><span class="fu">diff</span> metadata.txt metadata_new.txt <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-f1,6</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>  28 metadata.txt
@@ -834,9 +885,9 @@ C58 Legume</code></pre>
 &gt; C58   Legume_host</code></pre>
 <p><code>diff</code> compares two files line by line and prints only the lines that differ. <code>4c4</code> means: line 4 was changed. Lines starting with <code>&lt;</code> come from the first file, lines starting with <code>&gt;</code> from the second. <code>diff</code> prints whole lines, which are long in this table, so <code>| cut -f1,6</code> keeps only the strain and the host. Lines such as <code>4c4</code> have no tab, and <code>cut</code> prints them as they are. So exactly five lines changed, the way you wanted. Now replace the old file:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb48"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Replace the old file with the new one</span></span>
-<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a><span class="fu">mv</span> metadata_new.txt metadata.txt</span>
-<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="st">'Legume'</span> metadata.txt <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-f1,6</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb52"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Replace the old file with the new one</span></span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a><span class="fu">mv</span> metadata_new.txt metadata.txt</span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="st">'Legume'</span> metadata.txt <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-f1,6</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>USDA61  Legume_host
@@ -848,8 +899,8 @@ C58 Legume_host</code></pre>
 <h3 class="anchored" data-anchor-id="sed--i-change-the-file-itself"><code>sed -i</code>: change the file itself</h3>
 <p>sed can also change a file directly, with the option <code>-i</code> (for “in place”). It does the three steps above in one go, but without the check. This is often where mistakes happen. Say you forgot that you already made the change, and run the command again, this time with <code>-i</code>:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb50"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-i</span> <span class="st">'s/Legume/Legume_host/'</span> metadata.txt</span>
-<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="st">'Legume'</span> metadata.txt <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-f1,6</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb54"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-i</span> <span class="st">'s/Legume/Legume_host/'</span> metadata.txt</span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="st">'Legume'</span> metadata.txt <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-f1,6</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>USDA61  Legume_host_host
@@ -860,10 +911,10 @@ C58 Legume_host_host</code></pre>
 <p><code>Legume_host</code> still contains <code>Legume</code>, so sed added <code>_host</code> a second time. sed gives no warning, and the old version of the file is gone. This happens easily when you run a script or a notebook a second time.</p>
 <p>If you use <code>-i</code>, let sed keep a backup copy. With <code>-i.bak</code>, sed saves the old version as <code>metadata.txt.bak</code> before it changes the file:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb52"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-i.bak</span> <span class="st">'s/Legume_host_host/Legume_host/'</span> metadata.txt</span>
-<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> metadata<span class="pp">*</span></span>
-<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="st">'Legume'</span> metadata.txt <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-f1,6</span></span>
-<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="st">'Legume'</span> metadata.txt.bak <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-f1,6</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb56"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-i.bak</span> <span class="st">'s/Legume_host_host/Legume_host/'</span> metadata.txt</span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> metadata<span class="pp">*</span></span>
+<span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="st">'Legume'</span> metadata.txt <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-f1,6</span></span>
+<span id="cb56-4"><a href="#cb56-4" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="st">'Legume'</span> metadata.txt.bak <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-f1,6</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>metadata.txt
@@ -898,7 +949,7 @@ C58 Legume_host_host</code></pre>
 </div>
 </div>
 <div class="callout callout-style-default callout-question callout-titled" title="Exercise">
-<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-10-contents" aria-controls="callout-10" aria-expanded="true" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-11-contents" aria-controls="callout-11" aria-expanded="true" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -907,14 +958,14 @@ C58 Legume_host_host</code></pre>
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-10" class="callout-10-contents callout-collapse collapse show">
+<div id="callout-11" class="callout-11-contents callout-collapse collapse show">
 <div class="callout-body-container callout-body">
 <ol type="1">
 <li>Add <code>_host</code> to every host in column 6 of <code>awk_data/mmc5_metadata.txt</code>, and save the result in a new file. First look at which hosts there are. Do it once with sed, and once with AWK. Tip: on <a href="../source/awk_calc.html#mean-per-nutrient-and-condition">Calculate with AWK</a>, you glued text together with <code>$1"-"$2</code>.</li>
 <li>Check both results: count the values in column 6, and compare the two files.</li>
 </ol>
 <div class="callout callout-style-default callout-answer callout-titled" title="Click me to see an answer">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-9-contents" aria-controls="callout-9" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-10-contents" aria-controls="callout-10" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -923,22 +974,22 @@ C58 Legume_host_host</code></pre>
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-9" class="callout-9-contents callout-collapse collapse">
+<div id="callout-10" class="callout-10-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb54"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Which hosts are there?</span></span>
-<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cut</span> <span class="at">-f6</span> awk_data/mmc5_metadata.txt <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="at">-c</span></span>
-<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 1a. sed: one change per host</span></span>
-<span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'s/Legume/Legume_host/; s/Arabidopsis/Arabidopsis_host/'</span> awk_data/mmc5_metadata.txt <span class="op">&gt;</span> hosts_sed.txt</span>
-<span id="cb54-6"><a href="#cb54-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb54-7"><a href="#cb54-7" aria-hidden="true" tabindex="-1"></a><span class="co"># 1b. AWK: glue _host to column 6, on every line after the header</span></span>
-<span id="cb54-8"><a href="#cb54-8" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="at">-v</span> OFS=<span class="st">'\t'</span> <span class="st">'NR &gt; 1 { $6 = $6 "_host" } { print }'</span> awk_data/mmc5_metadata.txt <span class="op">&gt;</span> hosts_awk.txt</span>
-<span id="cb54-9"><a href="#cb54-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb54-10"><a href="#cb54-10" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Check</span></span>
-<span id="cb54-11"><a href="#cb54-11" aria-hidden="true" tabindex="-1"></a><span class="fu">cut</span> <span class="at">-f6</span> hosts_sed.txt <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="at">-c</span></span>
-<span id="cb54-12"><a href="#cb54-12" aria-hidden="true" tabindex="-1"></a><span class="fu">cut</span> <span class="at">-f6</span> hosts_awk.txt <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="at">-c</span></span>
-<span id="cb54-13"><a href="#cb54-13" aria-hidden="true" tabindex="-1"></a><span class="fu">cmp</span> hosts_sed.txt hosts_awk.txt <span class="kw">&amp;&amp;</span> <span class="bu">echo</span> <span class="st">'identical'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb58"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Which hosts are there?</span></span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cut</span> <span class="at">-f6</span> awk_data/mmc5_metadata.txt <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="at">-c</span></span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 1a. sed: one change per host</span></span>
+<span id="cb58-5"><a href="#cb58-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'s/Legume/Legume_host/; s/Arabidopsis/Arabidopsis_host/'</span> awk_data/mmc5_metadata.txt <span class="op">&gt;</span> hosts_sed.txt</span>
+<span id="cb58-6"><a href="#cb58-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb58-7"><a href="#cb58-7" aria-hidden="true" tabindex="-1"></a><span class="co"># 1b. AWK: glue _host to column 6, on every line after the header</span></span>
+<span id="cb58-8"><a href="#cb58-8" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="at">-v</span> OFS=<span class="st">'\t'</span> <span class="st">'NR &gt; 1 { $6 = $6 "_host" } { print }'</span> awk_data/mmc5_metadata.txt <span class="op">&gt;</span> hosts_awk.txt</span>
+<span id="cb58-9"><a href="#cb58-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb58-10"><a href="#cb58-10" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Check</span></span>
+<span id="cb58-11"><a href="#cb58-11" aria-hidden="true" tabindex="-1"></a><span class="fu">cut</span> <span class="at">-f6</span> hosts_sed.txt <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="at">-c</span></span>
+<span id="cb58-12"><a href="#cb58-12" aria-hidden="true" tabindex="-1"></a><span class="fu">cut</span> <span class="at">-f6</span> hosts_awk.txt <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="at">-c</span></span>
+<span id="cb58-13"><a href="#cb58-13" aria-hidden="true" tabindex="-1"></a><span class="fu">cmp</span> hosts_sed.txt hosts_awk.txt <span class="kw">&amp;&amp;</span> <span class="bu">echo</span> <span class="st">'identical'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>     22 Arabidopsis
@@ -968,7 +1019,7 @@ identical</code></pre>
 </div>
 </div>
 <div class="callout callout-style-default callout-tip callout-titled" title="Tip: sed on a Mac (optional)">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-11-contents" aria-controls="callout-11" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-12-contents" aria-controls="callout-12" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -977,7 +1028,7 @@ identical</code></pre>
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-11" class="callout-11-contents callout-collapse collapse">
+<div id="callout-12" class="callout-12-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
 <!-- DRAFT: not tested on a Mac yet -->
 <p>The sed on a Mac is a different version (BSD sed). Two differences matter for this page: <code>sed -i</code> needs a backup ending after it (<code>sed -i '' ...</code> for no backup, or <code>sed -i.bak ...</code>), and <code>\t</code> may not mean a tab in the text you look for. If a command from this page does not work on your Mac, this is a likely reason.</p>
@@ -991,15 +1042,15 @@ identical</code></pre>
 <p>Every line in a text file ends with an invisible character that says “a new line starts here”. Linux and Mac use one character for this, written as <code>\n</code>. Windows uses two: <code>\r\n</code>. A table saved on Windows, for example from Excel, may therefore have a hidden <code>\r</code> at the end of every line. You do not see it on screen, but AWK and grep on Linux see it as part of the last column and this can create silent errors that you will only catch if you closely inspect the output of your commands.</p>
 <p>The metadata table you use below was saved from Excel on a Windows PC. <code>file</code> tells you what kind of text a file holds. Compare it with the growth data:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb56"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="fu">file</span> awk_data/Growth_Data.txt awk_data/mmc5_metadata.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb60"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="fu">file</span> awk_data/Growth_Data.txt awk_data/mmc5_metadata.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>awk_data/Growth_Data.txt:   ASCII text
 awk_data/mmc5_metadata.txt: ASCII text, with CRLF line terminators</code></pre>
 <p><code>CRLF</code> is the name for the Windows line ending <code>\r\n</code>. Now see what it does. Column 12, the last column, holds <code>TRUE</code>, <code>FALSE</code> or <code>NA</code>. Count these values with the tools from the CLI workshop, and then let AWK count the rows with <code>TRUE</code>:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb58"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cut</span> <span class="at">-f12</span> awk_data/mmc5_metadata.txt <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="at">-c</span></span>
-<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$12 == "TRUE"'</span> awk_data/mmc5_metadata.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb62"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cut</span> <span class="at">-f12</span> awk_data/mmc5_metadata.txt <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="at">-c</span></span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$12 == "TRUE"'</span> awk_data/mmc5_metadata.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>      1 Colonization
@@ -1010,8 +1061,8 @@ awk_data/mmc5_metadata.txt: ASCII text, with CRLF line terminators</code></pre>
 0</code></pre>
 <p><code>cut</code> shows 11 rows with <code>TRUE</code>, but AWK finds 0, and there is no error. That happens because column 12 is <code>TRUE\r</code>, not <code>TRUE</code> and therefore the AWK pattern matches nothing. The problem for you is that <code>\r</code> is invisible on screen, also in the output of <code>cut</code> above. You can use <code>cat -A</code>, which shows the Windows line ending as <code>^M</code>. Since column 12 is the last column you can use <code>cut -f1,12</code> to have a short view of the strain name and the line end:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb60"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span> <span class="at">-3</span> awk_data/mmc5_metadata.txt <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-f1,12</span></span>
-<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span> <span class="at">-3</span> awk_data/mmc5_metadata.txt <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-f1,12</span> <span class="kw">|</span> <span class="fu">cat</span> <span class="at">-A</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb64"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span> <span class="at">-3</span> awk_data/mmc5_metadata.txt <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-f1,12</span></span>
+<span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span> <span class="at">-3</span> awk_data/mmc5_metadata.txt <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-f1,12</span> <span class="kw">|</span> <span class="fu">cat</span> <span class="at">-A</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>strain  Colonization
@@ -1025,15 +1076,15 @@ Root381^INA^M$</code></pre>
 <h3 class="anchored" data-anchor-id="remove-the-r-with-sed">Remove the <code>\r</code> with sed</h3>
 <p>To remove the <code>\r</code>, replace it with nothing. In sed, <code>\r</code> stands for this character, and <code>$</code> means “the end of the line”. So <code>s/\r$//</code> removes a <code>\r</code> only where it sits at the end of a line:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb62"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'s/\r$//'</span> awk_data/mmc5_metadata.txt <span class="op">&gt;</span> mmc5_metadata_fixed.txt</span>
-<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Check: file type, the hidden characters, the number of lines and characters,</span></span>
-<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a><span class="co"># and the count from before</span></span>
-<span id="cb62-5"><a href="#cb62-5" aria-hidden="true" tabindex="-1"></a><span class="fu">file</span> mmc5_metadata_fixed.txt</span>
-<span id="cb62-6"><a href="#cb62-6" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span> <span class="at">-3</span> mmc5_metadata_fixed.txt <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-f1,12</span> <span class="kw">|</span> <span class="fu">cat</span> <span class="at">-A</span></span>
-<span id="cb62-7"><a href="#cb62-7" aria-hidden="true" tabindex="-1"></a><span class="fu">wc</span> <span class="at">-l</span> mmc5_metadata_fixed.txt</span>
-<span id="cb62-8"><a href="#cb62-8" aria-hidden="true" tabindex="-1"></a><span class="fu">wc</span> <span class="at">-c</span> awk_data/mmc5_metadata.txt mmc5_metadata_fixed.txt</span>
-<span id="cb62-9"><a href="#cb62-9" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$12 == "TRUE"'</span> mmc5_metadata_fixed.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb66"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'s/\r$//'</span> awk_data/mmc5_metadata.txt <span class="op">&gt;</span> mmc5_metadata_fixed.txt</span>
+<span id="cb66-2"><a href="#cb66-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-3"><a href="#cb66-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Check: file type, the hidden characters, the number of lines and characters,</span></span>
+<span id="cb66-4"><a href="#cb66-4" aria-hidden="true" tabindex="-1"></a><span class="co"># and the count from before</span></span>
+<span id="cb66-5"><a href="#cb66-5" aria-hidden="true" tabindex="-1"></a><span class="fu">file</span> mmc5_metadata_fixed.txt</span>
+<span id="cb66-6"><a href="#cb66-6" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span> <span class="at">-3</span> mmc5_metadata_fixed.txt <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-f1,12</span> <span class="kw">|</span> <span class="fu">cat</span> <span class="at">-A</span></span>
+<span id="cb66-7"><a href="#cb66-7" aria-hidden="true" tabindex="-1"></a><span class="fu">wc</span> <span class="at">-l</span> mmc5_metadata_fixed.txt</span>
+<span id="cb66-8"><a href="#cb66-8" aria-hidden="true" tabindex="-1"></a><span class="fu">wc</span> <span class="at">-c</span> awk_data/mmc5_metadata.txt mmc5_metadata_fixed.txt</span>
+<span id="cb66-9"><a href="#cb66-9" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$12 == "TRUE"'</span> mmc5_metadata_fixed.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>mmc5_metadata_fixed.txt: ASCII text
@@ -1051,7 +1102,7 @@ Root381^INA$
 11</code></pre>
 <p>The <code>^M</code> is gone, and AWK finds the 11 rows. <code>wc -c</code> counts characters: the fixed file has 28 lines and 28 characters fewer, one <code>\r</code> per line. Keep <code>mmc5_metadata_fixed.txt</code>, you use it on the next page.</p>
 <div class="callout callout-style-default callout-tip callout-titled" title="Tip: remove the `\r` with tr (optional)">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-12-contents" aria-controls="callout-12" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-13-contents" aria-controls="callout-13" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -1060,12 +1111,12 @@ Root381^INA$
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-12" class="callout-12-contents callout-collapse collapse">
+<div id="callout-13" class="callout-13-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
 <p>You will often see another command for the same job: <code>tr -d '\r'</code> deletes every <code>\r</code> in a file. <code>tr</code> reads only from a pipe or with <code>&lt;</code>, not from a file name:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb64"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tr</span> <span class="at">-d</span> <span class="st">'\r'</span> <span class="op">&lt;</span> awk_data/mmc5_metadata.txt <span class="op">&gt;</span> mmc5_metadata_fixed_tr.txt</span>
-<span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cmp</span> mmc5_metadata_fixed_tr.txt mmc5_metadata_fixed.txt <span class="kw">&amp;&amp;</span> <span class="bu">echo</span> <span class="st">'identical'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb68"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tr</span> <span class="at">-d</span> <span class="st">'\r'</span> <span class="op">&lt;</span> awk_data/mmc5_metadata.txt <span class="op">&gt;</span> mmc5_metadata_fixed_tr.txt</span>
+<span id="cb68-2"><a href="#cb68-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cmp</span> mmc5_metadata_fixed_tr.txt mmc5_metadata_fixed.txt <span class="kw">&amp;&amp;</span> <span class="bu">echo</span> <span class="st">'identical'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>identical</code></pre>

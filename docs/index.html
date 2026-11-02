@@ -365,19 +365,19 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<p>This tutorial shows you how to work with tables and other text files on the command line with two small tools: AWK and sed. You can use these tools to select rows and columns, to calculate sums and means, to clean up names, and to combine information from two files. You will try every command on real biological data: a table with plant growth measurements, and a table with information on the bacterial strains used in that experiment.</p>
+<p>This tutorial shows you how to work with tables and other text files on the command line with AWK and sed. You can use these tools to select rows and columns, to calculate sums and means, to clean up names, and to combine information from two files. You will try every command on real biological data: a table with plant growth measurements, and a table with information on the bacterial strains used in that experiment.</p>
 <section id="what-are-awk-and-sed" class="level2">
 <h2 class="anchored" data-anchor-id="what-are-awk-and-sed">What are AWK and sed?</h2>
 <p><strong>AWK</strong> is a small programming language made for tables. It reads a file one line at a time and splits each line into <strong>fields</strong>, the separate values in a line, like the cells in one row of a spreadsheet. You then tell AWK what to do with these fields, for example “print the second and fourth column” or “keep only the rows where the root length is above 50”.</p>
-<p><strong>sed</strong> (short for “stream editor”) reads a file one line at a time and changes the text on the fly. You use it mostly to search and replace, for example to shorten a long sequence name, or to delete lines you do not need.</p>
+<p><strong>sed</strong> reads a file one line at a time and changes the text on the fly. You use it mostly to search and replace, for example to shorten a long sequence name, or to delete lines you do not need.</p>
 <p>Both tools come with almost every Linux and Mac system, they work on files of any size, and they need only one line of code for many everyday tasks. That is why you meet them in many bioinformatics scripts and tutorials.</p>
 </section>
 <section id="why-not-just-use-excel-r-or-python" class="level2">
 <h2 class="anchored" data-anchor-id="why-not-just-use-excel-r-or-python">Why not just use Excel, R or Python?</h2>
-<p>For statistics and plots, R or Python are the better tools. But for many smaller jobs, AWK and sed have some real advantages:</p>
+<p>For statistics and plots, R or Python are the better tools. But for many smaller jobs, AWK and sed have several advantages:</p>
 <ul>
-<li><strong>You keep a record of what you did.</strong> A command can be saved in a script or a notebook, and run again on new data. A table that you change by hand in Excel leaves no record, and Excel sometimes changes your data without asking: it is known to turn gene names such as <code>SEPT2</code> into dates.</li>
-<li><strong>The same step works on many files.</strong> Together with a <code>for</code> loop, one command can clean the names in 50 FASTA files, or take one column from 200 sample tables.</li>
+<li><strong>You keep a record of what you did.</strong> A command can be saved in a script or a notebook, and run again on new data. A table that you change by hand in Excel leaves no record, and Excel sometimes changes your data without asking, e.g.&nbsp;it is known to turn gene names such as <code>SEPT2</code> into dates.</li>
+<li><strong>The same step works on many files.</strong> Together with a <a href="https://scienceparkstudygroup.github.io/ibed-bioinformatics-page/source/core_tools/bash-for-loops.html"><code>for</code> loop</a>, one command can clean the names in 50 FASTA files, or take one column from 200 sample tables.</li>
 <li><strong>Nothing to install.</strong> AWK and sed are already on your computer and on most computer clusters, so you do not need packages or extra software.</li>
 </ul>
 </section>
@@ -408,7 +408,7 @@ ul.task-list li input[type="checkbox"] {
 <h2 class="anchored" data-anchor-id="before-you-start">Before you start</h2>
 <p>To follow this tutorial you need:</p>
 <ul>
-<li><strong>A terminal and the command line basics.</strong> This tutorial assumes you have worked through the <a href="https://ndombrowski.github.io/cli_workshop/source/bash_intro.html">basics of the CLI workshop</a>: moving around with <code>cd</code> and <code>ls</code>, looking at files with <code>head</code> and <code>wc</code>, and combining commands with a pipe (<code>|</code>). It also helps if you have used <code>grep</code> and <code>cut</code>. If you have never opened a terminal, start with <a href="https://ndombrowski.github.io/cli_workshop/source/installation.html">Before you start</a> of the CLI workshop.</li>
+<li><strong>A terminal and the command line basics.</strong> This tutorial assumes know how to use the CLI or that you have worked through the <a href="https://ndombrowski.github.io/cli_workshop/source/bash_intro.html">basics of the CLI workshop</a>: moving around with <code>cd</code> and <code>ls</code>, looking at files with <code>head</code> and <code>wc</code>, and combining commands with a pipe (<code>|</code>). It also helps if you have used <code>grep</code> and <code>cut</code>. If you have never opened a terminal, start with <a href="https://ndombrowski.github.io/cli_workshop/source/installation.html">Before you start</a> of the CLI workshop.</li>
 <li><strong>Your own computer.</strong> All commands are meant to run on your laptop. If you already know how to use Crunchomics, the UvA computer cluster, you can also work there (see the <a href="https://ndombrowski.github.io/cli_workshop/source/hpc_intro.html">HPC pages of the CLI workshop</a>).</li>
 <li><strong>The example data.</strong> You download it at the start of the first page, with two commands. It is small (about 14 kB), so it fits on any laptop. The data comes from an experiment where <em>Arabidopsis</em> plants grew with low or high phosphorus, either without bacteria or inoculated with one of two rhizobia strains. For each plant, root length and shoot weight were measured. The question was whether these bacteria promote plant growth, and might help plants grow when nutrients are limited. A second table describes these and other strains, from a <a href="https://www.cell.com/cell-host-microbe/fulltext/S1931-3128(18)30318-4">published study</a>.</li>
 </ul>
@@ -422,7 +422,7 @@ ul.task-list li input[type="checkbox"] {
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>There are several versions of AWK and sed. Linux systems and Crunchomics usually have the GNU versions, Macs have different (BSD) versions, and the terminal in MobaXterm may have yet another one. Most commands in this tutorial work everywhere, and where a command behaves differently, the page says so. <!-- DRAFT: not tested yet. Check in step 7 (PLAN.md) which platforms were tested, and adapt this box. --></p>
+<p>There are several versions of AWK and sed. Linux systems and Crunchomics usually have the GNU versions, Macs have different (BSD) versions, and the terminal in MobaXterm may have yet another one. Most commands in this tutorial work everywhere, and where a command behaves differently, the page says so.</p>
 </div>
 </div>
 <p>Start with <a href="./source/awk_table.html">AWK on a table</a>.</p>

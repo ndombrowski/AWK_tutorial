@@ -440,8 +440,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>Is the separator set?</td>
-<td>Look for <code>-F'\t'</code> or <code>FS</code>. Without it, a value with a space is split in two, and the columns after it shift. If a column is changed, also look for <code>OFS</code>. Without it, the changed lines lose their tabs</td>
-<td><a href="../source/awk_table.html#why--ft-matters">AWK on a table</a>, <a href="../source/awk_more.html#begin-before-the-first-line">More useful AWK</a></td>
+<td>Look for <code>-F'\t'</code> or <code>FS</code>. Without it, a value with a space is split in two, and the columns after it shift. If a column is changed, also look for <code>OFS</code>. Without it, the changed lines lose their tabs. In a comma-separated file, a value in double quotes can contain a comma, and <code>-F','</code> splits it too</td>
+<td><a href="../source/awk_table.html#why--ft-matters">AWK on a table</a>, <a href="../source/awk_more.html#begin-before-the-first-line">More useful AWK</a>, <a href="../source/sed_basics.html#a-file-with-another-column-separator">sed</a></td>
 </tr>
 <tr class="odd">
 <td>What happens to the header?</td>

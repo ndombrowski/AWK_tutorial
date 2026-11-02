@@ -187,7 +187,7 @@ With two lines of AWK, all 595 plants now carry the genus of their bacterium. Wi
 
 You will see `NR == FNR` in many AWK commands that combine two files, so it is worth taking it apart.
 
-The command has two parts, each with its own pattern and action: `NR == FNR { genus[$1] = $4; next }` and `{ print $0, genus[$2] }`. For each line, AWK checks the parts from top to bottom, and runs the action of every part whose pattern matches. A part without a pattern runs on every line. `next` stops this: AWK skips the remaining parts and goes on to the next line. Below, you look at each piece in turn.
+The command has two parts, each with its own pattern and action: `NR == FNR { genus[$1] = $4; next }` and `{ print $0, genus[$2] }`. For each line, AWK checks the parts from top to bottom, and runs the action of every part whose pattern matches. A part without a pattern runs on every line. `next` stops this: AWK skips the remaining parts and goes on to the next line. Below, you look at each piece in turn. `next` is not a pattern like `END` or `BEGIN`. It does not decide when an action runs. It is a step inside an action, and it tells AWK to stop working on this line and move on to the next one.
 
 **`NR` and `FNR`.** You know `NR` from [AWK on a table](awk_table.qmd#nr-work-with-the-header-line): the line number. When AWK reads several files, `NR` keeps counting across all of them. `FNR` is the line number within the current file, and starts at 1 again in each new file. `FILENAME` holds the name of the current file. You can see the difference where AWK moves from the first file to the second (`sed -n '27,30p'` prints lines 27 to 30):
 

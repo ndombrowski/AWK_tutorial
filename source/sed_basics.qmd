@@ -330,6 +330,61 @@ In the second command, sed first turns the semicolons into commas. The second ch
 :::
 ::::
 
+::: {.callout-important title="A comma inside a value breaks -F','"}
+A comma-separated file can have a comma inside a value, for example a place name such as `Texel, NL`. To show that this comma belongs to the value, the program that wrote the file puts the value between double quotes. AWK and sed do not know this rule. They split at every comma. Make a small file and see what happens:
+
+```{bash}
+# printf writes the text into a file, \n starts a new line
+printf 'sample,location,reads\nS01,Amsterdam,12000\nS02,"Texel, NL",8500\nS03,Utrecht,9100\n' > samples.csv
+
+cat samples.csv
+awk -F',' '{ print NF }' samples.csv | sort | uniq -c
+awk -F',' 'NR > 1 { sum += $3 } END { print sum }' samples.csv
+```
+
+This prints:
+
+```
+sample,location,reads
+S01,Amsterdam,12000
+S02,"Texel, NL",8500
+S03,Utrecht,9100
+
+      3 3
+      1 4
+
+21100
+```
+
+The line of `S02` has 4 fields instead of 3. For AWK, its column 3 is now ` NL"`, which is not a number and counts as 0. So the total number of reads comes out as 21100 instead of 29600, without an error. `sed 's/,/\t/g'` has the same problem: it also turns the comma inside the quotes into a tab. The `NF` check catches it: one line has more fields than the header.
+
+For a file like this, use a tool that knows the quote rule, and turn the file into a tab-separated table first. After that, AWK works as usual. One such tool is csvtk:
+
+```{bash}
+csvtk csv2tab samples.csv > samples.tsv
+
+# Check
+cat samples.tsv
+awk -F'\t' '{ print NF }' samples.tsv | sort | uniq -c
+awk -F'\t' 'NR > 1 { sum += $3 } END { print sum }' samples.tsv
+```
+
+This prints:
+
+```
+sample  location    reads
+S01 Amsterdam   12000
+S02 Texel, NL   8500
+S03 Utrecht 9100
+
+      4 3
+
+29600
+```
+
+If you continue in R anyway, `read.csv("samples.csv")` also reads the quoted value correctly. In code from an LLM, you may see `gawk --csv` or `gawk -v FPAT=...` for this job. Not every AWK version knows these options: in WSL with Ubuntu 24.04 (gawk 5.2.1), `gawk --csv` gave an error (tested November 2026).
+:::
+
 ## Delete lines
 
 Besides `s`, sed has a command `d` to **delete** lines. In front of `d`, you say which lines you want to delete and you can use a line number, or a pattern between slashes. To delete the header, line 1:
