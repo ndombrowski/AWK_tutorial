@@ -365,7 +365,7 @@ The command itself was fine. The mistake was in the explanation, in the middle o
 ::::
 
 ::: {.callout-tip title="Tip: check an explanation, not only a command (optional)" collapse="true"}
-You can also ask an LLM to explain a command, for example the join from [Combining two files](awk_join.qmd):
+You can also ask an LLM to explain a command, for example the join from [Join two tables](awk_join.qmd):
 
 ```         
 Explain this awk command:

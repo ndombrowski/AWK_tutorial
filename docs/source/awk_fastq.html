@@ -344,8 +344,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="../source/awk_combine.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Stack tables</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="../source/awk_join.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Combining two files</span></a>
+ <span class="menu-text">Join two tables</span></a>
   </div>
 </li>
         <li class="sidebar-item">
@@ -461,13 +467,13 @@ C&lt;C&lt;&lt;EGGFDCFGGGGGGFGGEFFGGGFB,88AF&lt;?4@,EDACEDFGCFFCFFEAFFFCCFFF9CFEG
 32:@CBCCGCFGDGFCF:FGGGGGGC8B@8BFFGGGCGGG
 33:@M08325:104:000000000-LT57L:1:1109:22
 37:@M08325:104:000000000-LT57L:1:1105:22</code></pre>
-<p>The headers are on lines 1, 5, 9 and so on, every 4 lines. Line 32 breaks the pattern. It is not a header, but the quality line of read 8. <code>@</code> is one of the characters that stand for a quality, so a quality line can start with <code>@</code>, and <code>grep</code> cannot tell it apart from a header.</p>
-<p>In a file with 10 reads, this is one read in ten. In a large file, the error is smaller, but it is there in almost every file, and it changes from file to file. You see this in the exercise below.</p>
+<p>The headers are on lines 1, 5, 9 and so on, every 4 lines. However, line 32 breaks the pattern. It is not a header, but the quality line of read 8. The reason for this behavior is that <code>@</code> is one of the characters that stand for a quality, so a quality line can start with <code>@</code>, and <code>grep</code> cannot tell it apart from a header.</p>
+<p>In a file with 10 reads, this is one read in ten. In a large file, the error will be smaller, but it is there in almost every file, and it changes from file to file. You see this in the exercise below.</p>
 </section>
 <section id="pick-one-line-of-each-read-nr-4" class="level2">
 <h2 class="anchored" data-anchor-id="pick-one-line-of-each-read-nr-4">Pick one line of each read: <code>NR % 4</code></h2>
-<p>You can count the reads with AWK instead, by looking at the position of a line, not at how it starts. The header is always line 1 of a read: line 1, 5, 9, and so on. AWK finds these lines with <code>NR % 4 == 1</code>.</p>
-<p><code>%</code> gives the <strong>remainder</strong> after dividing: <code>NR % 4</code> is what is left of <code>NR</code> after you take away as many 4s as you can. For line 5, that is 1 (5 = 4 + 1). For line 8, it is 0 (8 = 4 + 4). Print it next to the first 8 lines to see the pattern. <code>cut -c 1-30</code> again keeps the lines short:</p>
+<p>You can count the reads with AWK instead, by looking at the position of a line, not at how it starts (and LLMs might produce such code, so it is good to understand what it does). The header is always line 1 of a read: line 1, 5, 9, and so on. AWK finds these lines with <code>NR % 4 == 1</code>.</p>
+<p>The <code>%</code> gives the <strong>remainder</strong> after dividing: <code>NR % 4</code> is what is left of <code>NR</code> after you take away as many 4s as you can. For line 5, that is 1 (5 = 4 + 1). For line 8, it is 0 (8 = 4 + 4). Print it next to the first 8 lines to see the pattern. <code>cut -c 1-30</code> again keeps the lines short:</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> awk_data/Run1_S158_R1.fastq.gz <span class="kw">|</span> <span class="fu">head</span> <span class="at">-8</span> <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-c</span> 1-30 <span class="kw">|</span> <span class="fu">awk</span> <span class="st">'{ print NR, NR % 4, $0 }'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
@@ -507,19 +513,13 @@ C&lt;C&lt;&lt;EGGFDCFGGGGGGFGGEFFGGGFB,88AF&lt;?4@,EDACEDFGCFFCFFEAFFFCCFFF9CFEG
 </tr>
 </tbody>
 </table>
-<p>Now count the headers:</p>
+<p>Now you have everything you need to count the headers:</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> awk_data/Run1_S158_R1.fastq.gz <span class="kw">|</span> <span class="fu">awk</span> <span class="st">'NR % 4 == 1'</span> <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>10</code></pre>
-<p>The same as 40 lines divided by 4. You can also ask AWK directly which quality lines start with <code>@</code>. <code>/^@/</code> is a pattern for lines that start with <code>@</code>, as <code>/^&gt;/</code> was on the FASTA page:</p>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> awk_data/Run1_S158_R1.fastq.gz <span class="kw">|</span> <span class="fu">awk</span> <span class="st">'NR % 4 == 0 &amp;&amp; /^@/ { print NR }'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-<p>This prints:</p>
-<pre><code>32</code></pre>
-<p>The same line that <code>grep</code> counted as a header.</p>
+<p>The same as 40 lines divided by 4.</p>
 <p><code>NR % 4</code> relies on one thing: every read takes exactly 4 lines. That is true for the FASTQ files you get from current sequencers, but check it once on a new file: the number of lines should divide by 4 without a remainder.</p>
 <div class="callout callout-style-default callout-important callout-titled" title="AWK on a .gz file reads junk, without an error">
 <div class="callout-header d-flex align-content-center">
@@ -533,7 +533,7 @@ C&lt;C&lt;&lt;EGGFDCFGGGGGGFGGEFFGGGFB,88AF&lt;?4@,EDACEDFGCFFCFFEAFFFCCFFF9CFEG
 <div class="callout-body-container callout-body">
 <p>If you forget <code>zcat</code>, AWK reads the compressed bytes as if they were text:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'NR % 4 == 1'</span> awk_data/Run1_S158_R1.fastq.gz <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'NR % 4 == 1'</span> awk_data/Run1_S158_R1.fastq.gz <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>1</code></pre>
@@ -543,14 +543,14 @@ C&lt;C&lt;&lt;EGGFDCFGGGGGGFGGEFFGGGFB,88AF&lt;?4@,EDACEDFGCFFCFFEAFFFCCFFF9CFEG
 </section>
 <section id="from-fastq-to-fasta" class="level2">
 <h2 class="anchored" data-anchor-id="from-fastq-to-fasta">From FASTQ to FASTA</h2>
-<p>Some tools want FASTA, not FASTQ. A FASTA file needs only the header, with <code>&gt;</code> instead of <code>@</code>, and the sequence. So keep line 1 and line 2 of each read:</p>
+<p>Some tools want FASTA, not FASTQ. A FASTA file needs only the header, with <code>&gt;</code> instead of <code>@</code>, and the sequence. You can use awk to do this and only keep line 1 and line 2 of each read:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> awk_data/Run1_S158_R1.fastq.gz <span class="kw">|</span> <span class="fu">awk</span> <span class="st">'NR % 4 == 1 { print "&gt;" substr($0, 2) } NR % 4 == 2 { print }'</span> <span class="op">&gt;</span> Run1_S158_R1.fasta</span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Check: 2 lines per read, and 10 headers</span></span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="fu">wc</span> <span class="at">-l</span> Run1_S158_R1.fasta</span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-c</span> <span class="st">'&gt;'</span> Run1_S158_R1.fasta</span>
-<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span> <span class="at">-2</span> Run1_S158_R1.fasta <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-c</span> 1-60</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> awk_data/Run1_S158_R1.fastq.gz <span class="kw">|</span> <span class="fu">awk</span> <span class="st">'NR % 4 == 1 { print "&gt;" substr($0, 2) } NR % 4 == 2 { print }'</span> <span class="op">&gt;</span> Run1_S158_R1.fasta</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Check: 2 lines per read, and 10 headers</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="fu">wc</span> <span class="at">-l</span> Run1_S158_R1.fasta</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-c</span> <span class="st">'&gt;'</span> Run1_S158_R1.fasta</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span> <span class="at">-2</span> Run1_S158_R1.fasta <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-c</span> 1-60</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>20 Run1_S158_R1.fasta
@@ -593,11 +593,11 @@ GACCCTCAGCAATCTTAAACTTCTTAGACGAATCACCAGAACGGAAAACATCCTTCATAG</code></pre>
 <div id="callout-2" class="callout-2-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> awk_data/Run1_S137_R1.fastq.gz <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-c</span> <span class="st">'^@'</span></span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> awk_data/Run1_S137_R1.fastq.gz <span class="kw">|</span> <span class="fu">awk</span> <span class="st">'NR % 4 == 1'</span> <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Check: the number of lines, divided by 4</span></span>
-<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> awk_data/Run1_S137_R1.fastq.gz <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> awk_data/Run1_S137_R1.fastq.gz <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-c</span> <span class="st">'^@'</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> awk_data/Run1_S137_R1.fastq.gz <span class="kw">|</span> <span class="fu">awk</span> <span class="st">'NR % 4 == 1'</span> <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Check: the number of lines, divided by 4</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> awk_data/Run1_S137_R1.fastq.gz <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>2489
@@ -605,14 +605,14 @@ GACCCTCAGCAATCTTAAACTTCTTAGACGAATCACCAGAACGGAAAACATCCTTCATAG</code></pre>
 9940</code></pre>
 <p>9940 lines divided by 4 is 2485 reads, the same as the AWK count. <code>grep</code> counts 4 reads too many. You can find the 4 quality lines that start with <code>@</code>:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> awk_data/Run1_S137_R1.fastq.gz <span class="kw">|</span> <span class="fu">awk</span> <span class="st">'NR % 4 == 0 &amp;&amp; /^@/ { print NR }'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> awk_data/Run1_S137_R1.fastq.gz <span class="kw">|</span> <span class="fu">awk</span> <span class="st">'NR % 4 == 0 &amp;&amp; /^@/ { print NR }'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>984
 6932
 9240
 9560</code></pre>
-<p>Here the error is less than 0.2%, easy to miss. In the small file it was 10%. You find it only if you compare with a second count.</p>
+<p>Here the error is less than 0.2% and therefore easy to miss. In the small file it was 10%. You find it only if you compare with a second count.</p>
 <p>You may also see <code>grep -c '^@M08325'</code> in code from others, with the start of the header instead of only <code>@</code>. In this file it gives 2485 as well, because all reads come from the same sequencer, <code>M08325</code>. In another file, the header starts with something else, so look at your headers first, and still compare with the number of lines divided by 4.</p>
 </div>
 </div>

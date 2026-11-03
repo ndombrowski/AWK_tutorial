@@ -217,7 +217,7 @@ high_P^Imock^Iex64^I^I26$
 These are the 15 plants without a root length from [AWK on a table](awk_table.qmd#working-with-missing-values-empty-fields): an empty field is not a number either. In a new table, this check also finds values such as `NA`, `12,5` or `12 mm`.
 
 :::: {.callout-question .callout-warning collapse="false" title="Exercise"}
-On the [sed page](sed_basics.qmd), you added `_host` to every host in column 6 with `NR > 1 { $6 = $6 "_host" }`. Run twice, that command gives `Arabidopsis_host_host`. Change it, so that it adds `_host` only to hosts that do not end in `_host` yet. Use `mmc5_metadata_fixed.txt`, save the result as `metadata_host.txt`, then run your command a second time on `metadata_host.txt` and check that nothing changes. Finally, explain your pattern in one sentence, in your own words.
+In the exercise in [`sed -i`: change the file itself](sed_basics.qmd#sed--i-change-the-file-itself) on the sed page, you added `_host` to every host in column 6 with `NR > 1 { $6 = $6 "_host" }`. Run twice, that command gives `Arabidopsis_host_host`. Change it, so that it adds `_host` only to hosts that do not end in `_host` yet. Use `mmc5_metadata_fixed.txt`, save the result as `metadata_host.txt`, then run your command a second time on `metadata_host.txt` and check that nothing changes. Finally, explain your pattern in one sentence, in your own words.
 
 ::: {.callout-answer .callout-warning collapse="true" title="Click me to see an answer"}
 Add `$6 !~ /_host$/` to the pattern. `_host$` means "`_host` at the end", and `!~` means "does not match":
@@ -410,4 +410,4 @@ In code from an LLM, you may also see `match($1, /^R([0-9]+)_([A-Z])$/, m)`, whi
 -   `split(value, parts, "_")` cuts a value into parts, and gives back how many there are.
 -   A general rename can work if it is precise. Check with `diff` which names it changed.
 
-On the next page, [Combining two files](awk_join.qmd), you add the genus from the strain metadata to the growth data.
+On the next page, [Stack tables](awk_combine.qmd), you stack one table per condition into one long table, with a column that tells you where each row came from.

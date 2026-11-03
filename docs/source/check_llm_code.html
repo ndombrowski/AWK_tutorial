@@ -343,8 +343,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="../source/awk_combine.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Stack tables</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="../source/awk_join.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Combining two files</span></a>
+ <span class="menu-text">Join two tables</span></a>
   </div>
 </li>
         <li class="sidebar-item">
@@ -412,7 +418,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>LLMs are good at writing AWK and sed. That is exactly why this page exists: you will get a lot of AWK and sed code that you did not write yourself, and most of it will look fine. This page puts the checks from the earlier pages together into a short routine, and then shows what real LLM answers looked like when they were checked with it.</p>
 <p>The answers on this page come from October 2026, and each question was asked only once. If you ask the same questions today, your LLM may well get them right. That doesn’t make the checks less useful: they are how you find out whether an answer is right, whatever the LLM is and whenever you ask.</p>
 <p>General advice on using LLMs, such as which tools you are allowed to use at the UvA, why you should not paste your data, and why you should use an LLM more as a tutor than as a code machine, is on the <a href="https://ndombrowski.github.io/cli_workshop/source/llm_usage.html">Using LLMs page of the CLI workshop</a>. This page does not repeat it. Everything here works with a free chat tool: you paste a question, you read the answer, and you run the checks yourself in your terminal.</p>
-<p>You use the same folder as on the previous pages, with <code>awk_data/</code>, <code>mmc5_metadata_fixed.txt</code> (made on the <a href="../source/sed_basics.html#windows-line-endings">sed page</a>) and <code>mmc5_metadata_named.txt</code> (made on the page <a href="../source/awk_more.html#rename-two-strains">More useful AWK</a>). If you do not have them anymore, make them again:</p>
+<p>You use the same folder as on the previous pages, with <code>awk_data/</code>, <code>mmc5_metadata_fixed.txt</code> and <code>mmc5_metadata_named.txt</code> (both made on the <a href="../source/sed_basics.html">sed page</a>). If you do not have them anymore, make them again:</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'s/\r$//'</span> awk_data/mmc5_metadata.txt <span class="op">&gt;</span> mmc5_metadata_fixed.txt</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'s/^R129_E/129E/; s/^R13_C/13C/'</span> mmc5_metadata_fixed.txt <span class="op">&gt;</span> mmc5_metadata_named.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -611,6 +617,29 @@ identical</code></pre>
 </div>
 </div>
 </div>
+<div class="callout callout-style-default callout-tip callout-titled" title="Tip: remove the `\r` with tr (optional)">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Tip: remove the <code>\r</code> with tr (optional)
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-3" class="callout-3-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>You will often see another command for the same job, in LLM answers and in forums: <code>tr -d '\r'</code> deletes every <code>\r</code> in a file. Like the sed command, it writes a new file. <code>tr</code> reads only from a pipe or with <code>&lt;</code>, not from a file name:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tr</span> <span class="at">-d</span> <span class="st">'\r'</span> <span class="op">&lt;</span> awk_data/mmc5_metadata.txt <span class="op">&gt;</span> mmc5_metadata_fixed_tr.txt</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cmp</span> mmc5_metadata_fixed_tr.txt mmc5_metadata_fixed.txt <span class="kw">&amp;&amp;</span> <span class="bu">echo</span> <span class="st">'identical'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>This prints:</p>
+<pre><code>identical</code></pre>
+<p>Both commands give the same result here. There is one difference: <code>tr</code> deletes every <code>\r</code>, also one in the middle of a line, and <code>sed 's/\r$//'</code> only the one at the end of a line.</p>
+</div>
+</div>
+</div>
 </section>
 </section>
 <section id="example-one-question-two-answers" class="level2">
@@ -628,7 +657,7 @@ awk 'BEGIN {FS=OFS="\t"} NR&gt;1 {sum[$1,$2]+=$4; count[$1,$2]++} END {...}'
 # Answer 2
 awk -F'\t' 'NR &gt; 1 &amp;&amp; $4 != "" { key = $1 FS $2; sum[key] += $4; n[key]++ } END {...}'</code></pre>
 <div class="callout callout-style-default callout-question callout-titled" title="Exercise">
-<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="true" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-5-contents" aria-controls="callout-5" aria-expanded="true" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -637,11 +666,11 @@ awk -F'\t' 'NR &gt; 1 &amp;&amp; $4 != "" { key = $1 FS $2; sum[key] += $4; n[ke
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-4" class="callout-4-contents callout-collapse collapse show">
+<div id="callout-5" class="callout-5-contents callout-collapse collapse show">
 <div class="callout-body-container callout-body">
 <p>What is the difference between the two commands, and which answer gives the right means? You know the table from <a href="../source/awk_table.html#working-with-missing-values-empty-fields">AWK on a table</a>.</p>
 <div class="callout callout-style-default callout-answer callout-titled" title="Click me to see an answer">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -650,7 +679,7 @@ awk -F'\t' 'NR &gt; 1 &amp;&amp; $4 != "" { key = $1 FS $2; sum[key] += $4; n[ke
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-3" class="callout-3-contents callout-collapse collapse">
+<div id="callout-4" class="callout-4-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
 <p>Answer 2 skips the empty root lengths with <code>$4 != ""</code>, and answer 1 does not. So answer 1 counts every empty root length as 0, and its means come out too low in every group with empty root lengths.</p>
 </div>
@@ -661,7 +690,7 @@ awk -F'\t' 'NR &gt; 1 &amp;&amp; $4 != "" { key = $1 FS $2; sum[key] += $4; n[ke
 </div>
 <p>The difference is the empty root lengths. The first 5 lines have none, so answer 1 had no way to know about them, and it did not ask. Answer 2 added the rule anyway, as a precaution. This is the full command of answer 1, with its output through <code>cat -A</code> (the <code>^\</code> is explained in the tip below):</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'BEGIN {FS=OFS="\t"} NR&gt;1 {sum[$1,$2]+=$4; count[$1,$2]++} END {for (k in sum) print k, sum[k]/count[k]}'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">cat</span> <span class="at">-A</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'BEGIN {FS=OFS="\t"} NR&gt;1 {sum[$1,$2]+=$4; count[$1,$2]++} END {for (k in sum) print k, sum[k]/count[k]}'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">cat</span> <span class="at">-A</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>high_P^\129E^I98.3585$
@@ -714,7 +743,7 @@ low_P^\mock^I47.0685$</code></pre>
 </table>
 <p>Four of the six means from answer 1 are too low, because AWK counts an empty field as 0. No error, no warning. And two means are right: high_P 129E and low_P mock have no empty root lengths. If you check only one of those two groups, the command looks correct.</p>
 <div class="callout callout-style-default callout-tip callout-titled" title="Tip: what is the `^` in the output? (optional)">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-5-contents" aria-controls="callout-5" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-6-contents" aria-controls="callout-6" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -723,7 +752,7 @@ low_P^\mock^I47.0685$</code></pre>
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-5" class="callout-5-contents callout-collapse collapse">
+<div id="callout-6" class="callout-6-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
 <p>Answer 1 stores its groups as <code>sum[$1,$2]</code>. With a comma between the two columns, AWK glues the two names together with a hidden character. <code>cat -A</code> shows this character as <code>^\</code>. It is not meant to be printed, so it is easy to miss in the normal output.</p>
 <p>For you, this means that the output of answer 1 has 2 columns, not 3: the group name and the mean. You can’t select one condition from it by column, for example with <code>cut -f2</code>. Answer 2 builds its group name with <code>$1 FS $2</code>, with a tab between the two names, so the nutrient and the condition stay separate columns. On <a href="../source/awk_calc.html#mean-per-nutrient-and-condition">Calculate with AWK</a>, you used <code>$1"-"$2</code> for the same reason: you can see the dash, and you can split on it later.</p>
@@ -734,7 +763,7 @@ low_P^\mock^I47.0685$</code></pre>
 <p>So tell the LLM what you know about your file. Here, one sentence would have been enough: “Column 4 has empty fields for missing values.”</p>
 <p>But you can only write that sentence if you know it. An LLM answers the question you ask, and the problems you don’t know about are the ones you don’t ask about. So the most useful thing you can bring to an LLM is knowledge of your own data: what the file looks like, how many lines and empty fields it has, and which values you expect. That is also what you need to check the answer.</p>
 <div class="callout callout-style-default callout-question callout-titled" title="Exercise">
-<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-7-contents" aria-controls="callout-7" aria-expanded="true" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-8-contents" aria-controls="callout-8" aria-expanded="true" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -743,12 +772,12 @@ low_P^\mock^I47.0685$</code></pre>
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-7" class="callout-7-contents callout-collapse collapse show">
+<div id="callout-8" class="callout-8-contents callout-collapse collapse show">
 <div class="callout-body-container callout-body">
 <p>Imagine you want to ask an LLM for the mean root length per nutrient and condition, and you have not seen the results above. Which four things about <code>awk_data/Growth_Data.txt</code> should the LLM know? Find each one with a command from the earlier pages, and write the sentence you would add to your question.</p>
 <p>If you have an LLM that you are allowed to use (see <a href="https://ndombrowski.github.io/cli_workshop/source/llm_usage.html#rules-at-the-uva">Rules at the UvA</a>), go one step further: ask the question twice, once with only the first 5 lines and once with your sentence added. Then check both answers with the routine from this page.</p>
 <div class="callout callout-style-default callout-answer callout-titled" title="Click me to see an answer">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-6-contents" aria-controls="callout-6" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-7-contents" aria-controls="callout-7" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -757,17 +786,17 @@ low_P^\mock^I47.0685$</code></pre>
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-6" class="callout-6-contents callout-collapse collapse">
+<div id="callout-7" class="callout-7-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># The separator and the header line</span></span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span> <span class="at">-3</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">cat</span> <span class="at">-A</span></span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="co"># The number of lines</span></span>
-<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="fu">wc</span> <span class="at">-l</span> awk_data/Growth_Data.txt</span>
-<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="co"># The number of empty root lengths</span></span>
-<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR &gt; 1 &amp;&amp; $4 == ""'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># The separator and the header line</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span> <span class="at">-3</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">cat</span> <span class="at">-A</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="co"># The number of lines</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="fu">wc</span> <span class="at">-l</span> awk_data/Growth_Data.txt</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a><span class="co"># The number of empty root lengths</span></span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR &gt; 1 &amp;&amp; $4 == ""'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>Nutrient^ICondition^IExperiment^IRootlength^IFW_shoot_mg$
@@ -786,7 +815,7 @@ low_P^Imock^Iex61^I38^I6.8$
 </div>
 </div>
 <div class="callout callout-style-default callout-tip callout-titled" title="Tip: What if the LLM can read my file? (optional)">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-8-contents" aria-controls="callout-8" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-9-contents" aria-controls="callout-9" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -795,7 +824,7 @@ low_P^Imock^Iex61^I38^I6.8$
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-8" class="callout-8-contents callout-collapse collapse">
+<div id="callout-9" class="callout-9-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
 <p>Some LLM tools work inside a code editor. They can open your files and run commands themselves, so you don’t need to paste lines. You might expect the problems on this page to disappear then. To find out, the two questions from the examples went to such a tool in October 2026: Claude Code in VS Code, in a folder with a copy of the data. Each question started a new session. The tool ran with the author’s own settings: a file with standing instructions that the tool reads at the start of every session, and that asks it to check its work carefully. A fresh setup without such a file may well do worse.</p>
 <p><strong>The mean root length per group.</strong> The question was: “In this folder there is Growth_Data.txt. Give me an awk command for the mean Rootlength per Nutrient and Condition.” The tool found the file, looked at its first 5 lines with <code>cat -A</code>, counted the lines, and wrote a command without <code>$4 != ""</code>. It ran the command and showed the output: the same too-low means as answer 1 above, for example 64.7 instead of 69.9 for <code>low_P-129E</code>. It had the whole file, but it only looked at the top, where there are no empty fields. And “I ran it and got this output” shows that the command runs, not that the means are right.</p>
@@ -813,7 +842,7 @@ low_P^Imock^Iex61^I38^I6.8$
 <section id="check-a-claim-in-an-answer" class="level2">
 <h2 class="anchored" data-anchor-id="check-a-claim-in-an-answer">Check a claim in an answer</h2>
 <div class="callout callout-style-default callout-question callout-titled" title="Exercise">
-<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-10-contents" aria-controls="callout-10" aria-expanded="true" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-11-contents" aria-controls="callout-11" aria-expanded="true" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -822,7 +851,7 @@ low_P^Imock^Iex61^I38^I6.8$
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-10" class="callout-10-contents callout-collapse collapse show">
+<div id="callout-11" class="callout-11-contents callout-collapse collapse show">
 <div class="callout-body-container callout-body">
 <p>For the question “keep the rows where Rootlength is above 50”, both LLMs gave the same command: <code>awk -F'\t' 'NR == 1 || $4 &gt; 50'</code>. One answer explained <code>NR == 1 ||</code> like this:</p>
 <blockquote class="blockquote">
@@ -830,7 +859,7 @@ low_P^Imock^Iex61^I38^I6.8$
 </blockquote>
 <p>The two sentences contradict each other. Which one is true? Check it with one command.</p>
 <div class="callout callout-style-default callout-answer callout-titled" title="Click me to see an answer">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-9-contents" aria-controls="callout-9" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-10-contents" aria-controls="callout-10" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -839,11 +868,11 @@ low_P^Imock^Iex61^I38^I6.8$
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-9" class="callout-9-contents callout-collapse collapse">
+<div id="callout-10" class="callout-10-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
 <p>Run the command without <code>NR == 1 ||</code>, and look at the first line of the result:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$4 &gt; 50'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">head</span> <span class="at">-1</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$4 &gt; 50'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">head</span> <span class="at">-1</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>Nutrient    Condition   Experiment  Rootlength  FW_shoot_mg</code></pre>
@@ -856,7 +885,7 @@ low_P^Imock^Iex61^I38^I6.8$
 </div>
 </div>
 <div class="callout callout-style-default callout-tip callout-titled" title="Tip: check an explanation, not only a command (optional)">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-11-contents" aria-controls="callout-11" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-12-contents" aria-controls="callout-12" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -865,27 +894,27 @@ low_P^Imock^Iex61^I38^I6.8$
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-11" class="callout-11-contents callout-collapse collapse">
+<div id="callout-12" class="callout-12-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
-<p>You can also ask an LLM to explain a command, for example the join from <a href="../source/awk_join.html">Combining two files</a>:</p>
+<p>You can also ask an LLM to explain a command, for example the join from <a href="../source/awk_join.html">Join two tables</a>:</p>
 <pre><code>Explain this awk command:
 
 awk 'NR==FNR{a[$1]=$4;next}{print $0,a[$2]}' meta.txt growth.txt</code></pre>
 <p>Both LLMs explained <code>NR == FNR</code>, <code>next</code> and the array correctly, with a small made-up example. One answer added a warning: if the first file is empty, “the first line of growth.txt” also passes <code>NR==FNR</code>. The other warned that swapping the two files “breaks the logic entirely”.</p>
 <p>What did the explanations leave out, or get only half right? Think about it first, then run these commands:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># The command on the files from this tutorial</span></span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'NR==FNR{a[$1]=$4;next}{print $0,a[$2]}'</span> mmc5_metadata_named.txt awk_data/Growth_Data.txt <span class="op">&gt;</span> joined.txt</span>
-<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="fu">wc</span> <span class="at">-l</span> joined.txt</span>
-<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span> <span class="at">-1</span> joined.txt <span class="kw">|</span> <span class="fu">cat</span> <span class="at">-A</span></span>
-<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-m1</span> <span class="st">'129E'</span> joined.txt <span class="kw">|</span> <span class="fu">cat</span> <span class="at">-A</span></span>
-<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a><span class="co"># An empty first file</span></span>
-<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a><span class="fu">touch</span> empty.txt</span>
-<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'NR==FNR{a[$1]=$4;next}{print $0,a[$2]}'</span> empty.txt awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
-<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a><span class="co"># The two files swapped</span></span>
-<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'NR==FNR{a[$1]=$4;next}{print $0,a[$2]}'</span> awk_data/Growth_Data.txt mmc5_metadata_named.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># The command on the files from this tutorial</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'NR==FNR{a[$1]=$4;next}{print $0,a[$2]}'</span> mmc5_metadata_named.txt awk_data/Growth_Data.txt <span class="op">&gt;</span> joined.txt</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="fu">wc</span> <span class="at">-l</span> joined.txt</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span> <span class="at">-1</span> joined.txt <span class="kw">|</span> <span class="fu">cat</span> <span class="at">-A</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-m1</span> <span class="st">'129E'</span> joined.txt <span class="kw">|</span> <span class="fu">cat</span> <span class="at">-A</span></span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a><span class="co"># An empty first file</span></span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a><span class="fu">touch</span> empty.txt</span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'NR==FNR{a[$1]=$4;next}{print $0,a[$2]}'</span> empty.txt awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a><span class="co"># The two files swapped</span></span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'NR==FNR{a[$1]=$4;next}{print $0,a[$2]}'</span> awk_data/Growth_Data.txt mmc5_metadata_named.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p><code>touch</code> makes an empty file, and <code>grep -m1</code> stops after the first match. This prints:</p>
 <pre><code>595 joined.txt

@@ -1,6 +1,6 @@
 # AWK_tutorial
 
-This tutorial shows you how to work with tables and other text files on the command line with AWK and sed. You can use these tools to select rows and columns, to calculate sums and means, to clean up names, and to combine information from two files. You will try every command on real biological data: a table with plant growth measurements, and a table with information on the bacterial strains used in that experiment.
+This tutorial shows you how to work with tables and other text files on the command line with AWK and sed. You can use these tools to select rows and columns, to calculate sums and means, to clean up names, to stack the tables of several samples into one, and to combine information from two files. You will try every command on real biological data: a table with plant growth measurements, and a table with information on the bacterial strains used in that experiment.
 
 ## What are AWK and sed?
 
@@ -34,17 +34,18 @@ The last point matters most. A command that fails with an error message is easy 
 1.  **Use AWK on a table**: print and select columns and rows, and find missing values
 2.  **Calculate with AWK**: add a column, and calculate sums, counts and means per group
 3.  **Learn sed basics**: search and replace text, delete lines, change a file safely, and remove Windows line endings
-4.  **Use more of AWK**: change text in one column (`gsub`), search one column (`~`), pass a value into AWK (`-v`), split a value into parts (`split`), and read `BEGIN`, which you see often in code from an LLM or a forum
-5.  **Combine two files**: add information from the strain table to the growth data, make names match, and check the result
-6.  **Use AWK and sed on FASTA files** (optional): count sequences and clean up sequence names
-7.  **Use AWK on FASTQ files** (optional): count sequencing reads without counting too many, and turn reads into a FASTA file
-8.  **Check code from an LLM**: a short routine to test any AWK or sed command before you trust its output
+4.  **Use more of AWK**: change and search text in one column, pass a value from a bash loop into AWK, and split a value into parts, all forms you often see in code from an LLM or a forum
+5.  **Stack tables**: put one table per sample under each other into one long table, add a column with the sample name, and check that no header or row is there twice
+6.  **Join two tables**: add columns from the strain table to the growth data by the strain name, make names match, and check the result
+7.  **Use AWK and sed on FASTA files** (optional): count sequences and clean up sequence names
+8.  **Use AWK on FASTQ files** (optional): count sequencing reads without counting too many, and turn reads into a FASTA file
+9.  **Check code from an LLM**: a short routine to test any AWK or sed command before you trust its output
 
 ## Before you start
 
 To follow this tutorial you need:
 
--   **A terminal and the command line basics.** This tutorial assumes know how to use the CLI or that you have worked through the [basics of the CLI workshop](https://ndombrowski.github.io/cli_workshop/source/bash_intro.html): moving around with `cd` and `ls`, looking at files with `head` and `wc`, and combining commands with a pipe (`|`). It also helps if you have used `grep` and `cut`. If you have never opened a terminal, start with [Before you start](https://ndombrowski.github.io/cli_workshop/source/installation.html) of the CLI workshop.
+-   **A terminal and the command line basics.** This tutorial assumes you know how to use the CLI or that you have worked through the [basics of the CLI workshop](https://ndombrowski.github.io/cli_workshop/source/bash_intro.html): moving around with `cd` and `ls`, looking at files with `head` and `wc`, and combining commands with a pipe (`|`). It also helps if you have used `grep` and `cut`. If you have never opened a terminal, start with [Before you start](https://ndombrowski.github.io/cli_workshop/source/installation.html) of the CLI workshop.
 -   **Your own computer.** All commands are meant to run on your laptop. If you already know how to use Crunchomics, the UvA computer cluster, you can also work there (see the [HPC pages of the CLI workshop](https://ndombrowski.github.io/cli_workshop/source/hpc_intro.html)).
 -   **The example data.** You download it at the start of the first page, with two commands. It is small (about 440 kB), so it fits on any laptop. The data comes from an experiment where *Arabidopsis* plants grew with low or high phosphorus, either without bacteria or inoculated with one of two rhizobia strains. For each plant, root length and shoot weight were measured. The question was whether these bacteria promote plant growth, and might help plants grow when nutrients are limited. A second table describes these and other strains, from a [published study](https://www.cell.com/cell-host-microbe/fulltext/S1931-3128(18)30318-4).
 
@@ -52,4 +53,4 @@ To follow this tutorial you need:
 There are several versions of AWK and sed. Linux systems and Crunchomics usually have the GNU versions, Macs have different (BSD) versions, and the terminal in MobaXterm may have yet another one. Most commands in this tutorial work everywhere, and where a command behaves differently, the page says so.
 :::
 
-Start with [AWK on a table]([source/awk_table.qmd](https://ndombrowski.github.io/AWK_tutorial/source/awk_table.html)).
+Start with [AWK on a table](https://ndombrowski.github.io/AWK_tutorial/source/awk_table.html).

@@ -344,8 +344,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="../source/awk_combine.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Stack tables</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="../source/awk_join.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Combining two files</span></a>
+ <span class="menu-text">Join two tables</span></a>
   </div>
 </li>
         <li class="sidebar-item">
@@ -393,6 +399,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul class="collapse">
   <li><a href="#remove-the-r-with-sed" id="toc-remove-the-r-with-sed" class="nav-link" data-scroll-target="#remove-the-r-with-sed">Remove the <code>\r</code> with sed</a></li>
   </ul></li>
+  <li><a href="#rename-two-strains" id="toc-rename-two-strains" class="nav-link" data-scroll-target="#rename-two-strains">Rename two strains</a></li>
   <li><a href="#what-you-learned" id="toc-what-you-learned" class="nav-link" data-scroll-target="#what-you-learned">What you learned</a></li>
   </ul>
 </nav>
@@ -722,8 +729,8 @@ S03,Utrecht,9100
       1 4
 
 21100</code></pre>
-<p>The line of <code>S02</code> has 4 fields instead of 3. For AWK, its column 3 is now <code>NL"</code>, which is not a number and counts as 0. So the total number of reads comes out as 21100 instead of 29600, without an error. <code>sed 's/,/\t/g'</code> has the same problem: it also turns the comma inside the quotes into a tab. The <code>NF</code> check catches it: one line has more fields than the header.</p>
-<p>For a file like this, use a tool that knows the quote rule, and turn the file into a tab-separated table first. After that, AWK works as usual. One such tool is csvtk:</p>
+<p>The line of <code>S02</code> has 4 fields instead of 3. For AWK, its column 3 is now <code>NL"</code>, which is not a number and counts as 0. That is why the total number of reads comes out as 21100 instead of 29600, without an error. <code>sed 's/,/\t/g'</code> has the same problem: it also turns the comma inside the quotes into a tab. The <code>NF</code> check catches it: one line has more fields than the header.</p>
+<p>For a file like this, use a tool that knows the quote rule, and turn the file into a tab-separated table first. After that, AWK works as usual. One such tool that you can install for the CLI is csvtk:</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="ex">csvtk</span> csv2tab samples.csv <span class="op">&gt;</span> samples.tsv</span>
 <span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -741,7 +748,7 @@ S03 Utrecht 9100
       4 3
 
 29600</code></pre>
-<p>If you continue in R anyway, <code>read.csv("samples.csv")</code> also reads the quoted value correctly. In code from an LLM, you may see <code>gawk --csv</code> or <code>gawk -v FPAT=...</code> for this job. Not every AWK version knows these options: in WSL with Ubuntu 24.04 (gawk 5.2.1), <code>gawk --csv</code> gave an error (tested November 2026).</p>
+<p>If you plan to analyse such data in R, <code>read.csv("samples.csv")</code> also reads the quoted value correctly. In code from an LLM, you may see <code>gawk --csv</code> or <code>gawk -v FPAT=...</code> for this job. However, not every AWK version knows these options: in WSL with Ubuntu 24.04 (gawk 5.2.1), <code>gawk --csv</code> gave an error (tested November 2026) and in such case we recommend the solutions suggested above.</p>
 </div>
 </div>
 </section>
@@ -1053,7 +1060,8 @@ identical</code></pre>
 <p>This prints:</p>
 <pre><code>awk_data/Growth_Data.txt:   ASCII text
 awk_data/mmc5_metadata.txt: ASCII text, with CRLF line terminators</code></pre>
-<p><code>CRLF</code> is the name for the Windows line ending <code>\r\n</code>. Now see what it does. Column 12, the last column, holds <code>TRUE</code>, <code>FALSE</code> or <code>NA</code>. Count these values with the tools from the CLI workshop, and then let AWK count the rows with <code>TRUE</code>:</p>
+<p><code>CRLF</code> is the name for the Windows line ending <code>\r\n</code>.</p>
+<p>Now see what it does by looking at column 12, the last column, holds <code>TRUE</code>, <code>FALSE</code> or <code>NA</code>. Count these values with the tools from the CLI workshop, and then use AWK to also count the rows with <code>TRUE</code>:</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb62"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cut</span> <span class="at">-f12</span> awk_data/mmc5_metadata.txt <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="at">-c</span></span>
 <span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$12 == "TRUE"'</span> awk_data/mmc5_metadata.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -1065,7 +1073,7 @@ awk_data/mmc5_metadata.txt: ASCII text, with CRLF line terminators</code></pre>
      11 TRUE
 
 0</code></pre>
-<p><code>cut</code> shows 11 rows with <code>TRUE</code>, but AWK finds 0, and there is no error. That happens because column 12 is <code>TRUE\r</code>, not <code>TRUE</code> and therefore the AWK pattern matches nothing. The problem for you is that <code>\r</code> is invisible on screen, also in the output of <code>cut</code> above. You can use <code>cat -A</code>, which shows the Windows line ending as <code>^M</code>. Since column 12 is the last column you can use <code>cut -f1,12</code> to have a short view of the strain name and the line end:</p>
+<p><code>cut</code> shows 11 rows with <code>TRUE</code>, but AWK finds 0, and there is no error. That happens because column 12 is <code>TRUE\r</code>, not <code>TRUE</code> and therefore the AWK pattern matches nothing. The problem for you is that <code>\r</code> is invisible on screen, also in the output of <code>cut</code> above. You can visualize it with <code>cat -A</code>, which shows the Windows line ending as <code>^M</code>. Since column 12 is the last column you can use <code>cut -f1,12</code> to have a short view of the strain name and the line end:</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb64"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span> <span class="at">-3</span> awk_data/mmc5_metadata.txt <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-f1,12</span></span>
 <span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span> <span class="at">-3</span> awk_data/mmc5_metadata.txt <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-f1,12</span> <span class="kw">|</span> <span class="fu">cat</span> <span class="at">-A</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -1106,43 +1114,66 @@ Root381^INA$
 5588 total
 
 11</code></pre>
-<p>The <code>^M</code> is gone, and AWK finds the 11 rows. <code>wc -c</code> counts characters: the fixed file has 28 lines and 28 characters fewer, one <code>\r</code> per line. Keep <code>mmc5_metadata_fixed.txt</code>, you use it on the next page.</p>
-<div class="callout callout-style-default callout-tip callout-titled" title="Tip: remove the `\r` with tr (optional)">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-13-contents" aria-controls="callout-13" aria-expanded="false" aria-label="Toggle callout">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Tip</span>Tip: remove the <code>\r</code> with tr (optional)
-</div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
-</div>
-<div id="callout-13" class="callout-13-contents callout-collapse collapse">
-<div class="callout-body-container callout-body">
-<p>You will often see another command for the same job: <code>tr -d '\r'</code> deletes every <code>\r</code> in a file. <code>tr</code> reads only from a pipe or with <code>&lt;</code>, not from a file name:</p>
+<p>The <code>^M</code> is gone, and AWK finds the 11 rows. <code>wc -c</code> counts characters: the fixed file has 28 lines and 28 characters fewer, one <code>\r</code> per line. Keep <code>mmc5_metadata_fixed.txt</code>, you use it below and on the next pages.</p>
+</section>
+</section>
+<section id="rename-two-strains" class="level2">
+<h2 class="anchored" data-anchor-id="rename-two-strains">Rename two strains</h2>
+<p>The metadata is clean now, but there is one more problem. The growth data and the strain metadata describe the same two bacteria with different names: <code>129E</code> and <code>13C</code> in the growth data, <code>R129_E</code> and <code>R13_C</code> in column 1 of the metadata. On a later page you will combine the two tables, and for that the names must match.</p>
+<p>First look at the names in both tables: column 2 of the growth data, and the names in column 1 of the metadata that contain <code>R1</code>. Then count the lines that contain the two names you want to change:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb68"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tr</span> <span class="at">-d</span> <span class="st">'\r'</span> <span class="op">&lt;</span> awk_data/mmc5_metadata.txt <span class="op">&gt;</span> mmc5_metadata_fixed_tr.txt</span>
-<span id="cb68-2"><a href="#cb68-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cmp</span> mmc5_metadata_fixed_tr.txt mmc5_metadata_fixed.txt <span class="kw">&amp;&amp;</span> <span class="bu">echo</span> <span class="st">'identical'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb68"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cut</span> <span class="at">-f2</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="at">-c</span></span>
+<span id="cb68-2"><a href="#cb68-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cut</span> <span class="at">-f1</span> mmc5_metadata_fixed.txt <span class="kw">|</span> <span class="fu">grep</span> <span class="st">'R1'</span></span>
+<span id="cb68-3"><a href="#cb68-3" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-c</span> <span class="st">'R129_E'</span> mmc5_metadata_fixed.txt</span>
+<span id="cb68-4"><a href="#cb68-4" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-c</span> <span class="st">'R13_C'</span> mmc5_metadata_fixed.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
-<pre><code>identical</code></pre>
-<p>Both commands give the same result here.</p>
+<pre><code>    210 129E
+    175 13C
+      1 Condition
+    209 mock
+
+R129_E
+R129_N
+R13_A
+R13_C
+
+1
+1</code></pre>
+<p>You see both spellings side by side. A computer compares names letter by letter, so <code>129E</code> and <code>R129_E</code> do not match. In the metadata, each name appears on one line only. Note <code>R129_N</code> and <code>R13_A</code>: they are other strains, and they must stay as they are. A shorter pattern such as <code>s/R129/129/</code> would rename <code>R129_N</code> too, therefore write the full name. So before you run the rename, you know what to expect: the same 28 lines as in <code>mmc5_metadata_fixed.txt</code>, and exactly 2 lines changed.</p>
+<p>At the end of the last section, <code>$</code> meant “the end of the line”. Its mirror is <code>^</code>, which means “the start of the line”. The strain names are in column 1, so they stand at the start of the line, and <code>^R129_E</code> matches <code>R129_E</code> only there. In this file, the command would also work without <code>^</code>, because each name appears only once. With <code>^</code>, sed changes the name only at the start of the line, in column 1, even if the same text appears somewhere else in the line:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb70"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'s/^R129_E/129E/; s/^R13_C/13C/'</span> mmc5_metadata_fixed.txt <span class="op">&gt;</span> mmc5_metadata_named.txt</span>
+<span id="cb70-2"><a href="#cb70-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb70-3"><a href="#cb70-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Check: the number of lines, and which lines changed</span></span>
+<span id="cb70-4"><a href="#cb70-4" aria-hidden="true" tabindex="-1"></a><span class="fu">wc</span> <span class="at">-l</span> mmc5_metadata_named.txt</span>
+<span id="cb70-5"><a href="#cb70-5" aria-hidden="true" tabindex="-1"></a><span class="fu">diff</span> mmc5_metadata_fixed.txt mmc5_metadata_named.txt <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-f1,4</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</div>
-</div>
-</section>
+<p>This prints:</p>
+<pre><code>28 mmc5_metadata_named.txt
+
+11c11
+&lt; R129_E    Rhizobium
+---
+&gt; 129E  Rhizobium
+14c14
+&lt; R13_C Rhizobium
+---
+&gt; 13C   Rhizobium</code></pre>
+<p>28 lines, and only lines 11 and 14 changed, as expected. <code>cut -f1,4</code> keeps the output short: the strain name and the genus. <code>^</code> helps only for column 1. For a name in another column, there is no “start of the column” in sed, and you would use AWK. Keep <code>mmc5_metadata_named.txt</code>, you use it on the next pages.</p>
 </section>
 <section id="what-you-learned" class="level2">
 <h2 class="anchored" data-anchor-id="what-you-learned">What you learned</h2>
 <ul>
 <li><code>sed 's/old/new/' file</code> replaces the first match in each line, <code>s/old/new/g</code> every match.</li>
-<li>The text you look for is a regular expression: <code>.</code> means any character, <code>\.</code> a real dot. <code>\t</code> is a tab, <code>\r</code> the hidden Windows character, <code>$</code> the end of a line.</li>
+<li>The text you look for is a regular expression: <code>.</code> means any character, <code>\.</code> a real dot. <code>\t</code> is a tab, <code>\r</code> the hidden Windows character, <code>^</code> the start of a line, <code>$</code> the end of a line.</li>
 <li>sed looks at the whole line, not at columns. Make the text you look for specific, or use AWK to change one column.</li>
 <li>Separate several changes with <code>;</code>. They run in the order you write them.</li>
 <li><code>sed '1d'</code> deletes line 1, <code>sed '/text/d'</code> every line that contains <code>text</code>.</li>
 <li>Check which character separates the columns before you use a file, also when it ends in <code>.csv</code>.</li>
 <li>Change a file safely: work on a copy, write to a new file, check with <code>wc -l</code> and <code>diff</code>, then replace. With <code>sed -i</code>, keep a backup (<code>-i.bak</code>), and think about what happens if the command runs twice.</li>
 <li>Windows line endings (<code>\r</code>, <code>^M</code> in <code>cat -A</code>) make text matches on the last column fail without an error. Find them with <code>file</code> or <code>cat -A</code>, and remove them with <code>sed 's/\r$//'</code>.</li>
+<li>Before you rename, count the lines with the old name (<code>grep -c</code>). Use <code>^</code> to change a name only at the start of the line, in column 1. Afterwards, look at what changed (<code>diff</code>).</li>
 </ul>
 <p>On the next page, <a href="../source/awk_more.html">More useful AWK</a>, you learn a few more AWK forms that are handy in your own work and common in code from an LLM.</p>
 

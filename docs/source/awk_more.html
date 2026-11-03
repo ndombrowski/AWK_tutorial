@@ -65,7 +65,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../">
-<link href="../source/awk_join.html" rel="next">
+<link href="../source/awk_combine.html" rel="next">
 <link href="../source/sed_basics.html" rel="prev">
 <script src="../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
@@ -344,8 +344,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="../source/awk_combine.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Stack tables</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="../source/awk_join.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Combining two files</span></a>
+ <span class="menu-text">Join two tables</span></a>
   </div>
 </li>
         <li class="sidebar-item">
@@ -376,7 +382,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#rename-two-strains" id="toc-rename-two-strains" class="nav-link active" data-scroll-target="#rename-two-strains">Rename two strains</a></li>
+  <li><a href="#the-same-renaming-with-awk" id="toc-the-same-renaming-with-awk" class="nav-link active" data-scroll-target="#the-same-renaming-with-awk">The same renaming with AWK</a></li>
   <li><a href="#begin-before-the-first-line" id="toc-begin-before-the-first-line" class="nav-link" data-scroll-target="#begin-before-the-first-line"><code>BEGIN</code>: before the first line</a></li>
   <li><a href="#sub-and-gsub-replace-text-in-a-field" id="toc-sub-and-gsub-replace-text-in-a-field" class="nav-link" data-scroll-target="#sub-and-gsub-replace-text-in-a-field"><code>sub</code> and <code>gsub</code>: replace text in a field</a></li>
   <li><a href="#and-match-a-pattern-in-one-field" id="toc-and-match-a-pattern-in-one-field" class="nav-link" data-scroll-target="#and-match-a-pattern-in-one-field"><code>~</code> and <code>!~</code>: match a pattern in one field</a></li>
@@ -410,56 +416,57 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 <p>This page adds a few AWK forms that you will find useful in your own work: change text in one column, search one column for a pattern, give AWK a value from outside, for example in a loop over files, and split a value into parts. You will also see these forms often in commands from an LLM or a forum, so after this page you can read them too. You do not need to write them from memory. The goal is that you know what they do, when they are handy, and how to check the result.</p>
-<p>You use the same folder as on the previous pages, with <code>awk_data/Growth_Data.txt</code> and <code>mmc5_metadata_fixed.txt</code>, the strain metadata without Windows line endings from the <a href="../source/sed_basics.html#windows-line-endings">sed page</a>. If you do not have it anymore, make it again:</p>
+<p>You use the same folder as on the previous pages, with <code>awk_data/Growth_Data.txt</code> and two files from the <a href="../source/sed_basics.html#rename-two-strains">sed page</a>: <code>mmc5_metadata_fixed.txt</code>, the strain metadata without Windows line endings, and <code>mmc5_metadata_named.txt</code>, with two strains renamed. If you do not have them anymore, make them again:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'s/\r$//'</span> awk_data/mmc5_metadata.txt <span class="op">&gt;</span> mmc5_metadata_fixed.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'s/\r$//'</span> awk_data/mmc5_metadata.txt <span class="op">&gt;</span> mmc5_metadata_fixed.txt</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'s/^R129_E/129E/; s/^R13_C/13C/'</span> mmc5_metadata_fixed.txt <span class="op">&gt;</span> mmc5_metadata_named.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<section id="rename-two-strains" class="level2">
-<h2 class="anchored" data-anchor-id="rename-two-strains">Rename two strains</h2>
-<p>The growth data and the strain metadata describe the same two bacteria, but with different names: <code>129E</code> and <code>13C</code> in the growth data, <code>R129_E</code> and <code>R13_C</code> in column 1 of the metadata. On the next page you combine the two tables, and for that the names must match. Here is a command that renames the two strains in the metadata, of the kind you get from an LLM or a forum:</p>
+<section id="the-same-renaming-with-awk" class="level2">
+<h2 class="anchored" data-anchor-id="the-same-renaming-with-awk">The same renaming with AWK</h2>
+<p>On the <a href="../source/sed_basics.html#rename-two-strains">sed page</a>, you renamed <code>R129_E</code> and <code>R13_C</code> in column 1 of the metadata with one line of sed. Here is a command for the same job, of the kind you get from an LLM or a forum:</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'BEGIN{FS=OFS="\t"} {gsub(/R129_E/, "129E", $1); gsub(/R13_C/, "13C", $1); print}'</span> mmc5_metadata_fixed.txt <span class="op">&gt;</span> mmc5_metadata_awk.txt</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Check: the number of lines, and which lines changed</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Check: the number of lines, and compare with the file from the sed page</span></span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="fu">wc</span> <span class="at">-l</span> mmc5_metadata_awk.txt</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">diff</span> mmc5_metadata_fixed.txt mmc5_metadata_awk.txt <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-f1,4</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co"># The same change with sed, and a comparison</span></span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'s/^R129_E/129E/; s/^R13_C/13C/'</span> mmc5_metadata_fixed.txt <span class="op">&gt;</span> mmc5_metadata_named.txt</span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="fu">cmp</span> mmc5_metadata_awk.txt mmc5_metadata_named.txt <span class="kw">&amp;&amp;</span> <span class="bu">echo</span> <span class="st">'identical'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">cmp</span> mmc5_metadata_awk.txt mmc5_metadata_named.txt <span class="kw">&amp;&amp;</span> <span class="bu">echo</span> <span class="st">'identical'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>28 mmc5_metadata_awk.txt
-
-11c11
-&lt; R129_E    Rhizobium
----
-&gt; 129E  Rhizobium
-14c14
-&lt; R13_C Rhizobium
----
-&gt; 13C   Rhizobium
-
 identical</code></pre>
-<p>The command works: only lines 11 and 14 changed, and the file is the same as the one from sed. In the sed command, <code>^</code> means “the start of the line”, so sed only changes a name that stands at the start of a line, in column 1. Keep <code>mmc5_metadata_named.txt</code>, you use it on the next page.</p>
-<p>The AWK command uses two forms you have not seen yet: <code>BEGIN{FS=OFS="\t"}</code> and <code>gsub(...)</code>. The next two sections take them apart.</p>
+<p>The AWK command gives exactly the same file as your sed command. For this job, sed is enough. But the sed command only works because the names are in column 1, at the start of the line. The <code>$1</code> in the AWK command says which column to change, and you can choose any column. In the growth data, for example, the strain names are in column 2. To make the names match the other way round, with the long names in the growth data, you change <code>$1</code> into <code>$2</code>:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'BEGIN{FS=OFS="\t"} {gsub(/129E/, "R129_E", $2); gsub(/13C/, "R13_C", $2); print}'</span> awk_data/Growth_Data.txt <span class="op">&gt;</span> growth_long_names.txt</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Check: the number of lines, and the names in column 2</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="fu">wc</span> <span class="at">-l</span> growth_long_names.txt</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="fu">cut</span> <span class="at">-f2</span> growth_long_names.txt <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="at">-c</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>This prints:</p>
+<pre><code>595 growth_long_names.txt
+      1 Condition
+    210 R129_E
+    175 R13_C
+    209 mock</code></pre>
+<p>All 595 lines are still there, and the 385 plants with a bacterium now have the long names. You don’t use this file on the next pages: the short names are easier to read in the growth data, so the tutorial keeps them.</p>
+<p>Both AWK commands use two forms that you will see often: <code>BEGIN{FS=OFS="\t"}</code> and <code>gsub(...)</code>. The next two sections take them apart.</p>
 </section>
 <section id="begin-before-the-first-line" class="level2">
 <h2 class="anchored" data-anchor-id="begin-before-the-first-line"><code>BEGIN</code>: before the first line</h2>
 <p><code>BEGIN</code> is a pattern, like <code>NR == 1</code>. Its action runs once, before AWK reads the first line. It is the opposite of <code>END</code>, which you know from <a href="../source/awk_calc.html#sum-and-mean-of-a-column-variables-and-end">Calculate with AWK</a>: that action runs once, after the last line. You can see both in a small test:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'BEGIN { print "start" } END { print "end, lines read:", NR }'</span> mmc5_metadata_fixed.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'BEGIN { print "start" } END { print "end, lines read:", NR }'</span> mmc5_metadata_fixed.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>start
 end, lines read: 28</code></pre>
 <p><code>BEGIN</code> is a good place for settings that must be ready before the first line is read. <code>FS</code> is the field separator, the same setting that <code>-F</code> gives. <code>OFS</code> is the output field separator, the one you set with <code>-v OFS='\t'</code>. <code>FS=OFS="\t"</code> sets both to a tab in one go. So these two commands do the same:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'BEGIN{FS=OFS="\t"} {gsub(/R129_E/, "129E", $1); gsub(/R13_C/, "13C", $1); print}'</span> mmc5_metadata_fixed.txt <span class="op">&gt;</span> mmc5_metadata_awk.txt</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="at">-v</span> OFS=<span class="st">'\t'</span> <span class="st">'{gsub(/R129_E/, "129E", $1); gsub(/R13_C/, "13C", $1); print}'</span> mmc5_metadata_fixed.txt <span class="op">&gt;</span> mmc5_metadata_awk2.txt</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="fu">cmp</span> mmc5_metadata_awk2.txt mmc5_metadata_awk.txt <span class="kw">&amp;&amp;</span> <span class="bu">echo</span> <span class="st">'identical'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'BEGIN{FS=OFS="\t"} {gsub(/R129_E/, "129E", $1); gsub(/R13_C/, "13C", $1); print}'</span> mmc5_metadata_fixed.txt <span class="op">&gt;</span> mmc5_metadata_awk.txt</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="at">-v</span> OFS=<span class="st">'\t'</span> <span class="st">'{gsub(/R129_E/, "129E", $1); gsub(/R13_C/, "13C", $1); print}'</span> mmc5_metadata_fixed.txt <span class="op">&gt;</span> mmc5_metadata_awk2.txt</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="fu">cmp</span> mmc5_metadata_awk2.txt mmc5_metadata_awk.txt <span class="kw">&amp;&amp;</span> <span class="bu">echo</span> <span class="st">'identical'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>identical</code></pre>
@@ -476,11 +483,11 @@ end, lines read: 28</code></pre>
 <div class="callout-body-container callout-body">
 <p>If you set only <code>FS</code> and leave out <code>OFS</code>, AWK uses a space between the columns of each line it changed. Lines without a change stay as they are:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'BEGIN{FS="\t"} {gsub(/R129_E/, "129E", $1); gsub(/R13_C/, "13C", $1); print}'</span> mmc5_metadata_fixed.txt <span class="op">&gt;</span> mmc5_metadata_noofs.txt</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Look at line 10 (not changed) and line 11 (changed), and count the fields per line</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-n</span> <span class="st">'10,11p'</span> mmc5_metadata_noofs.txt <span class="kw">|</span> <span class="fu">cat</span> <span class="at">-A</span></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'{ print NF }'</span> mmc5_metadata_noofs.txt <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="at">-c</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'BEGIN{FS="\t"} {gsub(/R129_E/, "129E", $1); gsub(/R13_C/, "13C", $1); print}'</span> mmc5_metadata_fixed.txt <span class="op">&gt;</span> mmc5_metadata_noofs.txt</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Look at line 10 (not changed) and line 11 (changed), and count the fields per line</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-n</span> <span class="st">'10,11p'</span> mmc5_metadata_noofs.txt <span class="kw">|</span> <span class="fu">cat</span> <span class="at">-A</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'{ print NF }'</span> mmc5_metadata_noofs.txt <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="at">-c</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>CIAT899^IRhizobiales^IRhizobiaceae^IRhizobium^INodule^ILegume^ITRUE^IRhizobium spp.^I2^ITY^ITRUE^INA$
@@ -502,9 +509,9 @@ end, lines read: 28</code></pre>
 </ul>
 <p><code>sub</code> works the same, but replaces only the first match, like sed’s <code>s</code> without <code>g</code>. You can see the difference on the header of the metadata, where two column names contain a space. Many tools, R among them, are easier to use with column names without spaces:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span> <span class="at">-1</span> mmc5_metadata_fixed.txt</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'NR == 1 { sub(/ /, "_") } { print }'</span> mmc5_metadata_fixed.txt <span class="kw">|</span> <span class="fu">head</span> <span class="at">-1</span></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'NR == 1 { gsub(/ /, "_") } { print }'</span> mmc5_metadata_fixed.txt <span class="kw">|</span> <span class="fu">head</span> <span class="at">-1</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span> <span class="at">-1</span> mmc5_metadata_fixed.txt</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'NR == 1 { sub(/ /, "_") } { print }'</span> mmc5_metadata_fixed.txt <span class="kw">|</span> <span class="fu">head</span> <span class="at">-1</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'NR == 1 { gsub(/ /, "_") } { print }'</span> mmc5_metadata_fixed.txt <span class="kw">|</span> <span class="fu">head</span> <span class="at">-1</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>strain  Order   Family  Genus   compartment host    nifH    Taxonomy group  optimal dpi Media   RGP Colonization
@@ -514,10 +521,10 @@ strain  Order   Family  Genus   compartment host    nifH    Taxonomy_group  opti
 strain  Order   Family  Genus   compartment host    nifH    Taxonomy_group  optimal_dpi Media   RGP Colonization</code></pre>
 <p><code>sub</code> changed only the first space, <code>gsub</code> both. Here you give no field after the replacement, so both work on the whole line. The pattern <code>NR == 1</code> limits the change to the header: the values <code>Rhizobium spp.</code> and <code>50% TSB</code> further down keep their spaces. Check that with <code>diff</code>:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'NR == 1 { gsub(/ /, "_") } { print }'</span> mmc5_metadata_fixed.txt <span class="op">&gt;</span> mmc5_metadata_header.txt</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="fu">wc</span> <span class="at">-l</span> mmc5_metadata_header.txt</span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="fu">diff</span> mmc5_metadata_fixed.txt mmc5_metadata_header.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'NR == 1 { gsub(/ /, "_") } { print }'</span> mmc5_metadata_fixed.txt <span class="op">&gt;</span> mmc5_metadata_header.txt</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="fu">wc</span> <span class="at">-l</span> mmc5_metadata_header.txt</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="fu">diff</span> mmc5_metadata_fixed.txt mmc5_metadata_header.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>28 mmc5_metadata_header.txt
@@ -532,8 +539,8 @@ strain  Order   Family  Genus   compartment host    nifH    Taxonomy_group  opti
 <h2 class="anchored" data-anchor-id="and-match-a-pattern-in-one-field"><code>~</code> and <code>!~</code>: match a pattern in one field</h2>
 <p>So far, you kept lines with <code>==</code>, which means “exactly equal”. <code>~</code> means “contains a match of this regular expression”, and <code>!~</code> means “does not contain a match”. Look at column 8, the taxonomy group:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$8 == "Rhizobium"'</span> mmc5_metadata_fixed.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$8 ~ /Rhizobium/'</span> mmc5_metadata_fixed.txt <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-f1,8</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$8 == "Rhizobium"'</span> mmc5_metadata_fixed.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$8 ~ /Rhizobium/'</span> mmc5_metadata_fixed.txt <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-f1,8</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>0
@@ -548,14 +555,14 @@ Root149 Rhizobium spp.</code></pre>
 <p>No value in column 8 is exactly <code>Rhizobium</code>, so <code>==</code> finds nothing. <code>~</code> finds the 7 lines in which column 8 contains <code>Rhizobium</code>. The difference with <code>grep Rhizobium</code> is that <code>grep</code> looks in the whole line, and <code>~</code> only in the column you name. Here <code>Rhizobium</code> is also a genus in column 4, so with <code>grep</code> you could not tell which column matched.</p>
 <p>The special characters from sed work here too, for example <code>^</code> for the start. <code>$1 ~ /^Root/</code> keeps the strains whose name starts with <code>Root</code>:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$1 ~ /^Root/'</span> mmc5_metadata_fixed.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$1 ~ /^Root/'</span> mmc5_metadata_fixed.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>17</code></pre>
 <p>With <code>!~</code>, you can look for values that do not have the form you expect. A root length should be a number: only digits and a decimal point. In a regular expression, <code>[0-9.]</code> means “one character that is a digit or a dot”, and <code>+</code> means “the character before it, once or more”. So <code>^[0-9.]+$</code> means “from start to end only digits and dots”. Look for the lines where column 4 is not like that:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR &gt; 1 &amp;&amp; $4 !~ /^[0-9.]+$/'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR &gt; 1 &amp;&amp; $4 !~ /^[0-9.]+$/'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">head</span> <span class="at">-3</span> <span class="kw">|</span> <span class="fu">cat</span> <span class="at">-A</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR &gt; 1 &amp;&amp; $4 !~ /^[0-9.]+$/'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR &gt; 1 &amp;&amp; $4 !~ /^[0-9.]+$/'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">head</span> <span class="at">-3</span> <span class="kw">|</span> <span class="fu">cat</span> <span class="at">-A</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>15
@@ -576,7 +583,7 @@ high_P^Imock^Iex64^I^I26$</code></pre>
 </div>
 <div id="callout-3" class="callout-3-contents callout-collapse collapse show">
 <div class="callout-body-container callout-body">
-<p>On the <a href="../source/sed_basics.html">sed page</a>, you added <code>_host</code> to every host in column 6 with <code>NR &gt; 1 { $6 = $6 "_host" }</code>. Run twice, that command gives <code>Arabidopsis_host_host</code>. Change it, so that it adds <code>_host</code> only to hosts that do not end in <code>_host</code> yet. Use <code>mmc5_metadata_fixed.txt</code>, save the result as <code>metadata_host.txt</code>, then run your command a second time on <code>metadata_host.txt</code> and check that nothing changes. Finally, explain your pattern in one sentence, in your own words.</p>
+<p>In the exercise in <a href="../source/sed_basics.html#sed--i-change-the-file-itself"><code>sed -i</code>: change the file itself</a> on the sed page, you added <code>_host</code> to every host in column 6 with <code>NR &gt; 1 { $6 = $6 "_host" }</code>. Run twice, that command gives <code>Arabidopsis_host_host</code>. Change it, so that it adds <code>_host</code> only to hosts that do not end in <code>_host</code> yet. Use <code>mmc5_metadata_fixed.txt</code>, save the result as <code>metadata_host.txt</code>, then run your command a second time on <code>metadata_host.txt</code> and check that nothing changes. Finally, explain your pattern in one sentence, in your own words.</p>
 <div class="callout callout-style-default callout-answer callout-titled" title="Click me to see an answer">
 <div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
@@ -591,14 +598,14 @@ high_P^Imock^Iex64^I^I26$</code></pre>
 <div class="callout-body-container callout-body">
 <p>Add <code>$6 !~ /_host$/</code> to the pattern. <code>_host$</code> means “<code>_host</code> at the end”, and <code>!~</code> means “does not match”:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Run once, and a second time on the result</span></span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="at">-v</span> OFS=<span class="st">'\t'</span> <span class="st">'NR &gt; 1 &amp;&amp; $6 !~ /_host$/ { $6 = $6 "_host" } { print }'</span> mmc5_metadata_fixed.txt <span class="op">&gt;</span> metadata_host.txt</span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="at">-v</span> OFS=<span class="st">'\t'</span> <span class="st">'NR &gt; 1 &amp;&amp; $6 !~ /_host$/ { $6 = $6 "_host" } { print }'</span> metadata_host.txt <span class="op">&gt;</span> metadata_host2.txt</span>
-<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Check</span></span>
-<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="fu">cut</span> <span class="at">-f6</span> metadata_host2.txt <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="at">-c</span></span>
-<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a><span class="fu">cmp</span> metadata_host.txt metadata_host2.txt <span class="kw">&amp;&amp;</span> <span class="bu">echo</span> <span class="st">'identical'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Run once, and a second time on the result</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="at">-v</span> OFS=<span class="st">'\t'</span> <span class="st">'NR &gt; 1 &amp;&amp; $6 !~ /_host$/ { $6 = $6 "_host" } { print }'</span> mmc5_metadata_fixed.txt <span class="op">&gt;</span> metadata_host.txt</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="at">-v</span> OFS=<span class="st">'\t'</span> <span class="st">'NR &gt; 1 &amp;&amp; $6 !~ /_host$/ { $6 = $6 "_host" } { print }'</span> metadata_host.txt <span class="op">&gt;</span> metadata_host2.txt</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Check</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="fu">cut</span> <span class="at">-f6</span> metadata_host2.txt <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="at">-c</span></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a><span class="fu">cmp</span> metadata_host.txt metadata_host2.txt <span class="kw">&amp;&amp;</span> <span class="bu">echo</span> <span class="st">'identical'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>     22 Arabidopsis_host
@@ -619,8 +626,8 @@ identical</code></pre>
 <h2 class="anchored" data-anchor-id="v-give-awk-a-value-from-outside"><code>-v</code>: give AWK a value from outside</h2>
 <p>You know <code>-v</code> from <code>-v OFS='\t'</code>: it sets a variable before AWK starts. A <strong>variable</strong> is a name that holds a value. You can make your own, with any name you like. Here <code>strain</code> holds the text <code>129E</code>:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="at">-v</span> strain=129E <span class="st">'$2 == strain'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="at">-v</span> strain=13C <span class="st">'$2 == strain'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="at">-v</span> strain=129E <span class="st">'$2 == strain'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="at">-v</span> strain=13C <span class="st">'$2 == strain'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>210
@@ -628,14 +635,14 @@ identical</code></pre>
 <p>Inside the AWK command, <code>strain</code> has no quotes: it is the name of the variable, not the text <code>strain</code>. The command stays the same, and only the value after <code>-v</code> changes.</p>
 <p>This is most useful in a <code>for</code> loop in bash, which repeats a command for each value in a list. In the loop below, the bash variable <code>s</code> holds <code>129E</code>, then <code>13C</code>, then <code>mock</code>. <code>-v strain="$s"</code> hands each value over to AWK, and AWK writes one file per condition, with the header (<code>NR == 1</code>):</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> s <span class="kw">in</span> 129E 13C mock<span class="kw">;</span> <span class="cf">do</span></span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="at">-v</span> strain=<span class="st">"</span><span class="va">$s</span><span class="st">"</span> <span class="st">'NR == 1 || $2 == strain'</span> awk_data/Growth_Data.txt <span class="op">&gt;</span> growth_<span class="st">"</span><span class="va">$s</span><span class="st">"</span>.txt</span>
-<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span>
-<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Check</span></span>
-<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a><span class="fu">wc</span> <span class="at">-l</span> growth_129E.txt growth_13C.txt growth_mock.txt</span>
-<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span> <span class="at">-2</span> growth_13C.txt</span>
-<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a><span class="fu">cut</span> <span class="at">-f2</span> growth_13C.txt <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="at">-c</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> s <span class="kw">in</span> 129E 13C mock<span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="at">-v</span> strain=<span class="st">"</span><span class="va">$s</span><span class="st">"</span> <span class="st">'NR == 1 || $2 == strain'</span> awk_data/Growth_Data.txt <span class="op">&gt;</span> growth_<span class="st">"</span><span class="va">$s</span><span class="st">"</span>.txt</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Check</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a><span class="fu">wc</span> <span class="at">-l</span> growth_129E.txt growth_13C.txt growth_mock.txt</span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span> <span class="at">-2</span> growth_13C.txt</span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a><span class="fu">cut</span> <span class="at">-f2</span> growth_13C.txt <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="at">-c</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>  211 growth_129E.txt
@@ -662,10 +669,10 @@ low_P   13C ex61    54.3    1.56
 <div class="callout-body-container callout-body">
 <p>Why not write <code>$s</code> straight into the AWK command? Bash does not look inside single quotes, so AWK gets the text <code>$s</code> and not the value. Try it:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> s <span class="kw">in</span> 129E 13C mock<span class="kw">;</span> <span class="cf">do</span></span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> <span class="st">"</span><span class="va">$s</span><span class="st">"</span></span>
-<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$2 == "$s"'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
-<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> s <span class="kw">in</span> 129E 13C mock<span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> <span class="st">"</span><span class="va">$s</span><span class="st">"</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$2 == "$s"'</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>129E
@@ -682,7 +689,7 @@ mock
 <h2 class="anchored" data-anchor-id="split-cut-a-value-into-parts"><code>split</code>: cut a value into parts</h2>
 <p><code>split</code> cuts a value into parts at a separator, and puts the parts in an array. Here the names in the array are numbers: <code>parts[1]</code> is the first part, <code>parts[2]</code> the second, and so on. It gives back the number of parts. Take the four strain names with an underscore:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$1 ~ /_/ { n = split($1, parts, "_"); print $1, n, parts[1], parts[2] }'</span> mmc5_metadata_fixed.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$1 ~ /_/ { n = split($1, parts, "_"); print $1, n, parts[1], parts[2] }'</span> mmc5_metadata_fixed.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>R129_E 2 R129 E
@@ -691,7 +698,7 @@ R13_A 2 R13 A
 R13_C 2 R13 C</code></pre>
 <p><code>split($1, parts, "_")</code> means: cut column 1 at each <code>_</code>, and put the pieces in <code>parts</code>. <code>R129_E</code> gives 2 parts, <code>R129</code> and <code>E</code>. The number of parts is a useful check. For example, split the taxonomy group in column 8 at the space, and count how many words each value has:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR &gt; 1 { n = split($8, words, " "); print n, $8 }'</span> mmc5_metadata_fixed.txt <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="at">-c</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR &gt; 1 { n = split($8, words, " "); print n, $8 }'</span> mmc5_metadata_fixed.txt <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="at">-c</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>      2 1 Agrobacterium
@@ -717,12 +724,12 @@ R13_C 2 R13 C</code></pre>
 <div class="callout-body-container callout-body">
 <p>The command at the top of this page uses one explicit change per name. A quick general rule, such as “remove the <code>R</code> at the start and the underscore”, would also turn <code>Root123D2</code> into <code>oot123D2</code>. A general rule can work, if it is precise and you check what it changes. sed can remember parts of a match with <strong>capture groups</strong>: the parts of a regular expression between brackets <code>( )</code>. In the replacement, <code>\1</code> puts back what the first pair of brackets matched, and <code>\2</code> the second:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-E</span> <span class="st">'s/^R([0-9]+)_([A-Z])\t/\1\2\t/'</span> mmc5_metadata_fixed.txt <span class="op">&gt;</span> mmc5_metadata_regex.txt</span>
-<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Check</span></span>
-<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a><span class="fu">wc</span> <span class="at">-l</span> mmc5_metadata_regex.txt</span>
-<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a><span class="fu">diff</span> mmc5_metadata_fixed.txt mmc5_metadata_regex.txt <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-f1</span></span>
-<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a><span class="fu">cut</span> <span class="at">-f1</span> mmc5_metadata_regex.txt <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-c</span> <span class="st">'^oot'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-E</span> <span class="st">'s/^R([0-9]+)_([A-Z])\t/\1\2\t/'</span> mmc5_metadata_fixed.txt <span class="op">&gt;</span> mmc5_metadata_regex.txt</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Check</span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a><span class="fu">wc</span> <span class="at">-l</span> mmc5_metadata_regex.txt</span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a><span class="fu">diff</span> mmc5_metadata_fixed.txt mmc5_metadata_regex.txt <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-f1</span></span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a><span class="fu">cut</span> <span class="at">-f1</span> mmc5_metadata_regex.txt <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-c</span> <span class="st">'^oot'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>28 mmc5_metadata_regex.txt
@@ -741,7 +748,7 @@ R13_C 2 R13 C</code></pre>
 0</code></pre>
 <p>Read the regular expression from left to right: <code>^R</code> an <code>R</code> at the start of the line, <code>([0-9]+)</code> one or more digits (group 1), <code>_</code> an underscore, <code>([A-Z])</code> one capital letter (group 2), and <code>\t</code> the tab at the end of column 1. <code>-E</code> tells sed that brackets mean capture groups. (Tested with GNU sed. On a Mac, see the tip about <code>\t</code> on the <a href="../source/sed_basics.html">sed page</a>.) So <code>R129_E</code> becomes <code>129E</code>, and <code>Root123D2</code> does not match, because an <code>o</code> is not a digit. The last check counts the names that start with <code>oot</code>: 0.</p>
 <p>The rule changed four names, not only the two in the growth data. That is fine here, because all four now follow the same naming scheme. The <code>diff</code> shows you exactly which names changed, so you can decide. A rename with <code>split</code> and <code>sub</code> gives an identical file.</p>
-<p>In code from an LLM, you may also see <code>match($1, /^R([0-9]+)_([A-Z])$/, m)</code>, which puts the groups in the array <code>m</code>. This only works in GNU awk: run with <code>gawk --posix</code>, AWK stops with “match: third argument is a gawk extension”. (Tested 2026-10-29 in WSL and Git Bash. Not tested on a Mac.)</p>
+<p>In code from an LLM, you may also see <code>match($1, /^R([0-9]+)_([A-Z])$/, m)</code>, which puts the groups in the array <code>m</code>. This only works in GNU awk: run with <code>gawk --posix</code>, AWK stops with “match: third argument is a gawk extension”.</p>
 </div>
 </div>
 </div>
@@ -758,7 +765,7 @@ R13_C 2 R13 C</code></pre>
 <li><code>split(value, parts, "_")</code> cuts a value into parts, and gives back how many there are.</li>
 <li>A general rename can work if it is precise. Check with <code>diff</code> which names it changed.</li>
 </ul>
-<p>On the next page, <a href="../source/awk_join.html">Combining two files</a>, you add the genus from the strain metadata to the growth data.</p>
+<p>On the next page, <a href="../source/awk_combine.html">Stack tables</a>, you stack one table per condition into one long table, with a column that tells you where each row came from.</p>
 
 
 </section>
@@ -1184,8 +1191,8 @@ R13_C 2 R13 C</code></pre>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="../source/awk_join.html" class="pagination-link" aria-label="Combining two files">
-        <span class="nav-page-text">Combining two files</span> <i class="bi bi-arrow-right-short"></i>
+      <a href="../source/awk_combine.html" class="pagination-link" aria-label="Stack tables">
+        <span class="nav-page-text">Stack tables</span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>

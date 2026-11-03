@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Combining two files – Working with tables using AWK and sed</title>
+<title>Join two tables – Working with tables using AWK and sed</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -66,7 +66,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../">
 <link href="../source/awk_fasta.html" rel="next">
-<link href="../source/awk_more.html" rel="prev">
+<link href="../source/awk_combine.html" rel="prev">
 <script src="../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
 <script src="../site_libs/quarto-html/axe/axe-check.js" type="module"></script>
@@ -284,7 +284,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../source/awk_join.html">Combining two files</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../source/awk_join.html">Join two tables</a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -344,8 +344,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="../source/awk_combine.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Stack tables</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="../source/awk_join.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text">Combining two files</span></a>
+ <span class="menu-text">Join two tables</span></a>
   </div>
 </li>
         <li class="sidebar-item">
@@ -380,8 +386,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul class="collapse">
   <li><a href="#why--ft-matters-here-too" id="toc-why--ft-matters-here-too" class="nav-link" data-scroll-target="#why--ft-matters-here-too">Why <code>-F'\t'</code> matters here too</a></li>
   <li><a href="#the-names-in-both-files" id="toc-the-names-in-both-files" class="nav-link" data-scroll-target="#the-names-in-both-files">The names in both files</a></li>
+  <li><a href="#when-names-dont-match" id="toc-when-names-dont-match" class="nav-link" data-scroll-target="#when-names-dont-match">When names don’t match</a></li>
   </ul></li>
-  <li><a href="#make-the-names-match" id="toc-make-the-names-match" class="nav-link" data-scroll-target="#make-the-names-match">Make the names match</a></li>
   <li><a href="#add-the-genus-nr-fnr" id="toc-add-the-genus-nr-fnr" class="nav-link" data-scroll-target="#add-the-genus-nr-fnr">Add the genus: <code>NR == FNR</code></a>
   <ul class="collapse">
   <li><a href="#give-the-new-column-a-name" id="toc-give-the-new-column-a-name" class="nav-link" data-scroll-target="#give-the-new-column-a-name">Give the new column a name</a></li>
@@ -398,7 +404,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Combining two files</h1>
+<h1 class="title">Join two tables</h1>
 </div>
 
 
@@ -416,7 +422,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 <p>On this page, you add information from one table to another: the genus of each bacterial strain, from the strain metadata, to each plant in the growth data. Combining two tables by a shared name is called a <strong>join</strong>. It is one of the most common jobs in bioinformatics, for example when you add sample information to a table of read counts, or a taxonomy to a list of sequences. It is also a job where small mistakes give a wrong result without any error message, so a large part of this page is about checking the result.</p>
-<p>You use the same folder as on the previous pages. Besides <code>awk_data/Growth_Data.txt</code>, you need two versions of the strain metadata: <code>mmc5_metadata_fixed.txt</code>, without Windows line endings, from the <a href="../source/sed_basics.html#windows-line-endings">sed page</a>, and <code>mmc5_metadata_named.txt</code>, with two strains renamed, from the page <a href="../source/awk_more.html#rename-two-strains">More useful AWK</a>. If you do not have them anymore, make them again:</p>
+<p>You use the same folder as on the previous pages. Besides <code>awk_data/Growth_Data.txt</code>, you need two versions of the strain metadata from the <a href="../source/sed_basics.html">sed page</a>: <code>mmc5_metadata_fixed.txt</code>, without Windows line endings, and <code>mmc5_metadata_named.txt</code>, with two strains renamed. If you do not have them anymore, make them again:</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'s/\r$//'</span> awk_data/mmc5_metadata.txt <span class="op">&gt;</span> mmc5_metadata_fixed.txt</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'s/^R129_E/129E/; s/^R13_C/13C/'</span> mmc5_metadata_fixed.txt <span class="op">&gt;</span> mmc5_metadata_named.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -468,14 +474,14 @@ Root$</code></pre>
 </section>
 <section id="the-names-in-both-files" class="level3">
 <h3 class="anchored" data-anchor-id="the-names-in-both-files">The names in both files</h3>
-<p>The two tables share the names of the bacteria: column 2 of the growth data, and column 1 of the metadata. First look at the names in the growth data. Then search the metadata for the numbers of these two bacteria, <code>129</code> and <code>13</code>:</p>
+<p>The two tables share the names of the bacteria: column 2 of the growth data, and column 1 of the metadata. On the <a href="../source/sed_basics.html#rename-two-strains">sed page</a>, you saw that the metadata called the two bacteria <code>R129_E</code> and <code>R13_C</code>, and you renamed them in <code>mmc5_metadata_named.txt</code>. AWK compares names letter by letter, so before a join, check that the names now really match. Look at the names in the growth data, then search the renamed metadata for the numbers of the two bacteria, <code>129</code> and <code>13</code>:</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># The bacteria names in the growth data</span></span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cut</span> <span class="at">-f2</span> awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="at">-c</span></span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Names in the metadata that contain 129 or 13</span></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="fu">cut</span> <span class="at">-f1</span> mmc5_metadata_fixed.txt <span class="kw">|</span> <span class="fu">grep</span> <span class="st">'129'</span></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="fu">cut</span> <span class="at">-f1</span> mmc5_metadata_fixed.txt <span class="kw">|</span> <span class="fu">grep</span> <span class="st">'13'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Names in the renamed metadata that contain 129 or 13</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="fu">cut</span> <span class="at">-f1</span> mmc5_metadata_named.txt <span class="kw">|</span> <span class="fu">grep</span> <span class="st">'129'</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="fu">cut</span> <span class="at">-f1</span> mmc5_metadata_named.txt <span class="kw">|</span> <span class="fu">grep</span> <span class="st">'13'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>    210 129E
@@ -483,18 +489,17 @@ Root$</code></pre>
       1 Condition
     209 mock
 
-R129_E
+129E
 R129_N
 
 R13_A
-R13_C</code></pre>
-<p>You can see that bacteria <code>129E</code> and <code>13C</code> are the names used in the growth data, but in the metadata these bacteria are called <code>R129_E</code> and <code>R13_C</code>. These are the same strains, written in two ways. AWK compares names letter by letter, so <code>129E</code> and <code>R129_E</code> do not match. Before you can combine the tables, the names must be the same.</p>
+13C</code></pre>
+<p><code>129E</code> and <code>13C</code> are now written the same way in both tables, and the other strains, <code>R129_N</code> and <code>R13_A</code>, kept their names. The renamed file is the one to use for the join.</p>
 </section>
-</section>
-<section id="make-the-names-match" class="level2">
-<h2 class="anchored" data-anchor-id="make-the-names-match">Make the names match</h2>
+<section id="when-names-dont-match" class="level3">
+<h3 class="anchored" data-anchor-id="when-names-dont-match">When names don’t match</h3>
 <p>This happens all the time: one person writes <code>Sample-01</code>, another <code>Sample_01</code>, and the sequencing center sends back <code>S01</code>. A good habit is to choose one way of naming your samples at the start of a project, for example short names without spaces or special characters, and to use it everywhere: in your lab notes, in file names and in every table. Fixing names afterwards is extra work, and it is easy to get wrong.</p>
-<p>You already made the names match at the start of the page <a href="../source/awk_more.html#rename-two-strains">More useful AWK</a>. There you renamed the two strains in the metadata, the smaller of the two tables, with one explicit change per name, and saved the result as <code>mmc5_metadata_named.txt</code>. The <code>diff</code> showed that exactly two lines changed, lines 11 and 14. That is a good habit to keep: whenever you use a command to change names, look at all names after the change, not only at the ones you wanted to change.</p>
+<p>If you do have to fix names, keep one more habit: whenever you use a command to change names, look at all names after the change, not only at the ones you wanted to change.</p>
 <div class="callout callout-style-default callout-tip callout-titled" title="Tip: why not one general rule? (optional)">
 <div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
@@ -507,7 +512,7 @@ R13_C</code></pre>
 </div>
 <div id="callout-1" class="callout-1-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
-<p>Another idea to change names is to change all names at once, for example: remove the <code>R</code> at the start, and the underscore. <code>^R</code> means “an <code>R</code> at the start of the line”:</p>
+<p>Another idea to change names is to change all names at once, for example: remove the <code>R</code> at the start, and the underscore. As on the sed page, <code>^R</code> means “an <code>R</code> at the start of the line”. The commands use <code>mmc5_metadata_fixed.txt</code>, the file before the rename:</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cut</span> <span class="at">-f1</span> mmc5_metadata_fixed.txt <span class="kw">|</span> <span class="fu">sed</span> <span class="st">'s/^R//; s/_//'</span> <span class="kw">|</span> <span class="fu">grep</span> <span class="st">'^1'</span></span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cut</span> <span class="at">-f1</span> mmc5_metadata_fixed.txt <span class="kw">|</span> <span class="fu">sed</span> <span class="st">'s/^R//; s/_//'</span> <span class="kw">|</span> <span class="fu">head</span> <span class="at">-4</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -526,6 +531,7 @@ USDA61</code></pre>
 </div>
 </div>
 </div>
+</section>
 </section>
 <section id="add-the-genus-nr-fnr" class="level2">
 <h2 class="anchored" data-anchor-id="add-the-genus-nr-fnr">Add the genus: <code>NR == FNR</code></h2>
@@ -570,30 +576,21 @@ low_P   13C ex61    81  4   Rhizobium</code></pre>
 <p>595 lines, as many as in the growth data. The plants with <code>129E</code> and <code>13C</code> now have <code>Rhizobium</code> in a new column 6. The <code>mock</code> plants have an empty column 6, because no strain is called <code>mock</code>.</p>
 <p>With two lines of AWK, all 595 plants now carry the genus of their bacterium. With a metadata table of 1,000 strains and a count table of 10,000 samples, the command stays exactly the same.</p>
 <p>You will see <code>NR == FNR</code> in many AWK commands that combine two files, so it is worth taking it apart.</p>
-<p>The command has two parts, each with its own pattern and action: <code>NR == FNR { genus[$1] = $4; next }</code> and <code>{ print $0, genus[$2] }</code>. For each line, AWK checks the parts from top to bottom, and runs the action of every part whose pattern matches. A part without a pattern runs on every line. <code>next</code> stops this: AWK skips the remaining parts and goes on to the next line. Below, you look at each piece in turn. <code>next</code> is not a pattern like <code>END</code> or <code>BEGIN</code>. It does not decide when an action runs. It is a step inside an action, and it tells AWK to stop working on this line and move on to the next one.</p>
-<p><strong><code>NR</code> and <code>FNR</code>.</strong> You know <code>NR</code> from <a href="../source/awk_table.html#nr-work-with-the-header-line">AWK on a table</a>: the line number. When AWK reads several files, <code>NR</code> keeps counting across all of them. <code>FNR</code> is the line number within the current file, and starts at 1 again in each new file. <code>FILENAME</code> holds the name of the current file. You can see the difference where AWK moves from the first file to the second (<code>sed -n '27,30p'</code> prints lines 27 to 30):</p>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'{ print FILENAME, NR, FNR }'</span> mmc5_metadata_named.txt awk_data/Growth_Data.txt <span class="kw">|</span> <span class="fu">sed</span> <span class="at">-n</span> <span class="st">'27,30p'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-<p>This prints:</p>
-<pre><code>mmc5_metadata_named.txt 27 27
-mmc5_metadata_named.txt 28 28
-awk_data/Growth_Data.txt 29 1
-awk_data/Growth_Data.txt 30 2</code></pre>
-<p>In the first file, <code>NR</code> and <code>FNR</code> are the same. From the second file on, they differ. So the pattern <code>NR == FNR</code> is true only while AWK reads the first file.</p>
+<p>The command has two parts, each with its own pattern and action: <code>NR == FNR { genus[$1] = $4; next }</code> and <code>{ print $0, genus[$2] }</code>. As on <a href="../source/awk_combine.html#stack-the-tables-with-awk">Stack tables</a>, AWK checks the parts from top to bottom for each line, and runs the action of every part whose pattern matches. A part without a pattern runs on every line. <code>next</code> stops this: AWK skips the remaining parts and goes on to the next line. Below, you look at each piece in turn. <code>next</code> is not a pattern like <code>END</code> or <code>BEGIN</code>. It does not decide when an action runs. It is a step inside an action, and it tells AWK to stop working on this line and move on to the next one.</p>
+<p><strong><code>NR</code> and <code>FNR</code>.</strong> You know both from <a href="../source/awk_combine.html#fnr-and-filename-where-awk-is">Stack tables</a>: <code>NR</code> keeps counting across all files, and <code>FNR</code> starts at 1 again in each new file. So in the first file, <code>NR</code> and <code>FNR</code> are the same. From the second file on, they differ: the metadata has 28 lines, so line 1 of the growth data has <code>NR</code> 29 and <code>FNR</code> 1. The pattern <code>NR == FNR</code> is therefore true only while AWK reads the first file.</p>
 <p><strong>The first part</strong>, <code>NR == FNR { genus[$1] = $4; next }</code>, therefore runs only on the metadata. Here, <code>genus</code> is an array, a variable that holds one value per name, as on <a href="../source/awk_calc.html#count-and-mean-per-group-arrays">Calculate with AWK</a>. Take line 11 of the metadata, now that you renamed the strain:</p>
 <pre><code>129E    Rhizobiales Rhizobiaceae    Rhizobium   Root    Arabidopsis FALSE   Rhizobium spp.  2   TY  TRUE    TRUE</code></pre>
 <p>Here <code>$1</code> is <code>129E</code> and <code>$4</code> is <code>Rhizobium</code>. So <code>genus[$1] = $4</code> means <code>genus["129E"] = "Rhizobium"</code>: store the genus from column 4 under the name of the strain in column 1. You use the strain as the name, because the strain is what you want to look up later in the growth data. The genus is the value, because that is what you want back. Then <code>next</code> makes AWK go on to the next line, so the second part does not run on the metadata.</p>
 <p>You can look at the values in the array after AWK has read the whole metadata table:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="st">  { genus[$1] = $4 }</span></span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="st">  END {</span></span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="st">    print "129E:", genus["129E"]</span></span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="st">    print "Root154:", genus["Root154"]</span></span>
-<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="st">    print "mock:", genus["mock"]</span></span>
-<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="st">  }</span></span>
-<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> mmc5_metadata_named.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="st">  { genus[$1] = $4 }</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="st">  END {</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="st">    print "129E:", genus["129E"]</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="st">    print "Root154:", genus["Root154"]</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="st">    print "mock:", genus["mock"]</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="st">  }</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> mmc5_metadata_named.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>129E: Rhizobium
@@ -610,7 +607,7 @@ mock:</code></pre>
 <h3 class="anchored" data-anchor-id="give-the-new-column-a-name">Give the new column a name</h3>
 <p>The result has the right number of lines, but it is not finished yet. Look at the end of the first two lines with <code>cat -A</code>:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span> <span class="at">-2</span> growth_genus.txt <span class="kw">|</span> <span class="fu">cat</span> <span class="at">-A</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span> <span class="at">-2</span> growth_genus.txt <span class="kw">|</span> <span class="fu">cat</span> <span class="at">-A</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>Nutrient^ICondition^IExperiment^IRootlength^IFW_shoot_mg^I$
@@ -618,15 +615,15 @@ low_P^Imock^Iex61^I40.4^I6.6^I$</code></pre>
 <p>Both lines end with a tab and nothing after it: an empty column 6. For the <code>mock</code> plant, that is expected. For the header it is not: the new column has no name. The header went through the second part like any other line. Column 2 of the header is <code>Condition</code>, and <code>Condition</code> is not a name in the array.</p>
 <p>To give the new column a name, add a new part between the two others. Its pattern, <code>FNR == 1</code>, matches line 1 of a file. The metadata never gets this far, because the first part skips every metadata line to the next line with <code>next</code>. So the new part only runs on the header of the growth data:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="at">-v</span> OFS=<span class="st">'\t'</span> <span class="st">'</span></span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="st">  NR == FNR  { genus[$1] = $4; next }</span></span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="st">  FNR == 1   { print $0, "Genus"; next }</span></span>
-<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="st">             { print $0, genus[$2] }</span></span>
-<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> mmc5_metadata_named.txt awk_data/Growth_Data.txt <span class="op">&gt;</span> growth_genus.txt</span>
-<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Check</span></span>
-<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a><span class="fu">wc</span> <span class="at">-l</span> growth_genus.txt</span>
-<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span> <span class="at">-3</span> growth_genus.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="at">-v</span> OFS=<span class="st">'\t'</span> <span class="st">'</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="st">  NR == FNR  { genus[$1] = $4; next }</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="st">  FNR == 1   { print $0, "Genus"; next }</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="st">             { print $0, genus[$2] }</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> mmc5_metadata_named.txt awk_data/Growth_Data.txt <span class="op">&gt;</span> growth_genus.txt</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Check</span></span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a><span class="fu">wc</span> <span class="at">-l</span> growth_genus.txt</span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span> <span class="at">-3</span> growth_genus.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>595 growth_genus.txt
@@ -647,14 +644,14 @@ low_P   mock    ex61    38  6.8</code></pre>
 <div class="callout-body-container callout-body">
 <p>Without <code>next</code> in the first part, the other parts also run on the lines of the metadata. You get no error:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="at">-v</span> OFS=<span class="st">'\t'</span> <span class="st">'</span></span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="st">  NR == FNR  { genus[$1] = $4 }</span></span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a><span class="st">  FNR == 1   { print $0, "Genus"; next }</span></span>
-<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a><span class="st">             { print $0, genus[$2] }</span></span>
-<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> mmc5_metadata_named.txt awk_data/Growth_Data.txt <span class="op">&gt;</span> growth_genus_nonext.txt</span>
-<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a><span class="fu">wc</span> <span class="at">-l</span> growth_genus_nonext.txt</span>
-<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span> <span class="at">-3</span> growth_genus_nonext.txt <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-f1,13</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="at">-v</span> OFS=<span class="st">'\t'</span> <span class="st">'</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="st">  NR == FNR  { genus[$1] = $4 }</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="st">  FNR == 1   { print $0, "Genus"; next }</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="st">             { print $0, genus[$2] }</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> mmc5_metadata_named.txt awk_data/Growth_Data.txt <span class="op">&gt;</span> growth_genus_nonext.txt</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a><span class="fu">wc</span> <span class="at">-l</span> growth_genus_nonext.txt</span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span> <span class="at">-3</span> growth_genus_nonext.txt <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-f1,13</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>623 growth_genus_nonext.txt
@@ -672,8 +669,8 @@ Root381</code></pre>
 <p>The line count tells you that no lines were lost or added. It does not tell you whether each line got the right genus. Two more checks help.</p>
 <p><strong>Check 1: lines without a genus.</strong> Count the empty fields in column 6, as on <a href="../source/awk_table.html#working-with-missing-values-empty-fields">AWK on a table</a>, and look at which strains they belong to:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$6 == ""'</span> growth_genus.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$6 == "" { print $2 }'</span> growth_genus.txt <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="at">-c</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$6 == ""'</span> growth_genus.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$6 == "" { print $2 }'</span> growth_genus.txt <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="at">-c</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>209
@@ -681,15 +678,15 @@ Root381</code></pre>
 <p>209 lines without a genus, all of them <code>mock</code> plants. That is expected: these plants got no bacteria. If other names show up here, a name did not match.</p>
 <p><strong>Check 2: strains that were not used.</strong> This time, read the growth data first and remember which strains it has. Then go through the metadata, and print the strains that were not seen in the growth data:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'</span></span>
-<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="st">  NR == FNR                 { seen[$2] = 1; next }</span></span>
-<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="st">  FNR &gt; 1 &amp;&amp; !($1 in seen)  { print $1 }</span></span>
-<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt mmc5_metadata_named.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
-<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'</span></span>
-<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a><span class="st">  NR == FNR                 { seen[$2] = 1; next }</span></span>
-<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a><span class="st">  FNR &gt; 1 &amp;&amp; !($1 in seen)  { print $1 }</span></span>
-<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt mmc5_metadata_named.txt <span class="kw">|</span> <span class="fu">head</span> <span class="at">-3</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="st">  NR == FNR                 { seen[$2] = 1; next }</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a><span class="st">  FNR &gt; 1 &amp;&amp; !($1 in seen)  { print $1 }</span></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt mmc5_metadata_named.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'</span></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a><span class="st">  NR == FNR                 { seen[$2] = 1; next }</span></span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a><span class="st">  FNR &gt; 1 &amp;&amp; !($1 in seen)  { print $1 }</span></span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt mmc5_metadata_named.txt <span class="kw">|</span> <span class="fu">head</span> <span class="at">-3</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>25
@@ -706,33 +703,33 @@ USDA61</code></pre>
 </ul>
 <p>25 of the 27 strains do not appear in the growth data. That is fine here, because the experiment used only two of them. In your own data, an entry you expected to be used may point to a name that is written differently in the two files. Without the <code>!</code>, the same command prints the strains that were used:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'</span></span>
-<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="st">  NR == FNR                 { seen[$2] = 1; next }</span></span>
-<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="st">  FNR &gt; 1 &amp;&amp; ($1 in seen)   { print $1 }</span></span>
-<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt mmc5_metadata_named.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="st">  NR == FNR                 { seen[$2] = 1; next }</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="st">  FNR &gt; 1 &amp;&amp; ($1 in seen)   { print $1 }</span></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt mmc5_metadata_named.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>129E
 13C</code></pre>
 <p><strong>What the checks do not catch.</strong> Run the same join and checks with the general rule from the tip above (<code>s/^R//; s/_//</code>, which removes the <code>R</code> at the start and the underscore):</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'s/^R//; s/_//'</span> mmc5_metadata_fixed.txt <span class="op">&gt;</span> mmc5_metadata_wrong.txt</span>
-<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="at">-v</span> OFS=<span class="st">'\t'</span> <span class="st">'</span></span>
-<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a><span class="st">  NR == FNR  { genus[$1] = $4; next }</span></span>
-<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a><span class="st">  FNR == 1   { print $0, "Genus"; next }</span></span>
-<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a><span class="st">             { print $0, genus[$2] }</span></span>
-<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> mmc5_metadata_wrong.txt awk_data/Growth_Data.txt <span class="op">&gt;</span> growth_genus_wrong.txt</span>
-<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Check 1, and a comparison with the correct join</span></span>
-<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$6 == "" { print $2 }'</span> growth_genus_wrong.txt <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="at">-c</span></span>
-<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a><span class="fu">cmp</span> growth_genus_wrong.txt growth_genus.txt <span class="kw">&amp;&amp;</span> <span class="bu">echo</span> <span class="st">'identical to the correct join'</span></span>
-<span id="cb35-12"><a href="#cb35-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb35-13"><a href="#cb35-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Check 2</span></span>
-<span id="cb35-14"><a href="#cb35-14" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'</span></span>
-<span id="cb35-15"><a href="#cb35-15" aria-hidden="true" tabindex="-1"></a><span class="st">  NR == FNR                 { seen[$2] = 1; next }</span></span>
-<span id="cb35-16"><a href="#cb35-16" aria-hidden="true" tabindex="-1"></a><span class="st">  FNR &gt; 1 &amp;&amp; !($1 in seen)  { print $1 }</span></span>
-<span id="cb35-17"><a href="#cb35-17" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt mmc5_metadata_wrong.txt <span class="kw">|</span> <span class="fu">head</span> <span class="at">-3</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'s/^R//; s/_//'</span> mmc5_metadata_fixed.txt <span class="op">&gt;</span> mmc5_metadata_wrong.txt</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="at">-v</span> OFS=<span class="st">'\t'</span> <span class="st">'</span></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a><span class="st">  NR == FNR  { genus[$1] = $4; next }</span></span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a><span class="st">  FNR == 1   { print $0, "Genus"; next }</span></span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a><span class="st">             { print $0, genus[$2] }</span></span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> mmc5_metadata_wrong.txt awk_data/Growth_Data.txt <span class="op">&gt;</span> growth_genus_wrong.txt</span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Check 1, and a comparison with the correct join</span></span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$6 == "" { print $2 }'</span> growth_genus_wrong.txt <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="at">-c</span></span>
+<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a><span class="fu">cmp</span> growth_genus_wrong.txt growth_genus.txt <span class="kw">&amp;&amp;</span> <span class="bu">echo</span> <span class="st">'identical to the correct join'</span></span>
+<span id="cb33-12"><a href="#cb33-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-13"><a href="#cb33-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Check 2</span></span>
+<span id="cb33-14"><a href="#cb33-14" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'</span></span>
+<span id="cb33-15"><a href="#cb33-15" aria-hidden="true" tabindex="-1"></a><span class="st">  NR == FNR                 { seen[$2] = 1; next }</span></span>
+<span id="cb33-16"><a href="#cb33-16" aria-hidden="true" tabindex="-1"></a><span class="st">  FNR &gt; 1 &amp;&amp; !($1 in seen)  { print $1 }</span></span>
+<span id="cb33-17"><a href="#cb33-17" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> awk_data/Growth_Data.txt mmc5_metadata_wrong.txt <span class="kw">|</span> <span class="fu">head</span> <span class="at">-3</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>    209 mock
@@ -788,13 +785,13 @@ USDA61</code></pre>
 <div class="callout-body-container callout-body">
 <p>The pattern <code>$2 == "mock"</code> picks the <code>mock</code> plants, and the action puts <code>none</code> into column 6. The second part, <code>{ print }</code>, prints every line, changed or not. <code>-v OFS='\t'</code> keeps the tabs in the lines that changed:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="at">-v</span> OFS=<span class="st">'\t'</span> <span class="st">'$2 == "mock" { $6 = "none" } { print }'</span> growth_genus.txt <span class="op">&gt;</span> growth_genus_none.txt</span>
-<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Check</span></span>
-<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a><span class="fu">wc</span> <span class="at">-l</span> growth_genus_none.txt</span>
-<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span> <span class="at">-3</span> growth_genus_none.txt</span>
-<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$6 == ""'</span> growth_genus_none.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
-<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a><span class="fu">cut</span> <span class="at">-f2,6</span> growth_genus_none.txt <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="at">-c</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="at">-v</span> OFS=<span class="st">'\t'</span> <span class="st">'$2 == "mock" { $6 = "none" } { print }'</span> growth_genus.txt <span class="op">&gt;</span> growth_genus_none.txt</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Check</span></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a><span class="fu">wc</span> <span class="at">-l</span> growth_genus_none.txt</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span> <span class="at">-3</span> growth_genus_none.txt</span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$6 == ""'</span> growth_genus_none.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a><span class="fu">cut</span> <span class="at">-f2,6</span> growth_genus_none.txt <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="at">-c</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>595 growth_genus_none.txt
@@ -822,26 +819,26 @@ low_P   mock    ex61    38  6.8 none
 <h2 class="anchored" data-anchor-id="windows-line-endings-in-a-join">Windows line endings in a join</h2>
 <p>On the sed page, you removed the hidden <code>\r</code> from the metadata before you used it. Here is what happens if you skip that step. The <code>\r</code> sits at the end of each line, so it is part of the last column, column 12 (<code>Colonization</code>). Add this column to the growth data, once from the clean file and once from a renamed copy of the original Windows file:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="co"># The Windows file, with the two names changed, but without removing the \r</span></span>
-<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'s/^R129_E/129E/; s/^R13_C/13C/'</span> awk_data/mmc5_metadata.txt <span class="op">&gt;</span> mmc5_metadata_named_windows.txt</span>
-<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Add column 12, from the clean file and from the Windows file</span></span>
-<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="at">-v</span> OFS=<span class="st">'\t'</span> <span class="st">'</span></span>
-<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a><span class="st">  NR == FNR  { colon[$1] = $12; next }</span></span>
-<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a><span class="st">  FNR == 1   { print $0, "Colonization"; next }</span></span>
-<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a><span class="st">             { print $0, colon[$2] }</span></span>
-<span id="cb39-9"><a href="#cb39-9" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> mmc5_metadata_named.txt awk_data/Growth_Data.txt <span class="op">&gt;</span> growth_colon.txt</span>
-<span id="cb39-10"><a href="#cb39-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb39-11"><a href="#cb39-11" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="at">-v</span> OFS=<span class="st">'\t'</span> <span class="st">'</span></span>
-<span id="cb39-12"><a href="#cb39-12" aria-hidden="true" tabindex="-1"></a><span class="st">  NR == FNR  { colon[$1] = $12; next }</span></span>
-<span id="cb39-13"><a href="#cb39-13" aria-hidden="true" tabindex="-1"></a><span class="st">  FNR == 1   { print $0, "Colonization"; next }</span></span>
-<span id="cb39-14"><a href="#cb39-14" aria-hidden="true" tabindex="-1"></a><span class="st">             { print $0, colon[$2] }</span></span>
-<span id="cb39-15"><a href="#cb39-15" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> mmc5_metadata_named_windows.txt awk_data/Growth_Data.txt <span class="op">&gt;</span> growth_colon_windows.txt</span>
-<span id="cb39-16"><a href="#cb39-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb39-17"><a href="#cb39-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Count the plants with TRUE in the new column, and look at one line</span></span>
-<span id="cb39-18"><a href="#cb39-18" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$6 == "TRUE"'</span> growth_colon.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
-<span id="cb39-19"><a href="#cb39-19" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$6 == "TRUE"'</span> growth_colon_windows.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
-<span id="cb39-20"><a href="#cb39-20" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$2 == "129E"'</span> growth_colon_windows.txt <span class="kw">|</span> <span class="fu">head</span> <span class="at">-1</span> <span class="kw">|</span> <span class="fu">cat</span> <span class="at">-A</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co"># The Windows file, with the two names changed, but without removing the \r</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'s/^R129_E/129E/; s/^R13_C/13C/'</span> awk_data/mmc5_metadata.txt <span class="op">&gt;</span> mmc5_metadata_named_windows.txt</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Add column 12, from the clean file and from the Windows file</span></span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="at">-v</span> OFS=<span class="st">'\t'</span> <span class="st">'</span></span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a><span class="st">  NR == FNR  { colon[$1] = $12; next }</span></span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a><span class="st">  FNR == 1   { print $0, "Colonization"; next }</span></span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a><span class="st">             { print $0, colon[$2] }</span></span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> mmc5_metadata_named.txt awk_data/Growth_Data.txt <span class="op">&gt;</span> growth_colon.txt</span>
+<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="at">-v</span> OFS=<span class="st">'\t'</span> <span class="st">'</span></span>
+<span id="cb37-12"><a href="#cb37-12" aria-hidden="true" tabindex="-1"></a><span class="st">  NR == FNR  { colon[$1] = $12; next }</span></span>
+<span id="cb37-13"><a href="#cb37-13" aria-hidden="true" tabindex="-1"></a><span class="st">  FNR == 1   { print $0, "Colonization"; next }</span></span>
+<span id="cb37-14"><a href="#cb37-14" aria-hidden="true" tabindex="-1"></a><span class="st">             { print $0, colon[$2] }</span></span>
+<span id="cb37-15"><a href="#cb37-15" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> mmc5_metadata_named_windows.txt awk_data/Growth_Data.txt <span class="op">&gt;</span> growth_colon_windows.txt</span>
+<span id="cb37-16"><a href="#cb37-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-17"><a href="#cb37-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Count the plants with TRUE in the new column, and look at one line</span></span>
+<span id="cb37-18"><a href="#cb37-18" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$6 == "TRUE"'</span> growth_colon.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
+<span id="cb37-19"><a href="#cb37-19" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$6 == "TRUE"'</span> growth_colon_windows.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
+<span id="cb37-20"><a href="#cb37-20" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$2 == "129E"'</span> growth_colon_windows.txt <span class="kw">|</span> <span class="fu">head</span> <span class="at">-1</span> <span class="kw">|</span> <span class="fu">cat</span> <span class="at">-A</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>210
@@ -878,18 +875,18 @@ low_P^I129E^Iex61^I86.1^I5.5^ITRUE^M$</code></pre>
 <div class="callout-body-container callout-body">
 <p>Use one array per column you want to add:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Two arrays, and two new columns</span></span>
-<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="at">-v</span> OFS=<span class="st">'\t'</span> <span class="st">'</span></span>
-<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a><span class="st">  NR == FNR  { genus[$1] = $4; colon[$1] = $12; next }</span></span>
-<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a><span class="st">  FNR == 1   { print $0, "Genus", "Colonization"; next }</span></span>
-<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a><span class="st">             { print $0, genus[$2], colon[$2] }</span></span>
-<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> mmc5_metadata_named.txt awk_data/Growth_Data.txt <span class="op">&gt;</span> growth_meta.txt</span>
-<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb41-8"><a href="#cb41-8" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Check</span></span>
-<span id="cb41-9"><a href="#cb41-9" aria-hidden="true" tabindex="-1"></a><span class="fu">wc</span> <span class="at">-l</span> growth_meta.txt</span>
-<span id="cb41-10"><a href="#cb41-10" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span> <span class="at">-3</span> growth_meta.txt</span>
-<span id="cb41-11"><a href="#cb41-11" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'{ print NF }'</span> growth_meta.txt <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="at">-c</span></span>
-<span id="cb41-12"><a href="#cb41-12" aria-hidden="true" tabindex="-1"></a><span class="fu">cut</span> <span class="at">-f2,7</span> growth_meta.txt <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="at">-c</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Two arrays, and two new columns</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="at">-v</span> OFS=<span class="st">'\t'</span> <span class="st">'</span></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a><span class="st">  NR == FNR  { genus[$1] = $4; colon[$1] = $12; next }</span></span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a><span class="st">  FNR == 1   { print $0, "Genus", "Colonization"; next }</span></span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a><span class="st">             { print $0, genus[$2], colon[$2] }</span></span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> mmc5_metadata_named.txt awk_data/Growth_Data.txt <span class="op">&gt;</span> growth_meta.txt</span>
+<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Check</span></span>
+<span id="cb39-9"><a href="#cb39-9" aria-hidden="true" tabindex="-1"></a><span class="fu">wc</span> <span class="at">-l</span> growth_meta.txt</span>
+<span id="cb39-10"><a href="#cb39-10" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span> <span class="at">-3</span> growth_meta.txt</span>
+<span id="cb39-11"><a href="#cb39-11" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'{ print NF }'</span> growth_meta.txt <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="at">-c</span></span>
+<span id="cb39-12"><a href="#cb39-12" aria-hidden="true" tabindex="-1"></a><span class="fu">cut</span> <span class="at">-f2,7</span> growth_meta.txt <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="at">-c</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This prints:</p>
 <pre><code>595 growth_meta.txt
@@ -1344,8 +1341,8 @@ low_P   mock    ex61    38  6.8
   </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="../source/awk_more.html" class="pagination-link" aria-label="More useful AWK">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">More useful AWK</span>
+      <a href="../source/awk_combine.html" class="pagination-link" aria-label="Stack tables">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Stack tables</span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">

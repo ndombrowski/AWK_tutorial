@@ -24,6 +24,7 @@ website:
       - source/awk_calc.qmd
       - source/sed_basics.qmd
       - source/awk_more.qmd
+      - source/awk_combine.qmd
       - source/awk_join.qmd
       - source/awk_fasta.qmd
       - source/awk_fastq.qmd

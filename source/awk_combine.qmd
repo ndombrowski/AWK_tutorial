@@ -1,0 +1,351 @@
+---
+title: "Stack tables"
+engine: knitr
+---
+
+Often your data does not come as one table, but as one table per sample: one output file per sequencing run, per plate or per sample from a tool. To work with all of them together, for example in R, you stack them into one long table. Stacking means putting the rows of one table under the rows of the next. The table then also needs a column that tells you which file each row came from, because that information is often only in the file name.
+
+On this page, you stack three tables with AWK and add such a column. Along the way, you meet `FNR` and `FILENAME`, two variables that AWK sets when it reads several files. You will see them again on the next page, where you combine two different tables.
+
+You use the same folder as on the previous pages, with `awk_data/Growth_Data.txt`.
+
+## One table per condition
+
+First, make three tables to stack. The loop is the one from [More useful AWK](awk_more.qmd#v-give-awk-a-value-from-outside), with one change: `cut -f1,3-` keeps column 1 and column 3 to the end, so it drops column 2, the condition. Now the condition is only in the file name, just like in the output of many tools. Here you make them yourself, so you know what the right answer is, and can check your result against it later:
+
+```{bash}
+for s in 129E 13C mock; do
+  awk -F'\t' -v strain="$s" 'NR == 1 || $2 == strain' awk_data/Growth_Data.txt | cut -f1,3- > split_"$s".txt
+done
+
+# Check
+wc -l split_*.txt
+head -3 split_13C.txt
+```
+
+This prints:
+
+```
+  211 split_129E.txt
+  176 split_13C.txt
+  210 split_mock.txt
+  597 total
+
+Nutrient	Experiment	Rootlength	FW_shoot_mg
+low_P	ex61	54.3	1.56
+low_P	ex61	81	4
+```
+
+Each file has a header and four columns. Nothing inside `split_13C.txt` tells you that these plants grew with 13C.
+
+## Why `cat` is not enough
+
+`cat` prints files one after the other, and you can use it to stack files. Do this and then count the lines, and look for the header:
+
+```{bash}
+cat split_*.txt | wc -l
+cat split_*.txt | grep -n 'Nutrient'
+```
+
+This prints:
+
+```
+597
+
+1:Nutrient	Experiment	Rootlength	FW_shoot_mg
+212:Nutrient	Experiment	Rootlength	FW_shoot_mg
+388:Nutrient	Experiment	Rootlength	FW_shoot_mg
+```
+
+`grep -n` adds the line number and shows us that the result has three headers: one at the top, and two in the middle of the data, at lines 212 and 388. On top of that, you no longer know which plant came from which condition.
+
+So you need two things that `cat` cannot do: keep only the first header, and add the file name to each row.
+
+## `FNR` and `FILENAME`: where AWK is
+
+You know `NR` from [AWK on a table](awk_table.qmd#nr-work-with-the-header-line): the line number. When AWK reads several files, `NR` keeps counting across all of them. `FNR` is the line number within the current file, and starts at 1 again in each new file. `FILENAME` holds the name of the current file. You can see this where AWK moves from the first file to the second. `split_129E.txt` has 211 lines, so print lines 210 to 213 (`sed -n '210,213p'`):
+
+```{bash}
+awk '{ print FILENAME, NR, FNR }' split_*.txt | sed -n '210,213p'
+```
+
+This prints:
+
+```
+split_129E.txt 210 210
+split_129E.txt 211 211
+split_13C.txt 212 1
+split_13C.txt 213 2
+```
+
+`split_*.txt` means "all files whose name starts with `split_` and ends with `.txt`". `*` stands for any text. Bash puts the matching names in alphabetical order, so AWK reads `split_129E.txt` first, then `split_13C.txt`, then `split_mock.txt`.
+
+## Look at the headers first
+
+Stacking only makes sense if all files have the same columns in the same order. If one tool version wrote the columns in another order, the stacked table looks fine, but its values are in the wrong columns, and you get no error. So check first. `FNR == 1` matches line 1 of each file, the header. The second command prints, for each header, the file name (`FILENAME`) and the number of columns (`NF`):
+
+```{bash}
+awk 'FNR == 1' split_*.txt | sort | uniq -c
+
+awk -F'\t' 'FNR == 1 { print FILENAME, NF }' split_*.txt
+```
+
+This prints:
+
+```
+      3 Nutrient	Experiment	Rootlength	FW_shoot_mg
+
+split_129E.txt 4
+split_13C.txt 4
+split_mock.txt 4
+```
+
+All three files have the same header (3 times one line), and four columns. With 50 files, the first command still gives one line if all headers are the same. If you see two or more lines, look at the files with the other header before you go on.
+
+## Stack the tables with AWK
+
+The file name `split_13C.txt` has more in it than the condition. To get only `13C`, you can take the name apart with `sub`, which you know from [More useful AWK](awk_more.qmd#sub-and-gsub-replace-text-in-a-field). First, copy `FILENAME` into your own variable `name`. Then remove `split_` at the start (`^`) and `.txt` at the end (`$`). The `.` needs a backslash, because in a regular expression a plain `.` means "any character". 
+
+To see the result, try this on one line per file. In the command below `FNR == 2` picks line 2, the first plant in each file. Any line would do, because `FILENAME` is the same for every line of a file. Without a pattern, you would get the same answer 597 times:
+
+```{bash}
+awk 'FNR == 2 { name = FILENAME; sub(/^split_/, "", name); sub(/\.txt$/, "", name); print FILENAME, name }' split_*.txt
+```
+
+This prints:
+
+```
+split_129E.txt 129E
+split_13C.txt 13C
+split_mock.txt mock
+```
+
+Now put it together. The command below has three parts, each with its own pattern and action. AWK checks them from top to bottom on each line, and `next` makes AWK skip the remaining parts and go on to the next line:
+
+```{bash}
+awk -F'\t' -v OFS='\t' '
+  NR == 1  { print "Condition", $0; next }
+  FNR == 1 { next }
+  { name = FILENAME; sub(/^split_/, "", name); sub(/\.txt$/, "", name); print name, $0 }
+' split_*.txt > growth_combined.txt
+```
+
+Read the three parts one by one:
+
+-   `NR == 1 { print "Condition", $0; next }` runs only on the very first line of all files: the header of `split_129E.txt`. It prints a new column name, `Condition`, in front of the header.
+-   `FNR == 1 { next }` runs on line 1 of every file. For the first file, AWK never gets here, because the first part already went on to the next line. So this part only skips the headers of the second and third file.
+-   The last part has no pattern, so it runs on all other lines: the plants. It makes the condition from the file name, and prints it in front of the line.
+
+Now check the result:
+
+```{bash}
+# Check
+wc -l growth_combined.txt
+head -3 growth_combined.txt
+cut -f1 growth_combined.txt | sort | uniq -c
+awk -F'\t' '{ print NF }' growth_combined.txt | sort | uniq -c
+grep -c 'Nutrient' growth_combined.txt
+sort growth_combined.txt | uniq -d | wc -l
+```
+
+This prints:
+
+```
+595 growth_combined.txt
+
+Condition	Nutrient	Experiment	Rootlength	FW_shoot_mg
+129E	low_P	ex61	86.1	5.5
+129E	low_P	ex61	58.4	7.5
+
+    210 129E
+    175 13C
+      1 Condition
+    209 mock
+
+    595 5
+
+1
+
+0
+```
+
+The checks show one header, 210 + 175 + 209 = 594 plants, and five columns on every line.
+
+The last two checks look for the two most common mistakes when you stack tables:
+
+-   `grep -c 'Nutrient'` counts the lines with the header. It should be 1. If you forget the part `FNR == 1 { next }`, it is 3. The other checks hardly notice this mistake: AWK puts a condition in front of the two extra headers too, so they count as plants (176 13C and 210 mock), and they have five columns like every other line.
+-   `sort | uniq -d` prints each line that occurs more than once, and `wc -l` counts them. It should be 0. If a file is read twice, the plants of that file are in the table twice. This happens easily with the loop form further down: run its loop a second time, and this check gives 594, because every plant is in the table twice. The header check still gives 1 in that case, so you need both checks.
+
+A number above 0 in the second check does not always mean a mistake. In other data, two rows can be identical for a good reason, for example two plants with the same measurements. Here, the original `Growth_Data.txt` has no identical rows, so 0 is what you expect. In your own data, look at the repeated rows (`sort | uniq -d | head`) and decide.
+
+## Check the result against the original
+
+Here you have a rare luxury: you know what the answer should be, because the three files came from `Growth_Data.txt`. In the original, the condition is in column 2; in the stacked table, it is in column 1. So move column 2 to the front in the original, sort both tables, and compare them:
+
+```{bash}
+awk -F'\t' -v OFS='\t' '{ print $2, $1, $3, $4, $5 }' awk_data/Growth_Data.txt | sort > original_sorted.txt
+sort growth_combined.txt > combined_sorted.txt
+cmp original_sorted.txt combined_sorted.txt && echo 'identical'
+```
+
+This prints:
+
+```
+identical
+```
+
+`cmp` compares two files and prints nothing if they are the same; `&& echo 'identical'` then prints `identical`. Sorting is needed because the rows are in another order: first all 129E plants, then 13C, then mock.
+
+With your own data, you usually have no original to compare with. Then the checks from above are what you have: the number of lines (all rows of all files, plus one header), one header line, the same number of columns on every line, the number of rows per file, and no repeated rows that you did not expect.
+
+## The same with a loop and `>>`
+
+In code from an LLM or a forum, you will often see another form: a bash loop that runs AWK once per file, and adds the output to one table with `>>`. `>` writes a new file and replaces an old one. `>>` adds to the end of a file, and keeps what was there. Here, the first line writes the header with `>`: `head -1` takes the header of one file, and AWK puts `Condition` in front of it. Then the loop adds the plants of each file with `>>`. `-v cond="$s"` hands the condition to AWK, as on [More useful AWK](awk_more.qmd#v-give-awk-a-value-from-outside), and `FNR > 1` skips the header of each file:
+
+```{bash}
+head -1 split_129E.txt | awk -F'\t' -v OFS='\t' '{ print "Condition", $0 }' > growth_loop.txt
+
+for s in 129E 13C mock; do
+  awk -F'\t' -v OFS='\t' -v cond="$s" 'FNR > 1 { print cond, $0 }' split_"$s".txt >> growth_loop.txt
+done
+
+# Check
+wc -l growth_loop.txt
+cmp growth_combined.txt growth_loop.txt && echo 'identical'
+```
+
+This prints:
+
+```
+595 growth_loop.txt
+identical
+```
+
+Both forms give the same table. The loop has one advantage: the condition comes from the list after `in`, not from the file name, so you don't need `sub`.
+
+::: {.callout-important title="`>>` adds again on every run"}
+If you run only the loop a second time, without the `head -1` line before it, `>>` adds all plants again:
+
+```{bash}
+for s in 129E 13C mock; do
+  awk -F'\t' -v OFS='\t' -v cond="$s" 'FNR > 1 { print cond, $0 }' split_"$s".txt >> growth_loop.txt
+done
+wc -l growth_loop.txt
+```
+
+This prints:
+
+```
+1189 growth_loop.txt
+```
+
+Every plant is in the table twice now, and nothing warns you. This happens easily in a notebook or a script that you run again. Keep the line with `>` right before the loop, so each run starts with a new file. Run the whole block from above again, and `wc -l` gives 595 again.
+:::
+
+::: {.callout-important title="Don't give the output a name that matches the input pattern"}
+Suppose you call the stacked table `split_all.txt`. The first run is fine. On the second run, `split_*.txt` also matches `split_all.txt`, so AWK reads its own output while it writes it. In a test for this page, AWK did not stop: the file grew until a size limit stopped it at 2 MB, after less than five seconds. Without a limit, it would keep growing until your disk is full. **Don't try this.**
+
+Give the output a name that the pattern does not match, such as `growth_combined.txt` here, or write it to another folder. Before you run a command with `*`, you can check which files it matches with `ls split_*.txt`.
+:::
+
+## One line per file (optional)
+
+::: {.callout-tip title="Tip: a summary per file (optional)" collapse="true"}
+Sometimes you don't want one long table, but one line per file, for example the number of rows. Use an array with the file name as name, as on [Calculate with AWK](awk_calc.qmd#count-and-mean-per-group-arrays). `FILENAME` is set by AWK, while `file` is your own variable that holds one name at a time when the loop goes through the array. The order of `for (file in n)` is not fixed, so sort the output:
+
+```{bash}
+awk -F'\t' 'FNR > 1 { n[FILENAME]++ } END { for (file in n) print file, n[file] }' split_*.txt | sort
+
+awk -F'\t' 'FNR > 1 && $3 == "" { miss[FILENAME]++ } END { for (file in miss) print file, miss[file] }' split_*.txt | sort
+```
+
+This prints:
+
+```
+split_129E.txt 210
+split_13C.txt 175
+split_mock.txt 209
+
+split_129E.txt 8
+split_13C.txt 4
+split_mock.txt 3
+```
+
+The second command counts the plants without a root length (column 3 now) per file: 8 + 4 + 3 = 15, the 15 empty fields from [AWK on a table](awk_table.qmd#working-with-missing-values-empty-fields).
+
+:::
+
+:::: {.callout-question .callout-warning collapse="false" title="Exercise"}
+Make one table per experiment (`ex61`, `ex64`, `ex65`, column 3 of `Growth_Data.txt`), and drop the experiment column. Name the files `exp_ex61.txt` and so on. Then stack them into `growth_by_experiment.txt`, with a new first column `Experiment`. Check the result: count the rows per experiment, and compare it with the original, as above.
+
+Tip: don't call your AWK variable `exp`. AWK has a built-in function with that name, and gawk stops with "cannot use gawk builtin `exp' as variable name".
+
+::: {.callout-answer .callout-warning collapse="true" title="Click me to see an answer"}
+Make the tables. `cut -f1,2,4-` drops column 3:
+
+```{bash}
+for e in ex61 ex64 ex65; do
+  awk -F'\t' -v experiment="$e" 'NR == 1 || $3 == experiment' awk_data/Growth_Data.txt | cut -f1,2,4- > exp_"$e".txt
+done
+
+# Check
+wc -l exp_*.txt
+head -2 exp_ex61.txt
+```
+
+This prints:
+
+```
+  195 exp_ex61.txt
+  206 exp_ex64.txt
+  196 exp_ex65.txt
+  597 total
+
+Nutrient	Condition	Rootlength	FW_shoot_mg
+low_P	mock	40.4	6.6
+```
+
+Stack them. Only the column name and the text that `sub` removes change:
+
+```{bash}
+awk -F'\t' -v OFS='\t' '
+  NR == 1  { print "Experiment", $0; next }
+  FNR == 1 { next }
+  { name = FILENAME; sub(/^exp_/, "", name); sub(/\.txt$/, "", name); print name, $0 }
+' exp_*.txt > growth_by_experiment.txt
+
+# Check
+wc -l growth_by_experiment.txt
+cut -f1 growth_by_experiment.txt | sort | uniq -c
+awk -F'\t' -v OFS='\t' '{ print $3, $1, $2, $4, $5 }' awk_data/Growth_Data.txt | sort > original_by_exp.txt
+sort growth_by_experiment.txt | cmp - original_by_exp.txt && echo 'identical'
+```
+
+This prints:
+
+```
+595 growth_by_experiment.txt
+
+      1 Experiment
+    194 ex61
+    205 ex64
+    195 ex65
+
+identical
+```
+
+194 + 205 + 195 = 594 plants and one header. In `cmp -`, the `-` means "read this file from the pipe", so you don't need to save the sorted table first.
+:::
+::::
+
+## What you learned
+
+-   `cat` stacks files, but keeps every header and loses the file name.
+-   `NR` counts lines across all files, `FNR` starts at 1 in each file, and `FILENAME` holds the name of the current file.
+-   `awk 'FNR == 1' files | sort | uniq -c` shows if all files have the same header. Check this before you stack.
+-   `NR == 1` keeps the first header, `FNR == 1 { next }` skips the others, and `FILENAME` with `sub` gives a column with the sample name.
+-   Check a stacked table: the number of lines, one header (`grep -c`), the same number of columns on every line, the rows per file, and repeated rows (`sort | uniq -d | wc -l`).
+-   `>>` adds to a file on every run. Write the file with `>` first, right before the loop.
+-   Give the output a name that the input pattern (`split_*.txt`) does not match.
+
+On the next page, [Join two tables](awk_join.qmd), you add the genus from the strain metadata to the growth data. There, you use `NR` and `FNR` to tell the two files apart.
