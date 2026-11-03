@@ -303,4 +303,4 @@ identical
 - In a regular expression, `.*` is any text, and it takes as much as it can (greedy). `[^_]*` is any text without an underscore.
 - After shortening names, check for duplicates with `sort | uniq -d`, and look at the names yourself.
 
-On the next page, [Checking AWK or sed code from an LLM](check_llm_code.qmd), you put these checks together into a routine for any command you did not write yourself.
+The next page, [AWK on FASTQ files](awk_fastq.qmd), is optional too. It uses AWK on sequencing reads. After it, [Checking AWK or sed code from an LLM](check_llm_code.qmd) puts these checks together into a routine for any command you did not write yourself.

@@ -14,6 +14,7 @@ upstream, decide whether to update the copy, and if so, check the numbers in the
 | `accession_to_genus_windows.tsv` (**removed 2026-10-29**) | made from `accession_to_genus.tsv` (Windows line endings) | | 2026-10-28 |
 | `Growth_Data_dutch.csv` | made from `Growth_Data.txt` (semicolons, decimal commas) | | 2026-10-28 |
 | `mmc5_metadata.txt` | supplementary table `mmc5.xlsx`, sheet `metadata`, of https://www.cell.com/cell-host-microbe/fulltext/S1931-3128(18)30318-4 (local copy in R_cookbook `data/mmc5.xlsx`); reuse OK (Nina is an author) | | 2026-10-29 |
+| `Run1_S158_R1.fastq.gz`, `Run1_S137_R1.fastq.gz` | sequencing_qc repo, practice data `data/practice/data/` (a sibling folder of this repo): a 2% subset of a colleague's amplicon dataset, sample names randomized; reuse OK (Nina has permission) | md5 `040909374b09880c173ecd34e7d31435` (S158), `3c20f814f05a301a703b00aa6e1692c5` (S137) | 2026-11-02 |
 
 Changes to the source files:
 
@@ -108,6 +109,26 @@ Checks (2026-10-29, Git Bash, and against the `.xlsx` read with R `readxl`):
   header `Taxonomy group`)
 - strains `R129_E` and `R13_C` are the strains `129E` and `13C` in `Growth_Data.txt` (Nina, 2026-10-29)
 
+### Added later: two FASTQ files
+
+For the optional FASTQ page. Kept compressed (`.fastq.gz`) on purpose, because real FASTQ files
+almost always are; readers use `zcat`. `Run1_S158_R1` is the "failed sample" and `Run1_S137_R1`
+the "good sample" in sequencing_qc. Run in Git Bash, from the `data/` folder of this repo (2026-11-02):
+
+```bash
+cp -n '../../sequencing_qc/data/practice/data/Run1_S158_R1.fastq.gz' awk_data/
+cp -n '../../sequencing_qc/data/practice/data/Run1_S137_R1.fastq.gz' awk_data/
+ls awk_data | wc -l                     # 16
+md5sum awk_data/Run1_*                  # same as the sequencing_qc originals (see Sources)
+```
+
+Checks (2026-11-02, WSL, gawk 5.2.1, GNU grep 3.11, gzip 1.12; `_tests/fastq_page.sh`):
+
+- `Run1_S158_R1.fastq.gz`: 2,595 bytes, 40 lines = 10 reads; `Run1_S137_R1.fastq.gz`: 421,050 bytes,
+  9,940 lines = 2,485 reads; all reads 301 bases; all headers start with `@M08325`
+- `grep -c '^@'` counts too many: 11 and 2,489, because quality lines can start with `@`
+  (S158: line 32; S137: lines 984, 6932, 9240, 9560). `awk 'NR % 4 == 1' | wc -l` gives 10 and 2,485.
+
 ## Folder layout and the reader download
 
 Readers download one file, `data/awk_data.tar.gz`, and unpack it into a folder `awk_data/`.
@@ -143,6 +164,11 @@ were removed from `data/awk_data/` (the join now uses the strain metadata; still
 Rebuilt in Git Bash with the same `tar -czf` command: 14 files, 13,643 bytes, all `rw-r--r--`.
 Check (`_tests/check_tarball_4.sh`): unpacked, all 14 md5 checksums identical to `data/awk_data/`,
 only `mmc5_metadata.txt` has CRLF line endings.
+
+Changed 2026-11-02: the two FASTQ files were added. Rebuilt in Git Bash with the same `tar -czf` command:
+16 files, 438,659 bytes, all `rw-r--r--`. Check (`_tests/check_tarball_5.sh`, folder `tarcheck5`): unpacked,
+all 16 md5 checksums identical to `data/awk_data/`, only `mmc5_metadata.txt` has CRLF line endings, and the
+FASTQ files unpack to 40 and 9,940 lines.
 
 The commands of that check, to run again after each rebuild. Run them in Git Bash, as a script in
 `_tests/`, so the unpacked copy never lands in `data/`. Use a new folder name each time

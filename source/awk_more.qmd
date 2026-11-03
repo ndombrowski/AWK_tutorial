@@ -13,7 +13,7 @@ sed 's/\r$//' awk_data/mmc5_metadata.txt > mmc5_metadata_fixed.txt
 
 ## Rename two strains
 
-The growth data and the strain metadata describe the same two bacteria, but with different names: `129E` and `13C` in the growth data, `R129_E` and `R13_C` in column 1 of the metadata. On the next page you combine the two tables, and for that the names must match. Here is a command that renames the two strains in the metadata, of the kind you get from an LLM or a forum:
+The growth data and the strain metadata describe the same two bacteria, but with different names: `129E` and `13C` in the growth data, `R129_E` and `R13_C` in column 1 of the metadata. On the next page you will learn how to combine the two tables, and for that the names must match. Here is a command that renames the two strains in the metadata, of the kind you get from an LLM or a forum:
 
 ```{bash}
 awk 'BEGIN{FS=OFS="\t"} {gsub(/R129_E/, "129E", $1); gsub(/R13_C/, "13C", $1); print}' mmc5_metadata_fixed.txt > mmc5_metadata_awk.txt
@@ -46,7 +46,7 @@ identical
 
 The command works: only lines 11 and 14 changed, and the file is the same as the one from sed. In the sed command, `^` means "the start of the line", so sed only changes a name that stands at the start of a line, in column 1. Keep `mmc5_metadata_named.txt`, you use it on the next page.
 
-The AWK command uses two forms you have not seen yet: `BEGIN{FS=OFS="\t"}` and `gsub(...)`. The next two sections take them apart.
+The AWK command uses two forms you have not seen yet but might encounter regularly: `BEGIN{FS=OFS="\t"}` and `gsub(...)`. The next two sections take them apart.
 
 ## `BEGIN`: before the first line
 
@@ -389,7 +389,7 @@ Read the regular expression from left to right: `^R` an `R` at the start of the 
 
 The rule changed four names, not only the two in the growth data. That is fine here, because all four now follow the same naming scheme. The `diff` shows you exactly which names changed, so you can decide. A rename with `split` and `sub` gives an identical file.
 
-In code from an LLM, you may also see `match($1, /^R([0-9]+)_([A-Z])$/, m)`, which puts the groups in the array `m`. This only works in GNU awk: run with `gawk --posix`, AWK stops with "match: third argument is a gawk extension". (Tested 2026-10-29 in WSL and Git Bash. Not tested on a Mac.)
+In code from an LLM, you may also see `match($1, /^R([0-9]+)_([A-Z])$/, m)`, which puts the groups in the array `m`. This only works in GNU awk: run with `gawk --posix`, AWK stops with "match: third argument is a gawk extension". 
 :::
 
 ## What you learned

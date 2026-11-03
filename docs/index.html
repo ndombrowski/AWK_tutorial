@@ -320,6 +320,12 @@ ul.task-list li input[type="checkbox"] {
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="./source/awk_fastq.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">AWK on FASTQ files</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="./source/check_llm_code.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Checking code from an LLM</span></a>
   </div>
@@ -401,6 +407,7 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>Use more of AWK</strong>: change text in one column (<code>gsub</code>), search one column (<code>~</code>), pass a value into AWK (<code>-v</code>), split a value into parts (<code>split</code>), and read <code>BEGIN</code>, which you see often in code from an LLM or a forum</li>
 <li><strong>Combine two files</strong>: add information from the strain table to the growth data, make names match, and check the result</li>
 <li><strong>Use AWK and sed on FASTA files</strong> (optional): count sequences and clean up sequence names</li>
+<li><strong>Use AWK on FASTQ files</strong> (optional): count sequencing reads without counting too many, and turn reads into a FASTA file</li>
 <li><strong>Check code from an LLM</strong>: a short routine to test any AWK or sed command before you trust its output</li>
 </ol>
 </section>
@@ -410,7 +417,7 @@ ul.task-list li input[type="checkbox"] {
 <ul>
 <li><strong>A terminal and the command line basics.</strong> This tutorial assumes know how to use the CLI or that you have worked through the <a href="https://ndombrowski.github.io/cli_workshop/source/bash_intro.html">basics of the CLI workshop</a>: moving around with <code>cd</code> and <code>ls</code>, looking at files with <code>head</code> and <code>wc</code>, and combining commands with a pipe (<code>|</code>). It also helps if you have used <code>grep</code> and <code>cut</code>. If you have never opened a terminal, start with <a href="https://ndombrowski.github.io/cli_workshop/source/installation.html">Before you start</a> of the CLI workshop.</li>
 <li><strong>Your own computer.</strong> All commands are meant to run on your laptop. If you already know how to use Crunchomics, the UvA computer cluster, you can also work there (see the <a href="https://ndombrowski.github.io/cli_workshop/source/hpc_intro.html">HPC pages of the CLI workshop</a>).</li>
-<li><strong>The example data.</strong> You download it at the start of the first page, with two commands. It is small (about 14 kB), so it fits on any laptop. The data comes from an experiment where <em>Arabidopsis</em> plants grew with low or high phosphorus, either without bacteria or inoculated with one of two rhizobia strains. For each plant, root length and shoot weight were measured. The question was whether these bacteria promote plant growth, and might help plants grow when nutrients are limited. A second table describes these and other strains, from a <a href="https://www.cell.com/cell-host-microbe/fulltext/S1931-3128(18)30318-4">published study</a>.</li>
+<li><strong>The example data.</strong> You download it at the start of the first page, with two commands. It is small (about 440 kB), so it fits on any laptop. The data comes from an experiment where <em>Arabidopsis</em> plants grew with low or high phosphorus, either without bacteria or inoculated with one of two rhizobia strains. For each plant, root length and shoot weight were measured. The question was whether these bacteria promote plant growth, and might help plants grow when nutrients are limited. A second table describes these and other strains, from a <a href="https://www.cell.com/cell-host-microbe/fulltext/S1931-3128(18)30318-4">published study</a>.</li>
 </ul>
 <div class="callout callout-style-default callout-important callout-titled" title="AWK and sed are not the same on every computer">
 <div class="callout-header d-flex align-content-center">

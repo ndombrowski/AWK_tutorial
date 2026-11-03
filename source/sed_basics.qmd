@@ -356,9 +356,9 @@ S03,Utrecht,9100
 21100
 ```
 
-The line of `S02` has 4 fields instead of 3. For AWK, its column 3 is now ` NL"`, which is not a number and counts as 0. So the total number of reads comes out as 21100 instead of 29600, without an error. `sed 's/,/\t/g'` has the same problem: it also turns the comma inside the quotes into a tab. The `NF` check catches it: one line has more fields than the header.
+The line of `S02` has 4 fields instead of 3. For AWK, its column 3 is now ` NL"`, which is not a number and counts as 0. That is why the total number of reads comes out as 21100 instead of 29600, without an error. `sed 's/,/\t/g'` has the same problem: it also turns the comma inside the quotes into a tab. The `NF` check catches it: one line has more fields than the header.
 
-For a file like this, use a tool that knows the quote rule, and turn the file into a tab-separated table first. After that, AWK works as usual. One such tool is csvtk:
+For a file like this, use a tool that knows the quote rule, and turn the file into a tab-separated table first. After that, AWK works as usual. One such tool that you can install for the CLI is csvtk:
 
 ```{bash}
 csvtk csv2tab samples.csv > samples.tsv
@@ -382,7 +382,7 @@ S03 Utrecht 9100
 29600
 ```
 
-If you continue in R anyway, `read.csv("samples.csv")` also reads the quoted value correctly. In code from an LLM, you may see `gawk --csv` or `gawk -v FPAT=...` for this job. Not every AWK version knows these options: in WSL with Ubuntu 24.04 (gawk 5.2.1), `gawk --csv` gave an error (tested November 2026).
+If you plan to analyse such data in R, `read.csv("samples.csv")` also reads the quoted value correctly. In code from an LLM, you may see `gawk --csv` or `gawk -v FPAT=...` for this job. However, not every AWK version knows these options: in WSL with Ubuntu 24.04 (gawk 5.2.1), `gawk --csv` gave an error (tested November 2026) and in such case we recommend the solutions suggested above.
 :::
 
 ## Delete lines
@@ -671,7 +671,9 @@ awk_data/Growth_Data.txt:   ASCII text
 awk_data/mmc5_metadata.txt: ASCII text, with CRLF line terminators
 ```
 
-`CRLF` is the name for the Windows line ending `\r\n`. Now see what it does. Column 12, the last column, holds `TRUE`, `FALSE` or `NA`. Count these values with the tools from the CLI workshop, and then let AWK count the rows with `TRUE`:
+`CRLF` is the name for the Windows line ending `\r\n`. 
+
+Now see what it does by looking at column 12, the last column, holds `TRUE`, `FALSE` or `NA`. Count these values with the tools from the CLI workshop, and then use AWK to also count the rows with `TRUE`:
 
 ```{bash}
 cut -f12 awk_data/mmc5_metadata.txt | sort | uniq -c
@@ -689,7 +691,7 @@ This prints:
 0
 ```
 
-`cut` shows 11 rows with `TRUE`, but AWK finds 0, and there is no error. That happens because column 12 is `TRUE\r`, not `TRUE` and therefore the AWK pattern matches nothing. The problem for you is that `\r` is invisible on screen, also in the output of `cut` above. You can use `cat -A`, which shows the Windows line ending as `^M`. Since column 12 is the last column you can use `cut -f1,12` to have a short view of the strain name and the line end:
+`cut` shows 11 rows with `TRUE`, but AWK finds 0, and there is no error. That happens because column 12 is `TRUE\r`, not `TRUE` and therefore the AWK pattern matches nothing. The problem for you is that `\r` is invisible on screen, also in the output of `cut` above. You can visualize it with `cat -A`, which shows the Windows line ending as `^M`. Since column 12 is the last column you can use `cut -f1,12` to have a short view of the strain name and the line end:
 
 ```{bash}
 head -3 awk_data/mmc5_metadata.txt | cut -f1,12

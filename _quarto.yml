@@ -26,6 +26,7 @@ website:
       - source/awk_more.qmd
       - source/awk_join.qmd
       - source/awk_fasta.qmd
+      - source/awk_fastq.qmd
       - source/check_llm_code.qmd
 
 format:

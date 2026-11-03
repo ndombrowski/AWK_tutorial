@@ -56,7 +56,7 @@ low_P   mock    ex61    38  6.8 0.178947
 572 shoot_per_root.txt
 ```
 
-Your file now has 572 lines: the header plus 571 plants. You want to make it a habit to check, whether this adds up: 594 plants, minus 15 without a root length, minus 8 without a shoot weight, is 571. No plant misses both values, so no row is subtracted twice.
+Your file now has 572 lines: the header plus 571 plants. You want to make it a habit to check whether this adds up: 594 plants, minus 15 without a root length, minus 8 without a shoot weight, is 571. No plant misses both values, so no row is subtracted twice.
 
 ::: {.callout-important title="Keep the opening brace on the same line as its pattern"}
 When you spread a command over several lines, the opening `{` of an action must stay on the same line as its pattern. If you move the `{` to the next line, AWK reads the pattern on its own (which prints every matching line) and the action on its own (which runs on every line). You get no error, only a different result.
@@ -72,7 +72,9 @@ Here "action part" means the { ... } after END. Move the `{` back up to the line
 
 ## Sum and mean of a column: variables and `END`
 
-Start with one number: the total shoot weight of all plants. For this, AWK needs a variable, a name that holds a value. You do not need to create it first: AWK makes the variable the first time you use it, and it starts at 0.
+### Calculating a sum
+
+First, you will learn how to calculate a single number: the total shoot weight of all plants. For this, AWK needs a variable, a name that holds a value. You do not need to create it first: AWK makes the variable the first time you use it, and it starts at 0.
 
 ```{bash}
 awk -F'\t' 'NR > 1 && $5 != "" { sum += $5 } END { print sum }' awk_data/Growth_Data.txt
@@ -93,6 +95,8 @@ You use `END` when you want one answer about the whole file, such as a total, a 
 
 The name `sum` is your own choice. You could call it `total` or `weight` instead, and get the same result. Names such as `NR`, `NF` and `END` are different: they belong to AWK and have a fixed meaning.
 
+### Calculate the mean
+
 To calculate the mean, you need a second variable that counts the number of plants measured. Here it is called `n` (short for "number of plants"), and `n++` adds 1 to it each time the action runs, so once for each line that matches the pattern (here `n++` does the same as if you would write `n += 1`). The `;` separates two steps inside one action:
 
 ```{bash}
@@ -108,7 +112,7 @@ This prints the number of plants, the total and the mean:
 586 9715.23 16.5789
 ```
 
-When you run such calculations, you want to check if 586 adds up: 594 plants, minus the 8 without a shoot weight, is 586.
+When you run such calculations, you want to check if 586 adds up: 594 plants, minus the 8 without a shoot weight, is 586, so everything checks out.
 
 Now leave out the check for empty fields, and then also `NR > 1` to see how slight differences in the code can make a difference:
 
@@ -136,7 +140,7 @@ This prints:
 
 The total is the same all three times. AWK adds an empty field as 0, and the header text `FW_shoot_mg` as 0 too, so the sum does not change. But `n` still counts these lines and because of that the mean drops. This means that a mean that looks right does not mean that it is actually right. This is a good example to carefully think about what your code is doing since the code runs without any error but the output is still incorrect. In this case the difference is small, but depending on your data, such silent errors can have a large effect.
 
-## Nicer printing of results: `printf` 
+## Round the results: `printf` 
 
 The means above have more decimals than the measurements. To round them, use `printf` instead of `print`. With `printf`, you write the line you want to print as a template in double quotes, with placeholders where the numbers go. After the template, you list the values, separated by commas:
 
@@ -219,7 +223,7 @@ Look closely: there are two spaces between the numbers, because the smallest val
 
 ## Count and mean per group: arrays
 
-`sum` and `n` are single variables: each holds one value for the whole file. You can do more than that, for example count the plants per nutrient level. For this, you need one count per group. You get this by using an **array**, a variable that holds one value per name. `n["low_P"]` is the count for `low_P`, and `n["high_P"]` the count for `high_P`. Just like a single variable, AWK makes the value for a new name the first time you use it, and it starts at 0.
+`sum`, `n`, `min` and `max` are single variables: each holds one value for the whole file. You can do more than that, for example count the plants per nutrient level. For this, you need one count per group. You get this by using an **array**, a variable that holds one value per name. `n["low_P"]` is the count for `low_P`, and `n["high_P"]` the count for `high_P`. Just like a single variable, AWK makes the value for a new name the first time you use it, and it starts at 0.
 
 ```{bash}
 awk -F'\t' '
@@ -241,7 +245,7 @@ Taken apart:
     -   `n` is the array
     -   `[$1] `says which count to use: the one named after the text in column 1. On a `low_P` row that is `n["low_P"]`, on a high_P row `n["high_P"]`
     -   `++` adds 1 to that count
-    -   AWK does not need to know the levels in advance. The first time it sees a new text in column 1, it makes a new count for it, starting at 0. So the different values in column 1 become your groups. After the first `low_P` row, `n["low_P"]` is 1, after the second it is 2, and so on.
+    -   AWK does not need to know the groups in advance. The first time it sees a new text in column 1, it makes a new count for it, starting at 0. So the different values in column 1 become your groups. After the first `low_P` row, `n["low_P"]` is 1, after the second it is 2, and so on.
 -   `END { ... }`: as before, this runs once, after the last line
 -   `for (group in n) { print group, n[group] }`: go through all names in `n`. For each name, put it into the variable `group`, and print the name and its count
 

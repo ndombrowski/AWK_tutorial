@@ -356,6 +356,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="../source/awk_fastq.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">AWK on FASTQ files</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="../source/check_llm_code.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Checking code from an LLM</span></a>
   </div>
@@ -372,7 +378,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#add-a-column" id="toc-add-a-column" class="nav-link active" data-scroll-target="#add-a-column">Add a column</a></li>
   <li><a href="#sum-and-mean-of-a-column-variables-and-end" id="toc-sum-and-mean-of-a-column-variables-and-end" class="nav-link" data-scroll-target="#sum-and-mean-of-a-column-variables-and-end">Sum and mean of a column: variables and <code>END</code></a></li>
-  <li><a href="#nicer-printing-of-results-printf" id="toc-nicer-printing-of-results-printf" class="nav-link" data-scroll-target="#nicer-printing-of-results-printf">Nicer printing of results: <code>printf</code></a></li>
+  <li><a href="#round-the-results-printf" id="toc-round-the-results-printf" class="nav-link" data-scroll-target="#round-the-results-printf">Round the results: <code>printf</code></a></li>
   <li><a href="#smallest-and-largest-value" id="toc-smallest-and-largest-value" class="nav-link" data-scroll-target="#smallest-and-largest-value">Smallest and largest value</a></li>
   <li><a href="#count-and-mean-per-group-arrays" id="toc-count-and-mean-per-group-arrays" class="nav-link" data-scroll-target="#count-and-mean-per-group-arrays">Count and mean per group: arrays</a>
   <ul class="collapse">
@@ -504,8 +510,8 @@ low_P   mock    ex61    38  6.8 0.178947
 595 9715.23 16.3281</code></pre>
 <p>The total is the same all three times. AWK adds an empty field as 0, and the header text <code>FW_shoot_mg</code> as 0 too, so the sum does not change. But <code>n</code> still counts these lines and because of that the mean drops. This means that a mean that looks right does not mean that it is actually right. This is a good example to carefully think about what your code is doing since the code runs without any error but the output is still incorrect. In this case the difference is small, but depending on your data, such silent errors can have a large effect.</p>
 </section>
-<section id="nicer-printing-of-results-printf" class="level2">
-<h2 class="anchored" data-anchor-id="nicer-printing-of-results-printf">Nicer printing of results: <code>printf</code></h2>
+<section id="round-the-results-printf" class="level2">
+<h2 class="anchored" data-anchor-id="round-the-results-printf">Round the results: <code>printf</code></h2>
 <p>The means above have more decimals than the measurements. To round them, use <code>printf</code> instead of <code>print</code>. With <code>printf</code>, you write the line you want to print as a template in double quotes, with placeholders where the numbers go. After the template, you list the values, separated by commas:</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'</span></span>

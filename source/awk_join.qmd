@@ -565,4 +565,4 @@ You can predict both numbers: a join adds columns, not lines, so you expect the 
 -   A missing name gives an empty field, not an error. After a join, count the lines, count the empty fields and see which names they belong to, and look for entries that were not used. Read the names these checks print, not only the counts.
 -   A Windows line ending travels into your result when you add the last column. Remove it before the join.
 
-The next page, [AWK and sed on FASTA files](awk_fasta.qmd), is optional. It uses AWK and sed on sequence files. After it, [Checking code from an LLM](check_llm_code.qmd) puts the checks from all pages together.
+The next two pages are optional: [AWK and sed on FASTA files](awk_fasta.qmd) uses AWK and sed on sequence files, and [AWK on FASTQ files](awk_fastq.qmd) uses AWK on sequencing reads. After them, [Checking code from an LLM](check_llm_code.qmd) puts the checks from all pages together.
