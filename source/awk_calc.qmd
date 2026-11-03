@@ -193,7 +193,7 @@ This prints the number of plants with a root length, the smallest and the larges
 
 The action has several steps, so it is spread over several lines too. As before, the `{` stays on the line with the pattern.
 
-Taken apart:
+What each line does:
 
 -   `if (...) { ... }`: AWK runs the step in the braces only when the test in the brackets is true.
 -   `if (n == 0) { min = $4; max = $4 }`: `n` counts the rows with a root length. It is 0 only on the first of them, so this line gives `min` and `max` their start value from that row.
@@ -241,9 +241,9 @@ high_P 294
 
 Taken apart:
 
--  `NR > 1 { n[$1]++ }`: for each row of data, add 1 to the count of its nutrient level (in column 1 the levels are: `low_P` or `high_P`). Piece by piece::
+-  `NR > 1 { n[$1]++ }`: for each row of data, add 1 to the count of its nutrient level (in column 1 the levels are: `low_P` or `high_P`). Piece by piece:
     -   `n` is the array
-    -   `[$1] `says which count to use: the one named after the text in column 1. On a `low_P` row that is `n["low_P"]`, on a high_P row `n["high_P"]`
+    -   `[$1]` says which count to use: the one named after the text in column 1. On a `low_P` row that is `n["low_P"]`, on a high_P row `n["high_P"]`
     -   `++` adds 1 to that count
     -   AWK does not need to know the groups in advance. The first time it sees a new text in column 1, it makes a new count for it, starting at 0. So the different values in column 1 become your groups. After the first `low_P` row, `n["low_P"]` is 1, after the second it is 2, and so on.
 -   `END { ... }`: as before, this runs once, after the last line
@@ -305,7 +305,7 @@ Start from the command with the rule `$4 != ""`. Change only the `END` part, and
 2. `sum[group]` is the value stored under that name, the summed root length: `low_P 17384.8` and `high_P 26151.3`. `group` is the name, `sum[group]` what is stored under it.
 3. No. Each row adds to `sum` and to `n` with the same name, so both arrays hold the same names. It does not matter which one the loop goes through.
 
-`group` is a name you choose, just like `sum`. You can call it `x` instead, but then change it everywhere in the `END` part. If you change it only in for `(...)`, AWK still uses the old `group` in `print`, which is empty here, and you get an error.
+`group` is a name you choose, just like `sum`. You can call it `x` instead, but then change it everywhere in the `END` part. If you change it only in `for (...)`, AWK still uses the old `group` in `print`, which is empty here, and you get an error.
 
 :::
 ::::
@@ -334,12 +334,12 @@ low_P-mock  105 47.1
 
 One command gave you the count and the mean for all six groups, sorted. In Excel, this would be a pivot table that you build by clicking, with no record of how you made it. Here the command is the record.
 
-Taken apart:
+The new parts:
 
 -   `printf` with the format `"%s\t%d\t%.1f\n"`: the group name, a tab, the count as a whole number, a tab, and the mean with one decimal. `%s` is new: it stands for text, here the group name.
 -   `| sort`: AWK goes through the names in an array in no fixed order. Sort the result, so that it is easy to read and to compare between runs.
 
-::: {.callout-important title="Forget the quotes, and the dash becomes a minus"}
+::: {.callout-important title="A dash without quotes is a minus"}
 If you write `key = $1-$2` without the quotes, AWK reads the dash as a minus and subtracts column 2 from column 1. Text that does not start with a number counts as 0, so `low_P` and `high_P` both become 0, and `129E` becomes 129. The command runs without an error, but prints this:
 
 ```         

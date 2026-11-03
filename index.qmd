@@ -18,8 +18,7 @@ For statistics and plots, R or Python are the better tools. But for many smaller
 
 -   **You keep a record of what you did.** A command can be saved in a script or a notebook, and run again on new data. A table that you change by hand in Excel leaves no record, and Excel sometimes changes your data without asking, e.g. it is known to turn gene names such as `SEPT2` into dates.
 -   **The same step works on many files.** Together with a [`for` loop](https://scienceparkstudygroup.github.io/ibed-bioinformatics-page/source/core_tools/bash-for-loops.html), one command can clean the names in 50 FASTA files, or take one column from 200 sample tables.
--   **Nothing to install.** AWK and sed are already on your computer and on most computer clusters, so you do not need packages or extra software.
--   **You can look at your raw data yourself.** Amplicon, metagenome and genome analyses often start on the command line, with files that are too large to open in Excel. With a few AWK commands you can count the reads per sample, or check a table that a tool wrote, before an R package turns it into a summary plot.
+-   **You can look at your raw data yourself.** Amplicon and (meta)-genome analyses typically start on the command line and AWK commands are extremely useful to quickly explore this kind of data.
 
 ## Why learn this when an LLM can write it?
 
@@ -30,9 +29,7 @@ LLMs (large language models, such as ChatGPT or Claude) are normally good at wri
 -   **adapt** it, for example to use another column or another file
 -   **recognize the common traps**, where a command runs without an error but gives the wrong result
 
-The last point matters most. A command that fails with an error message is easy to notice. A command that quietly skips a few rows, or treats a missing value as a zero, is not.
-
-The checks you learn here work no matter who wrote the command: you, a colleague, a forum or an LLM. Most of them also work on a table that R or Python wrote.
+Recognizing traps is extremely important. That is because a command that fails with an error message is easy to notice. However, aa command that quietly skips a few rows, or treats a missing value as a zero, is not.
 
 ## What you will do
 
@@ -49,9 +46,9 @@ The checks you learn here work no matter who wrote the command: you, a colleague
 
 The times are a rough estimate. They include reading and running the commands, but not the exercises.
 
-## Short on time?
+## A short route (about 2 hours)
 
-If you have about 2 hours, take this route. It covers the commands you need most often, and the traps that give a wrong result without an error:
+This route covers the commands you need most often, and the traps that give a wrong result without an error:
 
 1.  [AWK on a table](source/awk_table.qmd), the whole page.
 2.  On [sed basics](source/sed_basics.qmd), the first section, [The shape of a sed command](source/sed_basics.qmd#the-shape-of-a-sed-command), and the section [Windows line endings](source/sed_basics.qmd#windows-line-endings). That section uses the strain table, `awk_data/mmc5_metadata.txt`.

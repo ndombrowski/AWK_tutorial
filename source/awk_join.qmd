@@ -141,13 +141,13 @@ oot381
 USDA61
 ```
 
-`129E` and `13C` look right now, and a join would work. But every strain whose name starts with `Root` lost its `R` too: 17 strains are now called `oot...`. A general rule works for the names you had in mind, but it is easy to forget what it does to the other names in the file. You only notice this if you look at the other names as well.
+`129E` and `13C` look right now, and a join would work. But every strain whose name starts with `Root` lost its `R` too: 17 strains are now called `oot...`.
 :::
 
 ## Add the genus: `NR == FNR`
 
 ::: {.callout-note title="The most advanced part of this tutorial"}
-Combining two files with AWK is harder than anything before it. If it does not make sense on the first read, that is normal: take your time, and run each step yourself. What matters most is that you recognize the `NR == FNR` pattern when you see it, for example in code from an LLM, and that you know the checks in "Check the result" below. These checks work no matter which command did the combining.
+Combining two files with AWK is harder than anything before it. If it does not make sense on the first read, that is normal: take your time, and run each step yourself. What matters most is that you recognize the `NR == FNR` pattern when you see it, for example in code from an LLM, and that you know the checks in "Check the result" below.
 :::
 
 AWK can read two files, one after the other. The command below first reads the metadata and remembers the genus of each strain. Then it reads the growth data and adds the remembered genus to each line:
@@ -182,8 +182,6 @@ low_P   13C ex61    81  4   Rhizobium
 ```
 
 595 lines, as many as in the growth data. The plants with `129E` and `13C` now have `Rhizobium` in a new column 6. The `mock` plants have an empty column 6, because no strain is called `mock`.
-
-With two lines of AWK, all 595 plants now carry the genus of their bacterium. With a metadata table of 1,000 strains and a count table of 10,000 samples, the command stays exactly the same.
 
 You will see `NR == FNR` in many AWK commands that combine two files, so it is worth taking it apart.
 
@@ -220,7 +218,7 @@ Root154:
 mock:
 ```
 
-`Root154` has an empty value, because this strain has no genus in the table. `mock` is not in the array at all, and AWK gives you empty text for it, without an error. In the result, both look the same: an empty field.
+`Root154` has an empty value, because this strain has no genus in the table. `mock` is not in the array at all, and AWK gives you empty text for it. In the result, both look the same: an empty field.
 
 **The second part**, `{ print $0, genus[$2] }`, has no pattern, so it runs on every line that gets this far: only the lines of the growth data. Take this line:
 
@@ -236,7 +234,7 @@ low_P   129E    ex61    86.1    5.5 Rhizobium
 
 Note that `$1`, `$2` and so on always mean the columns of the line AWK is reading at that moment. In the metadata, the strain is `$1` and the genus `$4`. In the growth data, the strain is `$2`. So you choose the column numbers for each file separately.
 
-**The order of the files matters.** The table you look things up in comes first, the table you add to comes second. If you swap them, AWK remembers the growth data and adds a column to the metadata instead. The result has 28 lines, and the new column is empty on every line. AWK gives no error, but a quick `wc -l` shows that something is wrong: you expected 595 lines.
+The table you look things up in comes first, the table you add to comes second. If you swap them, AWK remembers the growth data and adds a column to the metadata instead. The result has 28 lines, and the new column is empty on every line. A quick `wc -l` shows the problem: you expected 595 lines.
 
 ### Give the new column a name
 
@@ -281,7 +279,7 @@ low_P   mock    ex61    38  6.8
 
 The new part also ends with `next`. It makes sure that the header is not printed a second time by the last part, `{ print $0, genus[$2] }`.
 
-::: {.callout-important title="Forget next, and the first file ends up in the result"}
+::: {.callout-important title="If you leave out `next`"}
 Without `next` in the first part, the other parts also run on the lines of the metadata. You get no error:
 
 ```{bash}
@@ -375,7 +373,9 @@ This prints:
 13C
 ```
 
-**What the checks do not catch.** Run the same join and checks with the general rule from the tip above (`s/^R//; s/_//`, which removes the `R` at the start and the underscore):
+### What the checks do not catch
+
+Run the same join and checks with the general rule from the tip above (`s/^R//; s/_//`, which removes the `R` at the start and the underscore):
 
 ```{bash}
 sed 's/^R//; s/_//' mmc5_metadata_fixed.txt > mmc5_metadata_wrong.txt
@@ -409,7 +409,7 @@ USDA61
 
 The join is exactly the same as with the correct names, because `129E` and `13C` still match. But the metadata is now broken: 17 strains lost their `R`. Check 1 cannot see this. Check 2 shows it, but only if you read the names it prints.
 
-The checks give you numbers and names. Whether they show a problem, you decide: 209 `mock` plants without a genus is expected, a strain called `oot123D2` is not.
+The checks give you numbers and names. However, you still have to look closely at them and judge if everything worked: 209 `mock` plants without a genus is expected, a strain called `oot123D2` is not.
 
 ::: {.callout-tip title="Tip: joins in other tools (optional)" collapse="true"}
 AWK is not the only way to combine two tables. In bash, there is also the `join` command, and in R you would use `left_join()` from the dplyr package, or `merge()`. An LLM may suggest any of these. They look different, but they do the same job: match the lines of two tables by a shared name.
@@ -495,7 +495,7 @@ This prints:
 low_P^I129E^Iex61^I86.1^I5.5^ITRUE^M$
 ```
 
-The `\r` (`^M`) came along with the value, so the next command that looks for `TRUE` finds nothing. If you add column 4 (the genus) from the Windows file instead, the result is exactly the same as from the clean file, because the `\r` is not in column 4. So a file with Windows line endings can work fine in one join and quietly break the next one. Remove the `\r` before you combine files, as on the sed page.
+The `\r` (`^M`) came along with the value, so the next command that looks for `TRUE` finds nothing. If you add column 4 (the genus) from the Windows file instead, the result is exactly the same as from the clean file, because the `\r` is not in column 4. So a file with Windows line endings can work in one join and break the next. Remove the `\r` before you combine files, as on the sed page.
 
 :::: {.callout-question .callout-warning collapse="false" title="Exercise"}
 1.  Add two columns from the metadata to the growth data in one command: the genus (column 4) and `Colonization` (column 12). Give both new columns a name in the header. Save the result as `growth_meta.txt`.

@@ -3,9 +3,9 @@ title: "Checking code from an LLM"
 engine: knitr
 ---
 
-LLMs are good at writing AWK and sed. That is exactly why this page exists: you will get a lot of AWK and sed code that you did not write yourself, and most of it will look fine. This page puts the checks from the earlier pages together into a short routine, and then shows what real LLM answers looked like when they were checked with it.
+You will get a lot of AWK and sed code that you did not write yourself, and most of it will look fine. This page puts the checks from the earlier pages together into a short routine, and then shows what real LLM answers looked like when they were checked with it.
 
-The answers on this page come from October 2026, and each question was asked only once. If you ask the same questions today, your LLM may well get them right. That doesn't make the checks less useful: they are how you find out whether an answer is right, whatever the LLM is and whenever you ask.
+The answers on this page come from October 2026, and each question was asked only once. This might change if LLMs improve but that doesn't make the checks less useful: they are how you find out whether an answer is right, whatever the LLM is and whenever you ask.
 
 General advice on using LLMs, such as which tools you are allowed to use at the UvA, why you should not paste your data, and why you should use an LLM more as a tutor than as a code machine, is on the [Using LLMs page of the CLI workshop](https://ndombrowski.github.io/cli_workshop/source/llm_usage.html). This page does not repeat it. Everything here works with a free chat tool: you paste a question, you read the answer, and you run the checks yourself in your terminal.
 
@@ -32,11 +32,11 @@ Before you run a command that you did not write yourself, go through these quest
 | Does it change the original file? | Look for `sed -i`, `dos2unix`, `mv`. If so, run it on a copy, or write to a new file first | [sed](sed_basics.qmd#change-a-file-safely) |
 | Does the result match what I expected? | `wc -l`, `head`, `cut -f... \| sort \| uniq -c`, `diff`, `cmp` | all pages |
 
-The first question matters most. If you don't know which number you expect, you can't see that the output is wrong.
+The first question matters most.
 
 ## Example: a command that finds nothing
 
-Asking an LLM to write a command is one thing. Asking it why your own command does not work is harder, as this example shows.
+In this example, you ask an LLM why your own command does not work.
 
 The strain metadata has a column `Colonization` (column 12) with `TRUE`, `FALSE` or `NA`. You want the strains with `TRUE`, but AWK finds none:
 
@@ -191,7 +191,7 @@ This prints:
 identical
 ```
 
-`cmp -` compares the output of the command before the `|` with the file. The count of 11 was right, and the lines were still broken. A matching count is a good sign, not a proof. Look at the lines too.
+`cmp -` compares the output of the command before the `|` with the file. The count of 11 was right, and the lines were still broken.
 :::
 ::::
 
@@ -270,7 +270,7 @@ Here are the means of both answers side by side, rounded to two decimals. The me
 | low_P 13C              |    62.74 |    64.19 |
 | low_P mock             |    47.07 |    47.07 |
 
-Four of the six means from answer 1 are too low, because AWK counts an empty field as 0. No error, no warning. And two means are right: high_P 129E and low_P mock have no empty root lengths. If you check only one of those two groups, the command looks correct.
+Four of the six means from answer 1 are too low, because AWK counts an empty field as 0. And two means are right: high_P 129E and low_P mock have no empty root lengths. If you check only one of those two groups, the command looks correct.
 
 ::: {.callout-tip title="Tip: what is the `^` in the output? (optional)" collapse="true"}
 Answer 1 stores its groups as `sum[$1,$2]`. With a comma between the two columns, AWK glues the two names together with a hidden character. `cat -A` shows this character as `^\`. It is not meant to be printed, so it is easy to miss in the normal output.
@@ -278,11 +278,11 @@ Answer 1 stores its groups as `sum[$1,$2]`. With a comma between the two columns
 For you, this means that the output of answer 1 has 2 columns, not 3: the group name and the mean. You can't select one condition from it by column, for example with `cut -f2`. Answer 2 builds its group name with `$1 FS $2`, with a tab between the two names, so the nutrient and the condition stay separate columns. On [Calculate with AWK](awk_calc.qmd#mean-per-nutrient-and-condition), you used `$1"-"$2` for the same reason: you can see the dash, and you can split on it later.
 :::
 
-Answer 2 was right here. But it was not "the better LLM" that made the difference. Each LLM was asked once, and the same LLM may well give the other kind of answer next time. What told the two answers apart were the checks: the missing `$4 != ""`, and the output.
+Answer 2 was right here. Each LLM was asked only once, and the same LLM may give the other kind of answer next time.
 
 So tell the LLM what you know about your file. Here, one sentence would have been enough: "Column 4 has empty fields for missing values."
 
-But you can only write that sentence if you know it. An LLM answers the question you ask, and the problems you don't know about are the ones you don't ask about. So the most useful thing you can bring to an LLM is knowledge of your own data: what the file looks like, how many lines and empty fields it has, and which values you expect. That is also what you need to check the answer.
+This is an important point: you can only add this if you know your data and know what to ask. An LLM answers the question you ask, and the problems you don't know about are the ones you don't ask about. So the most useful thing you can bring to an LLM is knowledge of your own data: what the file looks like, how many lines and empty fields it has, and which values you expect. That is also what you need to check the answer.
 
 :::: {.callout-question .callout-warning collapse="false" title="Exercise"}
 Imagine you want to ask an LLM for the mean root length per nutrient and condition, and you have not seen the results above. Which four things about `awk_data/Growth_Data.txt` should the LLM know? Find each one with a command from the earlier pages, and write the sentence you would add to your question.
@@ -317,7 +317,7 @@ The `$` at the end of each line also tells you that the file has no Windows line
 
 These numbers also tell you what to expect from a correct answer: the counts per group add up to 594 minus 15, so 579 plants. You can check that in the output of any command you get.
 
-For the second part there is no fixed answer: LLM answers change from run to run. The checks are the answer. Look for `$4 != ""` or something similar in the command, and compare the counts per group with 579.
+For the second part there is no fixed answer: LLM answers change from run to run. Look for `$4 != ""` or something similar in the command, and compare the counts per group with 579.
 :::
 ::::
 
@@ -328,7 +328,7 @@ Some LLM tools work inside a code editor. They can open your files and run comma
 
 **The command that finds nothing.** The question was the one from the first example, without pasted lines. This time the tool looked closely: `file`, `cat -A`, and the number of fields per line. It found the Windows line endings and gave correct fixes. It also noticed something about its own setup. It ran its commands in Git Bash, where AWK ignores the `\r` and your command found all 11 lines. It said so, instead of reporting that the command works.
 
-So the same tool, with the same access to the files, did very different work. In the second question, the text said that something was wrong, so the tool searched for the cause. In the first question, nothing hinted at a problem, so it did not look for one. Empty fields are exactly the kind of problem you don't know about until you look. File access makes an LLM better at finding a problem you describe. It does not make it look for a problem you don't know about. For that, you need to know your data.
+In the second question, the text said that something was wrong, so the tool searched for the cause. In the first question, nothing hinted at a problem, so it did not look for one. Empty fields are often the kind of problem you don't know about until you look more closely at your data. Giving the file itself to an LLM can help with finding a problem. However, this does not make the LLM look for a problem you don't know about. For that, you need to know your data.
 
 Each question was asked once, so this shows what can happen, not what always happens. Two more points before you let a tool read your files:
 
@@ -360,7 +360,7 @@ Nutrient    Condition   Experiment  Rootlength  FW_shoot_mg
 
 The header is kept, so the second sentence is true and the first one is wrong. You saw this on [AWK on a table](awk_table.qmd#subset-rows-by-a-number): `$4 > 50` gives 476 lines, `NR > 1 && $4 > 50` gives 475.
 
-The command itself was fine. The mistake was in the explanation, in the middle of a long answer with variants and caveats. Long answers are not worse, but they give mistakes more places to hide. The CLI workshop has a tip on how to ask for shorter answers ([When the answer is longer than you want to read](https://ndombrowski.github.io/cli_workshop/source/llm_usage.html#using-an-llm-to-understand-code)).
+The command itself was fine. The mistake was in the explanation, in the middle of a long answer with variants and caveats. The CLI workshop has a tip on how to ask for shorter answers ([When the answer is longer than you want to read](https://ndombrowski.github.io/cli_workshop/source/llm_usage.html#using-an-llm-to-understand-code)).
 :::
 ::::
 
@@ -404,10 +404,10 @@ low_P^I129E^Iex61^I86.1^I5.5 Rhizobium$
 
 -   **The separator.** Neither explanation mentions that the command has no `-F'\t'`. The genus is added after a space, while the other columns are separated by tabs. A tool that reads tabs sees `5.5 Rhizobium` as one field. And for a strain with an empty genus, the columns shift, so AWK would store the wrong column as its genus (see [Why `-F'\t'` matters here too](awk_join.qmd#why--ft-matters-here-too)).
 -   **The header.** Neither mentions that the header gets an empty extra column (the space before `$`).
--   **The empty first file.** Not only the first line passes `NR == FNR`, but every line of the growth data. All of them go into the array, and the output is empty, without an error.
--   **The swapped files.** True, but the logic does not break with an error. You get 28 lines, quietly.
+-   **The empty first file.** Not only the first line passes `NR == FNR`, but every line of the growth data. All of them go into the array, and the output is empty: `wc -l` gives 0.
+-   **The swapped files.** True, but AWK gives no error: you get the 28 lines of the metadata, not 595.
 
-An explanation is easier to check than a command, but it can still be incomplete. Test the claims that matter for your data.
+Test the claims that matter for your data.
 :::
 
 ## What you learned
@@ -416,8 +416,8 @@ An explanation is easier to check than a command, but it can still be incomplete
 -   A command that runs without an error and prints a plausible number of lines is not yet a correct command. Check fixes as carefully as the first command: a matching count can still hide broken lines.
 -   An LLM only sees what you show it. Pasted lines hide tabs and Windows line endings. When your own command fails, run the checks first, paste their output, and ask what it means.
 -   An LLM answers the question you ask, also when it can read your files. Tell it what you know about your data, such as empty fields. To know that, and to check the answer, you need to look at your own data.
--   The same LLM can answer differently next time. Judge an answer by your checks, not by the tool or by how sure it sounds.
+-   The same LLM can answer differently next time. Judge an answer by your checks and don't blindly trust the output of an LLM.
 
-Keep the commands you have checked in your own notes, as suggested on [AWK on a table](awk_table.qmd#what-you-learned). A command you checked yourself is the best answer to the next similar question.
+Keep the commands you have checked in your own notes, as suggested on [AWK on a table](awk_table.qmd#what-you-learned).
 
 The [Command overview](cheat_sheet.qmd) lists the main commands from all pages, to look up later.

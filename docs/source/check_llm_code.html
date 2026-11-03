@@ -422,8 +422,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>LLMs are good at writing AWK and sed. That is exactly why this page exists: you will get a lot of AWK and sed code that you did not write yourself, and most of it will look fine. This page puts the checks from the earlier pages together into a short routine, and then shows what real LLM answers looked like when they were checked with it.</p>
-<p>The answers on this page come from October 2026, and each question was asked only once. If you ask the same questions today, your LLM may well get them right. That doesn’t make the checks less useful: they are how you find out whether an answer is right, whatever the LLM is and whenever you ask.</p>
+<p>You will get a lot of AWK and sed code that you did not write yourself, and most of it will look fine. This page puts the checks from the earlier pages together into a short routine, and then shows what real LLM answers looked like when they were checked with it.</p>
+<p>The answers on this page come from October 2026, and each question was asked only once. This might change if LLMs improve but that doesn’t make the checks less useful: they are how you find out whether an answer is right, whatever the LLM is and whenever you ask.</p>
 <p>General advice on using LLMs, such as which tools you are allowed to use at the UvA, why you should not paste your data, and why you should use an LLM more as a tutor than as a code machine, is on the <a href="https://ndombrowski.github.io/cli_workshop/source/llm_usage.html">Using LLMs page of the CLI workshop</a>. This page does not repeat it. Everything here works with a free chat tool: you paste a question, you read the answer, and you run the checks yourself in your terminal.</p>
 <p>You use the same folder as on the previous pages, with <code>awk_data/</code>, <code>mmc5_metadata_fixed.txt</code> and <code>mmc5_metadata_named.txt</code> (both made on the <a href="../source/sed_basics.html">sed page</a>). If you do not have them anymore, make them again:</p>
 <div class="cell">
@@ -489,11 +489,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 </tbody>
 </table>
-<p>The first question matters most. If you don’t know which number you expect, you can’t see that the output is wrong.</p>
+<p>The first question matters most.</p>
 </section>
 <section id="example-a-command-that-finds-nothing" class="level2">
 <h2 class="anchored" data-anchor-id="example-a-command-that-finds-nothing">Example: a command that finds nothing</h2>
-<p>Asking an LLM to write a command is one thing. Asking it why your own command does not work is harder, as this example shows.</p>
+<p>In this example, you ask an LLM why your own command does not work.</p>
 <p>The strain metadata has a column <code>Colonization</code> (column 12) with <code>TRUE</code>, <code>FALSE</code> or <code>NA</code>. You want the strains with <code>TRUE</code>, but AWK finds none:</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'$12 == "TRUE"'</span> awk_data/mmc5_metadata.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -617,7 +617,7 @@ R129_E Rhizobiales Rhizobiaceae Rhizobium Root Arabidopsis FALSE Rhizobium spp. 
 <p>This prints:</p>
 <pre><code>     11 12
 identical</code></pre>
-<p><code>cmp -</code> compares the output of the command before the <code>|</code> with the file. The count of 11 was right, and the lines were still broken. A matching count is a good sign, not a proof. Look at the lines too.</p>
+<p><code>cmp -</code> compares the output of the command before the <code>|</code> with the file. The count of 11 was right, and the lines were still broken.</p>
 </div>
 </div>
 </div>
@@ -748,7 +748,7 @@ low_P^\mock^I47.0685$</code></pre>
 </tr>
 </tbody>
 </table>
-<p>Four of the six means from answer 1 are too low, because AWK counts an empty field as 0. No error, no warning. And two means are right: high_P 129E and low_P mock have no empty root lengths. If you check only one of those two groups, the command looks correct.</p>
+<p>Four of the six means from answer 1 are too low, because AWK counts an empty field as 0. And two means are right: high_P 129E and low_P mock have no empty root lengths. If you check only one of those two groups, the command looks correct.</p>
 <div class="callout callout-style-default callout-tip callout-titled" title="Tip: what is the `^` in the output? (optional)">
 <div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-6-contents" aria-controls="callout-6" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
@@ -766,9 +766,9 @@ low_P^\mock^I47.0685$</code></pre>
 </div>
 </div>
 </div>
-<p>Answer 2 was right here. But it was not “the better LLM” that made the difference. Each LLM was asked once, and the same LLM may well give the other kind of answer next time. What told the two answers apart were the checks: the missing <code>$4 != ""</code>, and the output.</p>
+<p>Answer 2 was right here. Each LLM was asked only once, and the same LLM may give the other kind of answer next time.</p>
 <p>So tell the LLM what you know about your file. Here, one sentence would have been enough: “Column 4 has empty fields for missing values.”</p>
-<p>But you can only write that sentence if you know it. An LLM answers the question you ask, and the problems you don’t know about are the ones you don’t ask about. So the most useful thing you can bring to an LLM is knowledge of your own data: what the file looks like, how many lines and empty fields it has, and which values you expect. That is also what you need to check the answer.</p>
+<p>This is an important point: you can only add this if you know your data and know what to ask. An LLM answers the question you ask, and the problems you don’t know about are the ones you don’t ask about. So the most useful thing you can bring to an LLM is knowledge of your own data: what the file looks like, how many lines and empty fields it has, and which values you expect. That is also what you need to check the answer.</p>
 <div class="callout callout-style-default callout-question callout-titled" title="Exercise">
 <div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-8-contents" aria-controls="callout-8" aria-expanded="true" aria-label="Toggle callout">
 <div class="callout-icon-container">
@@ -814,7 +814,7 @@ low_P^Imock^Iex61^I38^I6.8$
 <p>So the sentence could be: “The file is tab-separated, with one header line and 594 plants. Column 4 (Rootlength) has 15 empty fields for missing values.”</p>
 <p>The <code>$</code> at the end of each line also tells you that the file has no Windows line endings (no <code>^M</code>), so you don’t need to mention them.</p>
 <p>These numbers also tell you what to expect from a correct answer: the counts per group add up to 594 minus 15, so 579 plants. You can check that in the output of any command you get.</p>
-<p>For the second part there is no fixed answer: LLM answers change from run to run. The checks are the answer. Look for <code>$4 != ""</code> or something similar in the command, and compare the counts per group with 579.</p>
+<p>For the second part there is no fixed answer: LLM answers change from run to run. Look for <code>$4 != ""</code> or something similar in the command, and compare the counts per group with 579.</p>
 </div>
 </div>
 </div>
@@ -836,7 +836,7 @@ low_P^Imock^Iex61^I38^I6.8$
 <p>Some LLM tools work inside a code editor. They can open your files and run commands themselves, so you don’t need to paste lines. You might expect the problems on this page to disappear then. To find out, the two questions from the examples went to such a tool in October 2026: Claude Code in VS Code, in a folder with a copy of the data. Each question started a new session. The tool ran with the author’s own settings: a file with standing instructions that the tool reads at the start of every session, and that asks it to check its work carefully. A fresh setup without such a file may well do worse.</p>
 <p><strong>The mean root length per group.</strong> The question was: “In this folder there is Growth_Data.txt. Give me an awk command for the mean Rootlength per Nutrient and Condition.” The tool found the file, looked at its first 5 lines with <code>cat -A</code>, counted the lines, and wrote a command without <code>$4 != ""</code>. It ran the command and showed the output: the same too-low means as answer 1 above, for example 64.7 instead of 69.9 for <code>low_P-129E</code>. It had the whole file, but it only looked at the top, where there are no empty fields. And “I ran it and got this output” shows that the command runs, not that the means are right.</p>
 <p><strong>The command that finds nothing.</strong> The question was the one from the first example, without pasted lines. This time the tool looked closely: <code>file</code>, <code>cat -A</code>, and the number of fields per line. It found the Windows line endings and gave correct fixes. It also noticed something about its own setup. It ran its commands in Git Bash, where AWK ignores the <code>\r</code> and your command found all 11 lines. It said so, instead of reporting that the command works.</p>
-<p>So the same tool, with the same access to the files, did very different work. In the second question, the text said that something was wrong, so the tool searched for the cause. In the first question, nothing hinted at a problem, so it did not look for one. Empty fields are exactly the kind of problem you don’t know about until you look. File access makes an LLM better at finding a problem you describe. It does not make it look for a problem you don’t know about. For that, you need to know your data.</p>
+<p>In the second question, the text said that something was wrong, so the tool searched for the cause. In the first question, nothing hinted at a problem, so it did not look for one. Empty fields are often the kind of problem you don’t know about until you look more closely at your data. Giving the file itself to an LLM can help with finding a problem. However, this does not make the LLM look for a problem you don’t know about. For that, you need to know your data.</p>
 <p>Each question was asked once, so this shows what can happen, not what always happens. Two more points before you let a tool read your files:</p>
 <ul>
 <li>Not everyone has such a tool, and some of them need a paid subscription. Everything on this page works with a free chat tool, such as UvA AI Chat.</li>
@@ -884,7 +884,7 @@ low_P^Imock^Iex61^I38^I6.8$
 <p>This prints:</p>
 <pre><code>Nutrient    Condition   Experiment  Rootlength  FW_shoot_mg</code></pre>
 <p>The header is kept, so the second sentence is true and the first one is wrong. You saw this on <a href="../source/awk_table.html#subset-rows-by-a-number">AWK on a table</a>: <code>$4 &gt; 50</code> gives 476 lines, <code>NR &gt; 1 &amp;&amp; $4 &gt; 50</code> gives 475.</p>
-<p>The command itself was fine. The mistake was in the explanation, in the middle of a long answer with variants and caveats. Long answers are not worse, but they give mistakes more places to hide. The CLI workshop has a tip on how to ask for shorter answers (<a href="https://ndombrowski.github.io/cli_workshop/source/llm_usage.html#using-an-llm-to-understand-code">When the answer is longer than you want to read</a>).</p>
+<p>The command itself was fine. The mistake was in the explanation, in the middle of a long answer with variants and caveats. The CLI workshop has a tip on how to ask for shorter answers (<a href="https://ndombrowski.github.io/cli_workshop/source/llm_usage.html#using-an-llm-to-understand-code">When the answer is longer than you want to read</a>).</p>
 </div>
 </div>
 </div>
@@ -932,10 +932,10 @@ low_P^I129E^Iex61^I86.1^I5.5 Rhizobium$
 <ul>
 <li><strong>The separator.</strong> Neither explanation mentions that the command has no <code>-F'\t'</code>. The genus is added after a space, while the other columns are separated by tabs. A tool that reads tabs sees <code>5.5 Rhizobium</code> as one field. And for a strain with an empty genus, the columns shift, so AWK would store the wrong column as its genus (see <a href="../source/awk_join.html#why--ft-matters-here-too">Why <code>-F'\t'</code> matters here too</a>).</li>
 <li><strong>The header.</strong> Neither mentions that the header gets an empty extra column (the space before <code>$</code>).</li>
-<li><strong>The empty first file.</strong> Not only the first line passes <code>NR == FNR</code>, but every line of the growth data. All of them go into the array, and the output is empty, without an error.</li>
-<li><strong>The swapped files.</strong> True, but the logic does not break with an error. You get 28 lines, quietly.</li>
+<li><strong>The empty first file.</strong> Not only the first line passes <code>NR == FNR</code>, but every line of the growth data. All of them go into the array, and the output is empty: <code>wc -l</code> gives 0.</li>
+<li><strong>The swapped files.</strong> True, but AWK gives no error: you get the 28 lines of the metadata, not 595.</li>
 </ul>
-<p>An explanation is easier to check than a command, but it can still be incomplete. Test the claims that matter for your data.</p>
+<p>Test the claims that matter for your data.</p>
 </div>
 </div>
 </div>
@@ -947,9 +947,9 @@ low_P^I129E^Iex61^I86.1^I5.5 Rhizobium$
 <li>A command that runs without an error and prints a plausible number of lines is not yet a correct command. Check fixes as carefully as the first command: a matching count can still hide broken lines.</li>
 <li>An LLM only sees what you show it. Pasted lines hide tabs and Windows line endings. When your own command fails, run the checks first, paste their output, and ask what it means.</li>
 <li>An LLM answers the question you ask, also when it can read your files. Tell it what you know about your data, such as empty fields. To know that, and to check the answer, you need to look at your own data.</li>
-<li>The same LLM can answer differently next time. Judge an answer by your checks, not by the tool or by how sure it sounds.</li>
+<li>The same LLM can answer differently next time. Judge an answer by your checks and don’t blindly trust the output of an LLM.</li>
 </ul>
-<p>Keep the commands you have checked in your own notes, as suggested on <a href="../source/awk_table.html#what-you-learned">AWK on a table</a>. A command you checked yourself is the best answer to the next similar question.</p>
+<p>Keep the commands you have checked in your own notes, as suggested on <a href="../source/awk_table.html#what-you-learned">AWK on a table</a>.</p>
 <p>The <a href="../source/cheat_sheet.html">Command overview</a> lists the main commands from all pages, to look up later.</p>
 
 

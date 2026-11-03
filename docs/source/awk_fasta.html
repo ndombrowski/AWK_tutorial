@@ -579,7 +579,7 @@ GCF_000714595-ECOLIN_RS22205_97 1726</code></pre>
 </section>
 <section id="shorter-names-with-sed-spot-the-problem" class="level2">
 <h2 class="anchored" data-anchor-id="shorter-names-with-sed-spot-the-problem">Shorter names with sed: spot the problem</h2>
-<p>Names like <code>GCF_000714595-ECOLIN_RS01105_1</code> are long. For a figure, for example a tree, you may want shorter ones. The one thing you want to avoid when you change names: two sequences end up with the same name.</p>
+<p>Names like <code>GCF_000714595-ECOLIN_RS01105_1</code> are long. For a figure, for example a tree, you may want shorter ones. When you change names, make sure that no two sequences end up with the same name.</p>
 <p>First, look at how the names are built. Each <code>GCF</code> name has two parts, separated by a dash: the genome ID (<code>GCF_000714595</code>), then a name for this one 16S copy within the genome (<code>ECOLIN_RS01105_1</code>). All 28 <code>GCF</code> names have exactly one dash. The 7 <code>Root</code> names have no dash, because each <code>Root</code> file holds only one sequence. So the dash is the place where you can cut a name, and each version below cuts in a different way.</p>
 <section id="version-1-remove-everything-from-the-dash" class="level3">
 <h3 class="anchored" data-anchor-id="version-1-remove-everything-from-the-dash">Version 1: remove everything from the dash</h3>
@@ -616,7 +616,7 @@ GCF_000714595-ECOLIN_RS22205_97 1726</code></pre>
 &gt;GCF_000009425_65
 
 0</code></pre>
-<p>No duplicates, so the check passes. But look at the names: the whole middle part, <code>LLMG_RS02645</code>, is gone, not only <code>LLMG</code>. That is because <code>.*</code> takes as much text as it can. There are two underscores after the dash, and <code>.*_</code> runs all the way to the <strong>last</strong> one. This is called a <strong>greedy</strong> match. A check that passes does not mean the result is what you want, so always look at the names too.</p>
+<p>No duplicates, so the check passes. But look at the names: the whole middle part, <code>LLMG_RS02645</code>, is gone, not only <code>LLMG</code>. That is because <code>.*</code> takes as much text as it can. There are two underscores after the dash, and <code>.*_</code> runs all the way to the <strong>last</strong> one. This is called a <strong>greedy</strong> match. So look at the names too, not only at the check.</p>
 </section>
 <section id="version-3-from-the-dash-to-the-first-underscore" class="level3">
 <h3 class="anchored" data-anchor-id="version-3-from-the-dash-to-the-first-underscore">Version 3: from the dash to the first underscore</h3>

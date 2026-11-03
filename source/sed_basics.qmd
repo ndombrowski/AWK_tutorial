@@ -295,8 +295,6 @@ This prints:
 identical
 ```
 
-One line of sed turned a file from a Dutch spreadsheet into the table you know, byte for byte. If you get 20 such files, a `for` loop does them all with the same line.
-
 :::: {.callout-question .callout-warning collapse="false" title="Exercise"}
 1.  Turn `Growth_Data_dutch.csv` into a real comma-separated file: commas between the columns, and dots as decimal symbol. Check the result with `head` and with the number of fields per line.
 2.  Now swap the order of the two changes in your command. Before you run it, predict: what will the first line look like, and how many fields will each line have? Why? Then run it and compare.

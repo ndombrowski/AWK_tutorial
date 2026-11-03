@@ -93,7 +93,7 @@ This prints:
 
 The headers are on lines 1, 5, 9 and so on, every 4 lines. However, line 32 breaks the pattern. It is not a header, but the quality line of read 8. The reason for this behavior is that `@` is one of the characters that stand for a quality, so a quality line can start with `@`, and `grep` cannot tell it apart from a header.
 
-In a file with 10 reads, this is one read in ten. In a large file, the error will be smaller, but it is there in almost every file, and it changes from file to file. You see this in the exercise below.
+In a file with 10 reads, this is one read in ten. In a large file, the error is smaller, but it is still there, as the exercise below shows. You see this in the exercise below.
 
 ## Pick one line of each read: `NR % 4`
 
@@ -238,6 +238,6 @@ You may also see `grep -c '^@M08325'` in code from others, with the start of the
 -   `%` gives the remainder after dividing. `NR % 4 == 1` picks the header of each read, `== 2` the sequence, `== 0` the quality line.
 -   `substr($0, 2)` is the line from character 2 on. With it, `NR % 4 == 1 { print ">" substr($0, 2) } NR % 4 == 2 { print }` turns FASTQ into FASTA.
 
-If you work with sequencing data, a good next step is the short tutorial [First look at your sequencing data](https://ndombrowski.github.io/sequencing_qc/). The two files on this page come from its practice data. It shows you how to check the number of reads per sample and the read quality yourself, shortly after you get your data back.
+If you work with sequencing data, see the short tutorial [First look at your sequencing data](https://ndombrowski.github.io/sequencing_qc/). The two files on this page come from its practice data. It shows you how to check the number of reads per sample and the read quality yourself, shortly after you get your data back.
 
 On the next page, [Checking AWK or sed code from an LLM](check_llm_code.qmd), you put these checks together into a routine for any command you did not write yourself.

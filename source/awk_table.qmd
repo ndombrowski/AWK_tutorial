@@ -596,6 +596,6 @@ So with `NA`, the rule stays the same, only with `$4 != "NA"` instead of `$4 != 
 -   Empty fields cause errors without a warning: skip them with `$4 != ""` before you compare or calculate.
 -   After each step, check the result: count the lines, and look at it with `head`.
 
-You do not need to learn these commands by heart. Instead, keep your own notes: a text file or notebook with the commands you have checked, each with one line on what it does and which trap it avoids (for example "skips empty fields in column 4"). A checked command in your notes is worth more than one you half remember, and more than a new one from an LLM that you still have to check.
+You do not need to learn these commands by heart. Instead, keep your own notes, e.g. in a text file or notebook with the commands you have checked, each with one line on what it does and which trap it avoids (for example "skips empty fields in column 4"). A checked command in your notes is something you can back to even months after you ran the command.
 
 On the next page, [Calculate with AWK](awk_calc.qmd), you add a new column, and calculate sums, counts and means per group.

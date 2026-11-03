@@ -573,7 +573,7 @@ low_P   mock    ex61    38  6.8 0.178947
 <p>This prints the number of plants with a root length, the smallest and the largest root length:</p>
 <pre><code>579 28.73 135.49</code></pre>
 <p>The action has several steps, so it is spread over several lines too. As before, the <code>{</code> stays on the line with the pattern.</p>
-<p>Taken apart:</p>
+<p>What each line does:</p>
 <ul>
 <li><code>if (...) { ... }</code>: AWK runs the step in the braces only when the test in the brackets is true.</li>
 <li><code>if (n == 0) { min = $4; max = $4 }</code>: <code>n</code> counts the rows with a root length. It is 0 only on the first of them, so this line gives <code>min</code> and <code>max</code> their start value from that row.</li>
@@ -609,10 +609,10 @@ low_P   mock    ex61    38  6.8 0.178947
 high_P 294</code></pre>
 <p>Taken apart:</p>
 <ul>
-<li><code>NR &gt; 1 { n[$1]++ }</code>: for each row of data, add 1 to the count of its nutrient level (in column 1 the levels are: <code>low_P</code> or <code>high_P</code>). Piece by piece::
+<li><code>NR &gt; 1 { n[$1]++ }</code>: for each row of data, add 1 to the count of its nutrient level (in column 1 the levels are: <code>low_P</code> or <code>high_P</code>). Piece by piece:
 <ul>
 <li><code>n</code> is the array</li>
-<li><code>[$1]</code>says which count to use: the one named after the text in column 1. On a <code>low_P</code> row that is <code>n["low_P"]</code>, on a high_P row <code>n["high_P"]</code></li>
+<li><code>[$1]</code> says which count to use: the one named after the text in column 1. On a <code>low_P</code> row that is <code>n["low_P"]</code>, on a high_P row <code>n["high_P"]</code></li>
 <li><code>++</code> adds 1 to that count</li>
 <li>AWK does not need to know the groups in advance. The first time it sees a new text in column 1, it makes a new count for it, starting at 0. So the different values in column 1 become your groups. After the first <code>low_P</code> row, <code>n["low_P"]</code> is 1, after the second it is 2, and so on.</li>
 </ul></li>
@@ -683,7 +683,7 @@ high_P 289 90.489</code></pre>
 <li><code>sum[group]</code> is the value stored under that name, the summed root length: <code>low_P 17384.8</code> and <code>high_P 26151.3</code>. <code>group</code> is the name, <code>sum[group]</code> what is stored under it.</li>
 <li>No.&nbsp;Each row adds to <code>sum</code> and to <code>n</code> with the same name, so both arrays hold the same names. It does not matter which one the loop goes through.</li>
 </ol>
-<p><code>group</code> is a name you choose, just like <code>sum</code>. You can call it <code>x</code> instead, but then change it everywhere in the <code>END</code> part. If you change it only in for <code>(...)</code>, AWK still uses the old <code>group</code> in <code>print</code>, which is empty here, and you get an error.</p>
+<p><code>group</code> is a name you choose, just like <code>sum</code>. You can call it <code>x</code> instead, but then change it everywhere in the <code>END</code> part. If you change it only in <code>for (...)</code>, AWK still uses the old <code>group</code> in <code>print</code>, which is empty here, and you get an error.</p>
 </div>
 </div>
 </div>
@@ -707,18 +707,18 @@ low_P-129E  99  69.9
 low_P-13C   86  64.2
 low_P-mock  105 47.1</code></pre>
 <p>One command gave you the count and the mean for all six groups, sorted. In Excel, this would be a pivot table that you build by clicking, with no record of how you made it. Here the command is the record.</p>
-<p>Taken apart:</p>
+<p>The new parts:</p>
 <ul>
 <li><code>printf</code> with the format <code>"%s\t%d\t%.1f\n"</code>: the group name, a tab, the count as a whole number, a tab, and the mean with one decimal. <code>%s</code> is new: it stands for text, here the group name.</li>
 <li><code>| sort</code>: AWK goes through the names in an array in no fixed order. Sort the result, so that it is easy to read and to compare between runs.</li>
 </ul>
-<div class="callout callout-style-default callout-important callout-titled" title="Forget the quotes, and the dash becomes a minus">
+<div class="callout callout-style-default callout-important callout-titled" title="A dash without quotes is a minus">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Important</span>Forget the quotes, and the dash becomes a minus
+<span class="screen-reader-only">Important</span>A dash without quotes is a minus
 </div>
 </div>
 <div class="callout-body-container callout-body">

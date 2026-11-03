@@ -619,8 +619,8 @@ high_P^Imock^Iex64^I^I26$</code></pre>
       1 host
 
 identical</code></pre>
-<p>The second run changed nothing. A command that you can safely run twice is worth a lot in a script or a notebook that you run again later.</p>
-<p>In one sentence, the pattern could read: “on every line after the header, if column 6 does not end in <code>_host</code> yet, add <code>_host</code> to it”. If you can say a command back like this, you understand it well enough to check it. If you cannot, that is the part to look at again.</p>
+<p>The second run changed nothing. Any command that you can safely run twice is very handy for when you write scripts or use a notebook that you want to run again later.</p>
+<p>In one sentence, the pattern could read: “on every line after the header, if column 6 does not end in <code>_host</code> yet, add <code>_host</code> to it”. Trying to formulate what code does in a sentence or two is a useful habit: it tells you that you understand it well enough to check it.</p>
 </div>
 </div>
 </div>
@@ -662,7 +662,7 @@ low_P   13C ex61    54.3    1.56
     175 13C
       1 Condition</code></pre>
 <p>Each file has its plants plus the header line: 210 + 175 + 209 plants, plus 3 headers, is 597.</p>
-<p>Three files, each with its header, from a loop of three lines. With 30 conditions, the loop stays the same length. Only the list after <code>in</code> gets longer, and at that point it is easier to keep the list in a text file, one condition per line, and let the loop read it. The IBED bioinformatics page shows how in <a href="https://scienceparkstudygroup.github.io/ibed-bioinformatics-page/source/core_tools/bash-for-loops.html#using-loops-with-files">Using loops with files</a>.</p>
+<p>With 30 conditions, only the list after <code>in</code> gets longer. Then it is easier to keep the list in a text file, one condition per line, and let the loop read it. The IBED bioinformatics page shows how in <a href="https://scienceparkstudygroup.github.io/ibed-bioinformatics-page/source/core_tools/bash-for-loops.html#using-loops-with-files">Using loops with files</a>.</p>
 <div class="callout callout-style-default callout-important callout-titled" title="A bash variable inside single quotes stays text">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
