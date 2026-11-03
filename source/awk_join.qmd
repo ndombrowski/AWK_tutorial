@@ -5,7 +5,7 @@ engine: knitr
 
 On this page, you add information from one table to another: the genus of each bacterial strain, from the strain metadata, to each plant in the growth data. Combining two tables by a shared name is called a **join**. It is one of the most common jobs in bioinformatics, for example when you add sample information to a table of read counts, or a taxonomy to a list of sequences. It is also a job where small mistakes give a wrong result without any error message, so a large part of this page is about checking the result.
 
-You use the same folder as on the previous pages. Besides `awk_data/Growth_Data.txt`, you need two versions of the strain metadata: `mmc5_metadata_fixed.txt`, without Windows line endings, from the [sed page](sed_basics.qmd#windows-line-endings), and `mmc5_metadata_named.txt`, with two strains renamed, from the page [More useful AWK](awk_more.qmd#rename-two-strains). If you do not have them anymore, make them again:
+You use the same folder as on the previous pages. Besides `awk_data/Growth_Data.txt`, you need two versions of the strain metadata from the [sed page](sed_basics.qmd): `mmc5_metadata_fixed.txt`, without Windows line endings, and `mmc5_metadata_named.txt`, with two strains renamed. If you do not have them anymore, make them again:
 
 ```{bash}
 sed 's/\r$//' awk_data/mmc5_metadata.txt > mmc5_metadata_fixed.txt
@@ -85,42 +85,42 @@ With `-F'\t'`, column 4 of Root154 is empty (only the `$` for the end of the lin
 
 ### The names in both files
 
-The two tables share the names of the bacteria: column 2 of the growth data, and column 1 of the metadata. First look at the names in the growth data. Then search the metadata for the numbers of these two bacteria, `129` and `13`:
+The two tables share the names of the bacteria: column 2 of the growth data, and column 1 of the metadata. On the [sed page](sed_basics.qmd#rename-two-strains), you saw that the metadata called the two bacteria `R129_E` and `R13_C`, and you renamed them in `mmc5_metadata_named.txt`. AWK compares names letter by letter, so before a join, check that the names now really match. Look at the names in the growth data, then search the renamed metadata for the numbers of the two bacteria, `129` and `13`:
 
 ```{bash}
 # The bacteria names in the growth data
 cut -f2 awk_data/Growth_Data.txt | sort | uniq -c
 
-# Names in the metadata that contain 129 or 13
-cut -f1 mmc5_metadata_fixed.txt | grep '129'
-cut -f1 mmc5_metadata_fixed.txt | grep '13'
+# Names in the renamed metadata that contain 129 or 13
+cut -f1 mmc5_metadata_named.txt | grep '129'
+cut -f1 mmc5_metadata_named.txt | grep '13'
 ```
 
 This prints:
 
-```         
+```
     210 129E
     175 13C
       1 Condition
     209 mock
 
-R129_E
+129E
 R129_N
 
 R13_A
-R13_C
+13C
 ```
 
-You can see that bacteria `129E` and `13C` are the names used in the growth data, but in the metadata these bacteria are called `R129_E` and `R13_C`. These are the same strains, written in two ways. AWK compares names letter by letter, so `129E` and `R129_E` do not match. Before you can combine the tables, the names must be the same.
+`129E` and `13C` are now written the same way in both tables, and the other strains, `R129_N` and `R13_A`, kept their names. The renamed file is the one to use for the join.
 
-## Make the names match
+### When names don't match
 
 This happens all the time: one person writes `Sample-01`, another `Sample_01`, and the sequencing center sends back `S01`. A good habit is to choose one way of naming your samples at the start of a project, for example short names without spaces or special characters, and to use it everywhere: in your lab notes, in file names and in every table. Fixing names afterwards is extra work, and it is easy to get wrong.
 
-You already made the names match at the start of the page [More useful AWK](awk_more.qmd#rename-two-strains). There you renamed the two strains in the metadata, the smaller of the two tables, with one explicit change per name, and saved the result as `mmc5_metadata_named.txt`. The `diff` showed that exactly two lines changed, lines 11 and 14. That is a good habit to keep: whenever you use a command to change names, look at all names after the change, not only at the ones you wanted to change.
+If you do have to fix names, keep one more habit: whenever you use a command to change names, look at all names after the change, not only at the ones you wanted to change.
 
 ::: {.callout-tip title="Tip: why not one general rule? (optional)" collapse="true"}
-Another idea to change names is to change all names at once, for example: remove the `R` at the start, and the underscore. `^R` means "an `R` at the start of the line":
+Another idea to change names is to change all names at once, for example: remove the `R` at the start, and the underscore. As on the sed page, `^R` means "an `R` at the start of the line". The commands use `mmc5_metadata_fixed.txt`, the file before the rename:
 
 ```{bash}
 cut -f1 mmc5_metadata_fixed.txt | sed 's/^R//; s/_//' | grep '^1'

@@ -9,7 +9,7 @@ The answers on this page come from October 2026, and each question was asked onl
 
 General advice on using LLMs, such as which tools you are allowed to use at the UvA, why you should not paste your data, and why you should use an LLM more as a tutor than as a code machine, is on the [Using LLMs page of the CLI workshop](https://ndombrowski.github.io/cli_workshop/source/llm_usage.html). This page does not repeat it. Everything here works with a free chat tool: you paste a question, you read the answer, and you run the checks yourself in your terminal.
 
-You use the same folder as on the previous pages, with `awk_data/`, `mmc5_metadata_fixed.txt` (made on the [sed page](sed_basics.qmd#windows-line-endings)) and `mmc5_metadata_named.txt` (made on the page [More useful AWK](awk_more.qmd#rename-two-strains)). If you do not have them anymore, make them again:
+You use the same folder as on the previous pages, with `awk_data/`, `mmc5_metadata_fixed.txt` and `mmc5_metadata_named.txt` (both made on the [sed page](sed_basics.qmd)). If you do not have them anymore, make them again:
 
 ```{bash}
 sed 's/\r$//' awk_data/mmc5_metadata.txt > mmc5_metadata_fixed.txt
@@ -194,6 +194,23 @@ identical
 `cmp -` compares the output of the command before the `|` with the file. The count of 11 was right, and the lines were still broken. A matching count is a good sign, not a proof. Look at the lines too.
 :::
 ::::
+
+::: {.callout-tip title="Tip: remove the `\\r` with tr (optional)" collapse="true"}
+You will often see another command for the same job, in LLM answers and in forums: `tr -d '\r'` deletes every `\r` in a file. Like the sed command, it writes a new file. `tr` reads only from a pipe or with `<`, not from a file name:
+
+```{bash}
+tr -d '\r' < awk_data/mmc5_metadata.txt > mmc5_metadata_fixed_tr.txt
+cmp mmc5_metadata_fixed_tr.txt mmc5_metadata_fixed.txt && echo 'identical'
+```
+
+This prints:
+
+```
+identical
+```
+
+Both commands give the same result here. There is one difference: `tr` deletes every `\r`, also one in the middle of a line, and `sed 's/\r$//'` only the one at the end of a line.
+:::
 
 ## Example: one question, two answers
 

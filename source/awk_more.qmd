@@ -5,25 +5,22 @@ engine: knitr
 
 This page adds a few AWK forms that you will find useful in your own work: change text in one column, search one column for a pattern, give AWK a value from outside, for example in a loop over files, and split a value into parts. You will also see these forms often in commands from an LLM or a forum, so after this page you can read them too. You do not need to write them from memory. The goal is that you know what they do, when they are handy, and how to check the result.
 
-You use the same folder as on the previous pages, with `awk_data/Growth_Data.txt` and `mmc5_metadata_fixed.txt`, the strain metadata without Windows line endings from the [sed page](sed_basics.qmd#windows-line-endings). If you do not have it anymore, make it again:
+You use the same folder as on the previous pages, with `awk_data/Growth_Data.txt` and two files from the [sed page](sed_basics.qmd#rename-two-strains): `mmc5_metadata_fixed.txt`, the strain metadata without Windows line endings, and `mmc5_metadata_named.txt`, with two strains renamed. If you do not have them anymore, make them again:
 
 ```{bash}
 sed 's/\r$//' awk_data/mmc5_metadata.txt > mmc5_metadata_fixed.txt
+sed 's/^R129_E/129E/; s/^R13_C/13C/' mmc5_metadata_fixed.txt > mmc5_metadata_named.txt
 ```
 
-## Rename two strains
+## The same renaming with AWK
 
-The growth data and the strain metadata describe the same two bacteria, but with different names: `129E` and `13C` in the growth data, `R129_E` and `R13_C` in column 1 of the metadata. On the next page you will learn how to combine the two tables, and for that the names must match. Here is a command that renames the two strains in the metadata, of the kind you get from an LLM or a forum:
+On the [sed page](sed_basics.qmd#rename-two-strains), you renamed `R129_E` and `R13_C` in column 1 of the metadata with one line of sed. Here is a command for the same job, of the kind you get from an LLM or a forum:
 
 ```{bash}
 awk 'BEGIN{FS=OFS="\t"} {gsub(/R129_E/, "129E", $1); gsub(/R13_C/, "13C", $1); print}' mmc5_metadata_fixed.txt > mmc5_metadata_awk.txt
 
-# Check: the number of lines, and which lines changed
+# Check: the number of lines, and compare with the file from the sed page
 wc -l mmc5_metadata_awk.txt
-diff mmc5_metadata_fixed.txt mmc5_metadata_awk.txt | cut -f1,4
-
-# The same change with sed, and a comparison
-sed 's/^R129_E/129E/; s/^R13_C/13C/' mmc5_metadata_fixed.txt > mmc5_metadata_named.txt
 cmp mmc5_metadata_awk.txt mmc5_metadata_named.txt && echo 'identical'
 ```
 
@@ -31,22 +28,32 @@ This prints:
 
 ```
 28 mmc5_metadata_awk.txt
-
-11c11
-< R129_E    Rhizobium
----
-> 129E	Rhizobium
-14c14
-< R13_C	Rhizobium
----
-> 13C   Rhizobium
-
 identical
 ```
 
-The command works: only lines 11 and 14 changed, and the file is the same as the one from sed. In the sed command, `^` means "the start of the line", so sed only changes a name that stands at the start of a line, in column 1. Keep `mmc5_metadata_named.txt`, you use it on the next page.
+The AWK command gives exactly the same file as your sed command. For this job, sed is enough. But the sed command only works because the names are in column 1, at the start of the line. The `$1` in the AWK command says which column to change, and you can choose any column. In the growth data, for example, the strain names are in column 2. To make the names match the other way round, with the long names in the growth data, you change `$1` into `$2`:
 
-The AWK command uses two forms you have not seen yet but might encounter regularly: `BEGIN{FS=OFS="\t"}` and `gsub(...)`. The next two sections take them apart.
+```{bash}
+awk 'BEGIN{FS=OFS="\t"} {gsub(/129E/, "R129_E", $2); gsub(/13C/, "R13_C", $2); print}' awk_data/Growth_Data.txt > growth_long_names.txt
+
+# Check: the number of lines, and the names in column 2
+wc -l growth_long_names.txt
+cut -f2 growth_long_names.txt | sort | uniq -c
+```
+
+This prints:
+
+```
+595 growth_long_names.txt
+      1 Condition
+    210 R129_E
+    175 R13_C
+    209 mock
+```
+
+All 595 lines are still there, and the 385 plants with a bacterium now have the long names. You don't use this file on the next pages: the short names are easier to read in the growth data, so the tutorial keeps them.
+
+Both AWK commands use two forms that you will see often: `BEGIN{FS=OFS="\t"}` and `gsub(...)`. The next two sections take them apart.
 
 ## `BEGIN`: before the first line
 

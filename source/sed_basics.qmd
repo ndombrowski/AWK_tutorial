@@ -744,34 +744,77 @@ Root381^INA$
 11
 ```
 
-The `^M` is gone, and AWK finds the 11 rows. `wc -c` counts characters: the fixed file has 28 lines and 28 characters fewer, one `\r` per line. Keep `mmc5_metadata_fixed.txt`, you use it on the next page.
+The `^M` is gone, and AWK finds the 11 rows. `wc -c` counts characters: the fixed file has 28 lines and 28 characters fewer, one `\r` per line. Keep `mmc5_metadata_fixed.txt`, you use it below and on the next pages.
 
-::: {.callout-tip title="Tip: remove the `\\r` with tr (optional)" collapse="true"}
-You will often see another command for the same job: `tr -d '\r'` deletes every `\r` in a file. `tr` reads only from a pipe or with `<`, not from a file name:
+## Rename two strains
+
+The metadata is clean now, but there is one more problem. The growth data and the strain metadata describe the same two bacteria with different names: `129E` and `13C` in the growth data, `R129_E` and `R13_C` in column 1 of the metadata. On a later page you will combine the two tables, and for that the names must match.
+
+First look at the names in both tables: column 2 of the growth data, and the names in column 1 of the metadata that contain `R1`. Then count the lines that contain the two names you want to change:
 
 ```{bash}
-tr -d '\r' < awk_data/mmc5_metadata.txt > mmc5_metadata_fixed_tr.txt
-cmp mmc5_metadata_fixed_tr.txt mmc5_metadata_fixed.txt && echo 'identical'
+cut -f2 awk_data/Growth_Data.txt | sort | uniq -c
+cut -f1 mmc5_metadata_fixed.txt | grep 'R1'
+grep -c 'R129_E' mmc5_metadata_fixed.txt
+grep -c 'R13_C' mmc5_metadata_fixed.txt
 ```
 
 This prints:
 
-```         
-identical
+```
+    210 129E
+    175 13C
+      1 Condition
+    209 mock
+
+R129_E
+R129_N
+R13_A
+R13_C
+
+1
+1
 ```
 
-Both commands give the same result here.
-:::
+You see both spellings side by side. A computer compares names letter by letter, so `129E` and `R129_E` do not match. In the metadata, each name appears on one line only. Note `R129_N` and `R13_A`: they are other strains, and they must stay as they are. A shorter pattern such as `s/R129/129/` would rename `R129_N` too, therefore write the full name. So before you run the rename, you know what to expect: the same 28 lines as in `mmc5_metadata_fixed.txt`, and exactly 2 lines changed.
+
+At the end of the last section, `$` meant "the end of the line". Its mirror is `^`, which means "the start of the line". The strain names are in column 1, so they stand at the start of the line, and `^R129_E` matches `R129_E` only there. In this file, the command would also work without `^`, because each name appears only once. With `^`, sed changes the name only at the start of the line, in column 1, even if the same text appears somewhere else in the line:
+
+```{bash}
+sed 's/^R129_E/129E/; s/^R13_C/13C/' mmc5_metadata_fixed.txt > mmc5_metadata_named.txt
+
+# Check: the number of lines, and which lines changed
+wc -l mmc5_metadata_named.txt
+diff mmc5_metadata_fixed.txt mmc5_metadata_named.txt | cut -f1,4
+```
+
+This prints:
+
+```
+28 mmc5_metadata_named.txt
+
+11c11
+< R129_E	Rhizobium
+---
+> 129E	Rhizobium
+14c14
+< R13_C	Rhizobium
+---
+> 13C	Rhizobium
+```
+
+28 lines, and only lines 11 and 14 changed, as expected. `cut -f1,4` keeps the output short: the strain name and the genus. `^` helps only for column 1. For a name in another column, there is no "start of the column" in sed, and you would use AWK. Keep `mmc5_metadata_named.txt`, you use it on the next pages.
 
 ## What you learned
 
 -   `sed 's/old/new/' file` replaces the first match in each line, `s/old/new/g` every match.
--   The text you look for is a regular expression: `.` means any character, `\.` a real dot. `\t` is a tab, `\r` the hidden Windows character, `$` the end of a line.
+-   The text you look for is a regular expression: `.` means any character, `\.` a real dot. `\t` is a tab, `\r` the hidden Windows character, `^` the start of a line, `$` the end of a line.
 -   sed looks at the whole line, not at columns. Make the text you look for specific, or use AWK to change one column.
 -   Separate several changes with `;`. They run in the order you write them.
 -   `sed '1d'` deletes line 1, `sed '/text/d'` every line that contains `text`.
 -   Check which character separates the columns before you use a file, also when it ends in `.csv`.
 -   Change a file safely: work on a copy, write to a new file, check with `wc -l` and `diff`, then replace. With `sed -i`, keep a backup (`-i.bak`), and think about what happens if the command runs twice.
 -   Windows line endings (`\r`, `^M` in `cat -A`) make text matches on the last column fail without an error. Find them with `file` or `cat -A`, and remove them with `sed 's/\r$//'`.
+-   Before you rename, count the lines with the old name (`grep -c`). Use `^` to change a name only at the start of the line, in column 1. Afterwards, look at what changed (`diff`).
 
 On the next page, [More useful AWK](awk_more.qmd), you learn a few more AWK forms that are handy in your own work and common in code from an LLM.
