@@ -419,3 +419,5 @@ An explanation is easier to check than a command, but it can still be incomplete
 -   The same LLM can answer differently next time. Judge an answer by your checks, not by the tool or by how sure it sounds.
 
 Keep the commands you have checked in your own notes, as suggested on [AWK on a table](awk_table.qmd#what-you-learned). A command you checked yourself is the best answer to the next similar question.
+
+The [Command overview](cheat_sheet.qmd) lists the main commands from all pages, to look up later.

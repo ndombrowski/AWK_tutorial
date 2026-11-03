@@ -29,6 +29,7 @@ website:
       - source/awk_fasta.qmd
       - source/awk_fastq.qmd
       - source/check_llm_code.qmd
+      - source/cheat_sheet.qmd
 
 format:
   html:

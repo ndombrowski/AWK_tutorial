@@ -372,6 +372,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text">Checking code from an LLM</span></a>
   </div>
 </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../source/cheat_sheet.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Command overview</span></a>
+  </div>
+</li>
     </ul>
     </div>
 </nav>
@@ -629,6 +635,7 @@ GACCCTCAGCAATCTTAAACTTCTTAGACGAATCACCAGAACGGAAAACATCCTTCATAG</code></pre>
 <li><code>%</code> gives the remainder after dividing. <code>NR % 4 == 1</code> picks the header of each read, <code>== 2</code> the sequence, <code>== 0</code> the quality line.</li>
 <li><code>substr($0, 2)</code> is the line from character 2 on. With it, <code>NR % 4 == 1 { print "&gt;" substr($0, 2) } NR % 4 == 2 { print }</code> turns FASTQ into FASTA.</li>
 </ul>
+<p>If you work with sequencing data, a good next step is the short tutorial <a href="https://ndombrowski.github.io/sequencing_qc/">First look at your sequencing data</a>. The two files on this page come from its practice data. It shows you how to check the number of reads per sample and the read quality yourself, shortly after you get your data back.</p>
 <p>On the next page, <a href="../source/check_llm_code.html">Checking AWK or sed code from an LLM</a>, you put these checks together into a routine for any command you did not write yourself.</p>
 
 

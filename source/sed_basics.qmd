@@ -565,38 +565,11 @@ C58 Legume_host_host
 
 `Legume_host` still contains `Legume`, so sed added `_host` a second time. sed gives no warning, and the old version of the file is gone. This happens easily when you run a script or a notebook a second time.
 
-If you use `-i`, let sed keep a backup copy. With `-i.bak`, sed saves the old version as `metadata.txt.bak` before it changes the file:
-
-```{bash}
-sed -i.bak 's/Legume_host_host/Legume_host/' metadata.txt
-ls metadata*
-grep 'Legume' metadata.txt | cut -f1,6
-grep 'Legume' metadata.txt.bak | cut -f1,6
-```
-
-This prints:
-
-```         
-metadata.txt
-metadata.txt.bak
-
-USDA61  Legume_host
-R7A Legume_host
-CIAT899 Legume_host
-NGR234  Legume_host
-C58 Legume_host
-
-USDA61  Legume_host_host
-R7A Legume_host_host
-CIAT899 Legume_host_host
-NGR234  Legume_host_host
-C58 Legume_host_host
-```
+You will often see `sed -i` in code from an LLM or a forum, sometimes as `sed -i.bak`. With `-i.bak`, sed keeps the old version of the file as `metadata.txt.bak`.
 
 ::: {.callout-important title="Before you use sed -i"}
--   Work on a copy, not on your original data.
--   If you are not sure, write to a new file first and check it with `wc -l` and `diff`.
--   Ask yourself what happens if the command runs twice. A change like `s/Legume/Legume_host/` grows each time, `s/Legume_host_host/Legume_host/` does not.
+-   Write to a new file first, and check it with `wc -l` and `diff`, as above. Then you don't need `-i` at all.
+-   Ask yourself what happens if the command runs twice. A change like `s/Legume/Legume_host/` grows each time.
 :::
 
 :::: {.callout-question .callout-warning collapse="false" title="Exercise"}
@@ -813,7 +786,7 @@ This prints:
 -   Separate several changes with `;`. They run in the order you write them.
 -   `sed '1d'` deletes line 1, `sed '/text/d'` every line that contains `text`.
 -   Check which character separates the columns before you use a file, also when it ends in `.csv`.
--   Change a file safely: work on a copy, write to a new file, check with `wc -l` and `diff`, then replace. With `sed -i`, keep a backup (`-i.bak`), and think about what happens if the command runs twice.
+-   Change a file safely: work on a copy, write to a new file, check with `wc -l` and `diff`, then replace. `sed -i` changes the file itself, without a check: think about what happens if the command runs twice.
 -   Windows line endings (`\r`, `^M` in `cat -A`) make text matches on the last column fail without an error. Find them with `file` or `cat -A`, and remove them with `sed 's/\r$//'`.
 -   Before you rename, count the lines with the old name (`grep -c`). Use `^` to change a name only at the start of the line, in column 1. Afterwards, look at what changed (`diff`).
 

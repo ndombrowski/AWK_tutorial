@@ -17,6 +17,7 @@ For statistics and plots, R or Python are the better tools. But for many smaller
 -   **You keep a record of what you did.** A command can be saved in a script or a notebook, and run again on new data. A table that you change by hand in Excel leaves no record, and Excel sometimes changes your data without asking, e.g. it is known to turn gene names such as `SEPT2` into dates.
 -   **The same step works on many files.** Together with a [`for` loop](https://scienceparkstudygroup.github.io/ibed-bioinformatics-page/source/core_tools/bash-for-loops.html), one command can clean the names in 50 FASTA files, or take one column from 200 sample tables.
 -   **Nothing to install.** AWK and sed are already on your computer and on most computer clusters, so you do not need packages or extra software.
+-   **You can look at your raw data yourself.** Amplicon, metagenome and genome analyses often start on the command line, with files that are too large to open in Excel. With a few AWK commands you can count the reads per sample, or check a table that a tool wrote, before an R package turns it into a summary plot.
 
 ## Why learn this when an LLM can write it?
 
@@ -29,17 +30,32 @@ LLMs (large language models, such as ChatGPT or Claude) are normally good at wri
 
 The last point matters most. A command that fails with an error message is easy to notice. A command that quietly skips a few rows, or treats a missing value as a zero, is not.
 
+The checks you learn here work no matter who wrote the command: you, a colleague, a forum or an LLM. Most of them also work on a table that R or Python wrote.
+
 ## What you will do
 
-1.  **Use AWK on a table**: print and select columns and rows, and find missing values
-2.  **Calculate with AWK**: add a column, and calculate sums, counts and means per group
-3.  **Learn sed basics**: search and replace text, delete lines, change a file safely, and remove Windows line endings
-4.  **Use more of AWK**: change and search text in one column, pass a value from a bash loop into AWK, and split a value into parts, all forms you often see in code from an LLM or a forum
-5.  **Stack tables**: put one table per sample under each other into one long table, add a column with the sample name, and check that no header or row is there twice
-6.  **Join two tables**: add columns from the strain table to the growth data by the strain name, make names match, and check the result
-7.  **Use AWK and sed on FASTA files** (optional): count sequences and clean up sequence names
-8.  **Use AWK on FASTQ files** (optional): count sequencing reads without counting too many, and turn reads into a FASTA file
-9.  **Check code from an LLM**: a short routine to test any AWK or sed command before you trust its output
+1.  **Use AWK on a table** (about 1 hour): print and select columns and rows, and find missing values
+2.  **Calculate with AWK** (about 45 minutes): add a column, and calculate sums, counts and means per group
+3.  **Learn sed basics** (about 1 hour): search and replace text, delete lines, change a file safely, and remove Windows line endings
+4.  **Use more of AWK** (about 40 minutes): change and search text in one column, pass a value from a bash loop into AWK, and split a value into parts, all forms you often see in code from an LLM or a forum
+5.  **Stack tables** (about 30 minutes): put one table per sample under each other into one long table, add a column with the sample name, and check that no header or row is there twice
+6.  **Join two tables** (about 1 hour): add columns from the strain table to the growth data by the strain name, make names match, and check the result
+7.  **Use AWK and sed on FASTA files** (optional, about 20 minutes): count sequences and clean up sequence names
+8.  **Use AWK on FASTQ files** (optional, about 20 minutes): count sequencing reads without counting too many, and turn reads into a FASTA file
+9.  **Check code from an LLM** (about 45 minutes): a short routine to test any AWK or sed command before you trust its output
+10. **Command overview**: the main commands from all pages on one page, to look up later
+
+The times are a rough estimate. They include reading and running the commands, but not the exercises.
+
+## Short on time?
+
+If you have about 2 hours, take this route. It covers the commands you need most often, and the traps that give a wrong result without an error:
+
+1.  [AWK on a table](https://ndombrowski.github.io/AWK_tutorial/source/awk_table.html), the whole page.
+2.  On [sed basics](https://ndombrowski.github.io/AWK_tutorial/source/sed_basics.html), the first section, [The shape of a sed command](https://ndombrowski.github.io/AWK_tutorial/source/sed_basics.html#the-shape-of-a-sed-command), and the section [Windows line endings](https://ndombrowski.github.io/AWK_tutorial/source/sed_basics.html#windows-line-endings). That section uses the strain table, `awk_data/mmc5_metadata.txt`.
+3.  On [Checking code from an LLM](https://ndombrowski.github.io/AWK_tutorial/source/check_llm_code.html), the table [A routine for any AWK or sed command](https://ndombrowski.github.io/AWK_tutorial/source/check_llm_code.html#a-routine-for-any-awk-or-sed-command).
+
+You can come back for the other pages when you need them, for example when you have to stack or join tables.
 
 ## Before you start
 

@@ -1,0 +1,381 @@
+---
+title: "Command overview"
+engine: knitr
+---
+
+This page lists the main commands from the tutorial, grouped by task. Each one has a link to the section that explains it, and a note on the trap it avoids. Use it to look things up later, or to compare a command from an LLM with one you have already checked.
+
+The file names on this page are general. `table.txt` is a tab-separated table with one header line, and `new.txt` is a new file you write. The column numbers are examples: change them to the columns of your own table. Before you trust a result, go through the [routine for any AWK or sed command](check_llm_code.qmd#a-routine-for-any-awk-or-sed-command).
+
+## Look at a file first
+
+-   The first lines, and the number of lines ([Look at the table first](awk_table.qmd#look-at-the-table-first)):
+
+    ```bash
+    head -5 table.txt
+    wc -l table.txt
+    ```
+
+-   Show the hidden characters: `^I` is a tab, `$` the end of a line, `^M` a Windows line ending ([Look at the table first](awk_table.qmd#look-at-the-table-first)). On a Mac, try `cat -et`:
+
+    ```bash
+    head -3 table.txt | cat -A
+    ```
+
+-   What kind of text the file holds. "with CRLF line terminators" means Windows line endings ([Windows line endings](sed_basics.qmd#windows-line-endings)):
+
+    ```bash
+    file table.txt
+    ```
+
+-   The number of fields per line. One number means every line has the same columns ([`NF`](awk_table.qmd#nf-work-with-the-number-of-fields)):
+
+    ```bash
+    awk -F'\t' '{ print NF }' table.txt | sort | uniq -c
+    ```
+
+-   The lines that do not have 5 fields, with their line number ([Why `-F'\t'` matters](awk_table.qmd#why--ft-matters)):
+
+    ```bash
+    awk -F'\t' 'NF != 5 { print NR, $0 }' table.txt
+    ```
+
+-   The values in column 2, and how often each occurs ([Count and mean per group](awk_calc.qmd#count-and-mean-per-group-arrays)):
+
+    ```bash
+    cut -f2 table.txt | sort | uniq -c
+    ```
+
+-   Show one line, or a range of lines, by number ([the tip in Delete lines](sed_basics.qmd#delete-lines)):
+
+    ```bash
+    awk 'NR == 123' table.txt
+    sed -n '2,4p' table.txt
+    ```
+
+## Choose columns and rows with AWK
+
+-   The shape of every AWK command: `-F'\t'` for a tab-separated table, the pattern says which lines, the action what to do ([The shape of an AWK command](awk_table.qmd#the-shape-of-an-awk-command)):
+
+    ```bash
+    awk -F'\t' 'pattern { action }' table.txt
+    ```
+
+-   Print columns 1 and 4, and keep the tabs between them. Without `-v OFS='\t'`, AWK puts a space between the columns ([`print`](awk_table.qmd#print-choose-columns)):
+
+    ```bash
+    awk -F'\t' -v OFS='\t' '{ print $1, $4 }' table.txt
+    ```
+
+-   Only the header, or every line after it ([`NR`](awk_table.qmd#nr-work-with-the-header-line)):
+
+    ```bash
+    awk -F'\t' 'NR == 1' table.txt
+    awk -F'\t' 'NR > 1' table.txt
+    ```
+
+-   Keep the rows where column 1 is exactly `low_P`. Use two equal signs, and put text in double quotes. With one `=`, AWK changes column 1 on every line, without an error ([Subset rows by text](awk_table.qmd#subset-rows-by-text)):
+
+    ```bash
+    awk -F'\t' '$1 == "low_P"' table.txt
+    ```
+
+-   Combine conditions: `&&` means "and", `||` means "or" ([Subset rows by a number](awk_table.qmd#subset-rows-by-a-number)):
+
+    ```bash
+    awk -F'\t' '$1 == "low_P" && $2 == "mock"' table.txt
+    awk -F'\t' '$2 == "129E" || $2 == "13C"' table.txt
+    ```
+
+-   Keep the rows where column 4 is above 50. `NR > 1` keeps the header out, and `$4 != ""` the empty fields ([Subset rows by a number](awk_table.qmd#subset-rows-by-a-number), [empty fields](awk_table.qmd#working-with-missing-values-empty-fields)):
+
+    ```bash
+    awk -F'\t' 'NR > 1 && $4 != "" && $4 > 50' table.txt
+    ```
+
+-   Keep the rows where column 8 contains a match, or does not. `grep` would search the whole line instead ([`~` and `!~`](awk_more.qmd#and-match-a-pattern-in-one-field)):
+
+    ```bash
+    awk -F'\t' '$8 ~ /Rhizobium/' table.txt
+    awk -F'\t' '$8 !~ /Rhizobium/' table.txt
+    ```
+
+-   Find values in column 4 that are not a number: empty fields, `NA`, `12,5` or `12 mm` ([`~` and `!~`](awk_more.qmd#and-match-a-pattern-in-one-field)):
+
+    ```bash
+    awk -F'\t' 'NR > 1 && $4 !~ /^[0-9.]+$/' table.txt
+    ```
+
+-   Count the lines you kept: add `| wc -l` to any of the commands above.
+
+## Empty fields
+
+-   Count the empty fields in column 4. AWK compares an empty field as text and calculates with it as 0, without a warning ([empty fields](awk_table.qmd#working-with-missing-values-empty-fields)):
+
+    ```bash
+    awk -F'\t' '$4 == ""' table.txt | wc -l
+    ```
+
+-   Fill the empty fields in columns 4 and 5 with `NA`. Afterwards, skip them with `$4 != "NA"` instead of `$4 != ""` ([Tip: fill empty fields with NA](awk_table.qmd#working-with-missing-values-empty-fields)):
+
+    ```bash
+    awk -F'\t' -v OFS='\t' '
+      $4 == "" { $4 = "NA" }
+      $5 == "" { $5 = "NA" }
+      { print }
+    ' table.txt > new.txt
+    ```
+
+## Calculate with AWK
+
+-   Add a column, with a name in the header. Skip empty fields, or AWK stops with "division by zero" halfway, and still leaves a file ([Add a column](awk_calc.qmd#add-a-column)):
+
+    ```bash
+    awk -F'\t' -v OFS='\t' '
+      NR == 1                          { print $0, "shoot_per_root" }
+      NR > 1 && $4 != "" && $5 != ""   { print $0, $5 / $4 }
+    ' table.txt > new.txt
+    ```
+
+-   The number of values, the sum and the mean of column 5 ([Sum and mean](awk_calc.qmd#sum-and-mean-of-a-column-variables-and-end)):
+
+    ```bash
+    awk -F'\t' '
+      NR > 1 && $5 != "" { sum += $5; n++ }
+      END                { print n, sum, sum / n }
+    ' table.txt
+    ```
+
+-   Round the result. `%d` is a whole number, `%.1f` a number with one decimal, `%s` text. `printf` needs `\n` for a new line ([`printf`](awk_calc.qmd#round-the-results-printf)):
+
+    ```bash
+    awk -F'\t' '
+      NR > 1 && $5 != "" { sum += $5; n++ }
+      END                { printf "n: %d\tmean: %.1f\n", n, sum / n }
+    ' table.txt
+    ```
+
+-   The smallest and largest value in column 4. Take the start value from the data, not 0 ([Smallest and largest value](awk_calc.qmd#smallest-and-largest-value)):
+
+    ```bash
+    awk -F'\t' '
+      NR > 1 && $4 != "" {
+        if (n == 0)   { min = $4; max = $4 }
+        if ($4 < min) { min = $4 }
+        if ($4 > max) { max = $4 }
+        n++
+      }
+      END { print n, min, max }
+    ' table.txt
+    ```
+
+-   Count the rows per value in column 1 ([Count and mean per group](awk_calc.qmd#count-and-mean-per-group-arrays)):
+
+    ```bash
+    awk -F'\t' '
+      NR > 1 { n[$1]++ }
+      END    { for (group in n) { print group, n[group] } }
+    ' table.txt
+    ```
+
+-   The count and mean of column 4 per group of columns 1 and 2. The dash between the columns goes in quotes, or AWK subtracts. Sort the output, because AWK goes through an array in no fixed order ([Mean per nutrient and condition](awk_calc.qmd#mean-per-nutrient-and-condition)):
+
+    ```bash
+    awk -F'\t' '
+      NR > 1 && $4 != "" { key = $1"-"$2; sum[key] += $4; n[key]++ }
+      END                { for (group in sum) { printf "%s\t%d\t%.1f\n", group, n[group], sum[group] / n[group] } }
+    ' table.txt | sort
+    ```
+
+## Change text with sed
+
+-   Replace the first match in each line, or every match with `g`. sed looks at the whole line, not at one column, so make the text you look for specific ([The shape of a sed command](sed_basics.qmd#the-shape-of-a-sed-command), [the `g` flag](sed_basics.qmd#the-g-flag-change-every-match-in-a-line), [the whole line](sed_basics.qmd#sed-sees-the-whole-line-not-columns)):
+
+    ```bash
+    sed 's/old/new/' table.txt
+    sed 's/old/new/g' table.txt
+    ```
+
+-   Look for a real dot with `\.`. A plain `.` means "any character" ([Special characters](sed_basics.qmd#special-characters-the-dot)):
+
+    ```bash
+    sed 's/\./,/g' table.txt
+    ```
+
+-   Several changes in one command, separated by `;`. They run in the order you write them. This one turns a table with `;` between the columns and decimal commas into a tab-separated table ([Another column separator](sed_basics.qmd#a-file-with-another-column-separator)):
+
+    ```bash
+    sed 's/,/./g; s/;/\t/g' table.csv > new.txt
+    ```
+
+-   Delete line 1, or every line that contains `text` ([Delete lines](sed_basics.qmd#delete-lines)):
+
+    ```bash
+    sed '1d' table.txt
+    sed '/text/d' table.txt
+    ```
+
+-   Remove Windows line endings. `$` means the end of the line ([Remove the `\r` with sed](sed_basics.qmd#remove-the-r-with-sed)):
+
+    ```bash
+    sed 's/\r$//' table.txt > new.txt
+    ```
+
+-   Rename a name at the start of the line, in column 1. Write the full name, so that similar names stay as they are ([Rename two strains](sed_basics.qmd#rename-two-strains)):
+
+    ```bash
+    sed 's/^R129_E/129E/; s/^R13_C/13C/' table.txt > new.txt
+    ```
+
+-   Change a file safely: write to a new file, check it, then replace the old file. `sed -i` changes the file itself, without the check, and a second run applies the change again ([Change a file safely](sed_basics.qmd#change-a-file-safely)):
+
+    ```bash
+    sed 's/Legume/Legume_host/' table.txt > new.txt
+    wc -l table.txt new.txt
+    diff table.txt new.txt
+    mv new.txt table.txt
+    ```
+
+## Change text in one column with AWK
+
+-   Change column 2 only on the lines where it is `13C`, and print every line. Without `-v OFS='\t'`, the changed lines lose their tabs ([sed sees the whole line](sed_basics.qmd#sed-sees-the-whole-line-not-columns)):
+
+    ```bash
+    awk -F'\t' -v OFS='\t' '$2 == "13C" { $2 = "strain13C" } { print }' table.txt > new.txt
+    ```
+
+-   Replace text inside column 1 with `gsub` (every match) or `sub` (the first match). `BEGIN{FS=OFS="\t"}` does the same as `-F'\t' -v OFS='\t'` ([`BEGIN`](awk_more.qmd#begin-before-the-first-line), [`sub` and `gsub`](awk_more.qmd#sub-and-gsub-replace-text-in-a-field)):
+
+    ```bash
+    awk 'BEGIN{FS=OFS="\t"} {gsub(/R129_E/, "129E", $1); gsub(/R13_C/, "13C", $1); print}' table.txt > new.txt
+    ```
+
+-   Replace the spaces in the header only ([`sub` and `gsub`](awk_more.qmd#sub-and-gsub-replace-text-in-a-field)):
+
+    ```bash
+    awk 'NR == 1 { gsub(/ /, "_") } { print }' table.txt > new.txt
+    ```
+
+-   Add `_host` to column 6, but only once. You can run this command twice and get the same file ([`~` and `!~`](awk_more.qmd#and-match-a-pattern-in-one-field)):
+
+    ```bash
+    awk -F'\t' -v OFS='\t' 'NR > 1 && $6 !~ /_host$/ { $6 = $6 "_host" } { print }' table.txt > new.txt
+    ```
+
+-   Cut column 1 into parts at each `_`. `split` gives back the number of parts ([`split`](awk_more.qmd#split-cut-a-value-into-parts)):
+
+    ```bash
+    awk -F'\t' '$1 ~ /_/ { n = split($1, parts, "_"); print $1, n, parts[1], parts[2] }' table.txt
+    ```
+
+## Several files
+
+-   One file per value in column 2, each with the header. `-v` hands the bash variable to AWK. `$s` inside the single quotes would stay text ([`-v`](awk_more.qmd#v-give-awk-a-value-from-outside)):
+
+    ```bash
+    for s in 129E 13C mock; do
+      awk -F'\t' -v strain="$s" 'NR == 1 || $2 == strain' table.txt > table_"$s".txt
+    done
+    ```
+
+-   Check that all files have the same header. One line in the output means they do ([Look at the headers first](awk_combine.qmd#look-at-the-headers-first)):
+
+    ```bash
+    awk 'FNR == 1' sample_*.txt | sort | uniq -c
+    ```
+
+-   Stack the files under each other: keep the first header, skip the others, and put the part of the file name between `sample_` and `.txt` in a new first column. Don't give the output a name that `sample_*.txt` matches ([Stack the tables with AWK](awk_combine.qmd#stack-the-tables-with-awk)):
+
+    ```bash
+    awk -F'\t' -v OFS='\t' '
+      NR == 1  { print "Sample", $0; next }
+      FNR == 1 { next }
+      { name = FILENAME; sub(/^sample_/, "", name); sub(/\.txt$/, "", name); print name, $0 }
+    ' sample_*.txt > combined.txt
+    ```
+
+-   The same with a loop and `>>`. Write the header with `>` right before the loop, or a second run adds every row again ([The same with a loop](awk_combine.qmd#the-same-with-a-loop-and)):
+
+    ```bash
+    head -1 sample_A.txt | awk -F'\t' -v OFS='\t' '{ print "Sample", $0 }' > combined.txt
+
+    for s in A B C; do
+      awk -F'\t' -v OFS='\t' -v cond="$s" 'FNR > 1 { print cond, $0 }' sample_"$s".txt >> combined.txt
+    done
+    ```
+
+-   The number of rows per file ([One line per file](awk_combine.qmd#one-line-per-file-optional)):
+
+    ```bash
+    awk -F'\t' 'FNR > 1 { n[FILENAME]++ } END { for (file in n) print file, n[file] }' sample_*.txt | sort
+    ```
+
+-   Join two tables: add column 4 of `lookup.txt` to `table.txt`, matched on column 1 of `lookup.txt` and column 2 of `table.txt`. The table you look things up in comes first. `FNR == 1` gives the new column a name ([Add the genus](awk_join.qmd#add-the-genus-nr-fnr), [Give the new column a name](awk_join.qmd#give-the-new-column-a-name)):
+
+    ```bash
+    awk -F'\t' -v OFS='\t' '
+      NR == FNR  { genus[$1] = $4; next }
+      FNR == 1   { print $0, "Genus"; next }
+                 { print $0, genus[$2] }
+    ' lookup.txt table.txt > new.txt
+    ```
+
+-   After a join: which names got no match, and which entries of `lookup.txt` were not used. Read the names, not only the counts ([Check the result](awk_join.qmd#check-the-result)):
+
+    ```bash
+    awk -F'\t' '$6 == "" { print $2 }' new.txt | sort | uniq -c
+
+    awk -F'\t' '
+      NR == FNR                 { seen[$2] = 1; next }
+      FNR > 1 && !($1 in seen)  { print $1 }
+    ' table.txt lookup.txt
+    ```
+
+## Check a result
+
+-   The number of lines, and the first lines ([AWK on a table](awk_table.qmd#what-you-learned)):
+
+    ```bash
+    wc -l new.txt
+    head -3 new.txt
+    ```
+
+-   Which lines differ between two files ([Change a file safely](sed_basics.qmd#change-a-file-safely)):
+
+    ```bash
+    diff table.txt new.txt
+    ```
+
+-   Whether two files are identical. `cmp` prints nothing if they are ([A file with another column separator](sed_basics.qmd#a-file-with-another-column-separator)):
+
+    ```bash
+    cmp table.txt new.txt && echo 'identical'
+    ```
+
+-   The number of lines that occur more than once. Expect 0, unless your data has identical rows for a good reason ([Stack the tables with AWK](awk_combine.qmd#stack-the-tables-with-awk)):
+
+    ```bash
+    sort new.txt | uniq -d | wc -l
+    ```
+
+## FASTA and FASTQ files
+
+-   The number of sequences in FASTA files, per file and in total ([Count the sequences](awk_fasta.qmd#count-the-sequences)):
+
+    ```bash
+    grep -c '^>' *.fasta
+    cat *.fasta | grep -c '^>'
+    ```
+
+-   The number of reads in a FASTQ file. Don't count with `grep -c '^@'`: a quality line can also start with `@` ([Count the reads](awk_fastq.qmd#count-the-reads)). Divide the number of lines by 4, or count the headers with `NR % 4 == 1`:
+
+    ```bash
+    zcat reads.fastq.gz | wc -l
+    zcat reads.fastq.gz | awk 'NR % 4 == 1' | wc -l
+    ```
+
+-   Turn FASTQ into FASTA ([From FASTQ to FASTA](awk_fastq.qmd#from-fastq-to-fasta)):
+
+    ```bash
+    zcat reads.fastq.gz | awk 'NR % 4 == 1 { print ">" substr($0, 2) } NR % 4 == 2 { print }' > reads.fasta
+    ```

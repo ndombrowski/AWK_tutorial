@@ -2,42 +2,46 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://ndombrowski.github.io/AWK_tutorial/source/sed_basics.html</loc>
-    <lastmod>2026-11-03T07:32:35.858Z</lastmod>
+    <lastmod>2026-11-03T08:49:40.115Z</lastmod>
   </url>
   <url>
-    <loc>https://ndombrowski.github.io/AWK_tutorial/source/awk_table.html</loc>
-    <lastmod>2026-11-02T13:07:58.066Z</lastmod>
-  </url>
-  <url>
-    <loc>https://ndombrowski.github.io/AWK_tutorial/source/awk_join.html</loc>
-    <lastmod>2026-11-03T08:09:24.456Z</lastmod>
-  </url>
-  <url>
-    <loc>https://ndombrowski.github.io/AWK_tutorial/source/awk_fasta.html</loc>
-    <lastmod>2026-11-02T13:11:30.370Z</lastmod>
-  </url>
-  <url>
-    <loc>https://ndombrowski.github.io/AWK_tutorial/source/awk_calc.html</loc>
-    <lastmod>2026-11-02T14:21:11.968Z</lastmod>
-  </url>
-  <url>
-    <loc>https://ndombrowski.github.io/AWK_tutorial/index.html</loc>
-    <lastmod>2026-11-03T08:16:40.074Z</lastmod>
-  </url>
-  <url>
-    <loc>https://ndombrowski.github.io/AWK_tutorial/source/awk_combine.html</loc>
-    <lastmod>2026-11-03T08:29:23.068Z</lastmod>
-  </url>
-  <url>
-    <loc>https://ndombrowski.github.io/AWK_tutorial/source/awk_fastq.html</loc>
-    <lastmod>2026-11-02T14:32:39.746Z</lastmod>
+    <loc>https://ndombrowski.github.io/AWK_tutorial/source/cheat_sheet.html</loc>
+    <lastmod>2026-11-03T08:52:35.808Z</lastmod>
   </url>
   <url>
     <loc>https://ndombrowski.github.io/AWK_tutorial/source/awk_more.html</loc>
     <lastmod>2026-11-03T08:20:06.745Z</lastmod>
   </url>
   <url>
+    <loc>https://ndombrowski.github.io/AWK_tutorial/source/awk_fastq.html</loc>
+    <lastmod>2026-11-03T09:08:01.657Z</lastmod>
+  </url>
+  <url>
+    <loc>https://ndombrowski.github.io/AWK_tutorial/source/awk_combine.html</loc>
+    <lastmod>2026-11-03T08:29:23.068Z</lastmod>
+  </url>
+  <url>
+    <loc>https://ndombrowski.github.io/AWK_tutorial/index.html</loc>
+    <lastmod>2026-11-03T09:07:58.794Z</lastmod>
+  </url>
+  <url>
+    <loc>https://ndombrowski.github.io/AWK_tutorial/source/awk_calc.html</loc>
+    <lastmod>2026-11-02T14:21:11.968Z</lastmod>
+  </url>
+  <url>
+    <loc>https://ndombrowski.github.io/AWK_tutorial/source/awk_fasta.html</loc>
+    <lastmod>2026-11-02T13:11:30.370Z</lastmod>
+  </url>
+  <url>
+    <loc>https://ndombrowski.github.io/AWK_tutorial/source/awk_join.html</loc>
+    <lastmod>2026-11-03T08:09:24.456Z</lastmod>
+  </url>
+  <url>
+    <loc>https://ndombrowski.github.io/AWK_tutorial/source/awk_table.html</loc>
+    <lastmod>2026-11-02T13:07:58.066Z</lastmod>
+  </url>
+  <url>
     <loc>https://ndombrowski.github.io/AWK_tutorial/source/check_llm_code.html</loc>
-    <lastmod>2026-11-03T08:09:24.660Z</lastmod>
+    <lastmod>2026-11-03T08:52:55.658Z</lastmod>
   </url>
 </urlset>
